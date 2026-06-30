@@ -1,0 +1,78 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0px;
+    padding: 0px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-titlebar {
+    /* width: 100%; /* or whatever height your custom assets dictate */
+    /* height: 40px; /* or whatever height your custom assets dictate */
+    -webkit-app-region: drag; 
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px;
+    border-bottom: 1px solid black;
+}
+
+.settings-window-controls button {
+    border-radius: 5px;
+    -webkit-app-region: no-drag; 
+    cursor: pointer;
+}
+
+.settings{
+    display: flex;
+    flex: 1;
+}
+
+.hidden{
+    display: none;
+}
+
+.side-bar {
+    width: 30%;
+    padding-top: 10px;
+    flex-direction: left;
+    border-right: 1px solid black;
+}
+
+.side-bar button {
+    border: none;
+    background: none;
+    display: block;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 5px;
+}
+
+.main-bar{
+    width: 70%;
+    padding-top: 10px;
+    padding-left: 10px;
+}
+
+.analytics-content {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+.analytics-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    
+}
+
+.card-data {
+    font-family: 'Inter';
+    font-size: 24px;
+    font-weight: 700;
+}

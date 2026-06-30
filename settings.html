@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--<title>Document</title>-->
+    <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+    <header class="settings-titlebar">
+        <div>MENU</div>
+        <div class="settings-window-controls">            
+            <button id="minimize-btn">_</button>
+            <button id="close-btn">X</button>
+        </div>
+    </header>
+    <div class="settings">
+        <div class="side-bar">
+            <button id="dashboard-btn">Dashboard</button>
+            <button id="about-btn">About</button>
+            <button id="settings-btn">Settings</button>
+        </div>
+        <div class="main-bar">
+            <div id="dashboard-content">
+                <h1>Your Progress</h1>
+                <div class="analytics-content">
+                    <div class="analytics-card">
+                        <span>TOTAL FOCUS TIME<br></span>
+                        <span>TODAY<br></span>
+                        <span class="card-data" id="today_work_seconds">0</span>
+                    </div>
+                    <div class="analytics-card">
+                        <span>COMPLETED<br></span>
+                        <span>POMODOROS<br></span>
+                        <span class="card-data" id="historical_pomodoro">0</span>
+                    </div>
+                    <div class="analytics-card">
+                        <span>FAVORITE<br></span>
+                        <span>COMPANION<br></span>
+                        <span class="card-data" id="favorite_cat">None</span>
+                    </div>
+                </div>
+                <h1>This Week's Focus</h1>
+                <div>
+
+                </div>
+            </div>
+            <div id="about-content" class="hidden">
+                Welcome to the About!
+            </div>
+            <div id="settings-content" class="hidden">
+                Welcome to the Settings!
+            </div>
+        </div>
+    </div>
+    <script src="settings.js"></script>
+</body>
+</html>

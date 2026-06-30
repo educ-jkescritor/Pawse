@@ -1,0 +1,12 @@
+#black_timer {
+    text-align: center;
+    font-size: 48px;
+    margin-top: 10px;
+}
+
+.timer-controls {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
