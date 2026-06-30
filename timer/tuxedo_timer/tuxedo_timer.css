@@ -1,20 +1,85 @@
+@font-face {
+    font-family: 'Pixelfy Sans';
+    src: url('../../assets/fonts/PixelifySans-Bold.ttf') format('truetype');
+    font-weight: 700;
+}   
+
 #tuxedo_timer {
     text-align: center;
     font-size: 48px;
     margin-top: 10px;
+
+    font-family: 'Pixelfy Sans';
+    font-size: 64px;
+    font-weight: 700;
 }
 
 .timer-controls {
+    position: absolute;
+    bottom: 16px;
+    
+    left: 0;
+    right: 0;
+    
     display: flex;
     justify-content: center;
-    gap: 20px;
-    margin-top: 20px;
+    
+    align-items: center;
+
+    gap: 24px;
 }
 
-.session-counter{
+.timer-controls button {
+    border-radius: 50%;
+    border: 1px solid#F2B679; /* subject to change */
+    background-color: #F2B679; /* subject to change */
+    cursor: pointer;
+
     display: flex;
     justify-content: center;
-    gap: 10px;
+    align-items: center;
+    padding: 0px;
+}
+
+.timer-controls button img {
+    image-rendering: pixelated;
+    object-fit: contain;
+    pointer-events: none;
+    -webkit-user-drag: none;
+
+    /* width: 60%; */
+    /* height: 60%; */
+}
+
+#play-btn {
+    width: 40px;
+    height: 40px;
+}
+
+#play-btn img {
+    width: 24px;
+}
+
+#skip-btn, #sound-btn {
+    width: 28px;
+    height: 28px;
+}
+
+#skip-btn img, #sound-btn img {
+    width: 14px;
+    height: 14px;
+}
+
+.session-counter {
+    position: absolute;
+    bottom: 275px;
+    left: 0;
+    right: 0;
+
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    padding: 0px 90px;
 }
 
 .fish-icon {
