@@ -33,12 +33,15 @@ body {
 
 .main-titlebar {
     /* width: 100%; /* or whatever height your custom assets dictate */
-    /* height: 40px; /* or whatever height your custom assets dictate */
+    height: 40px; /* or whatever height your custom assets dictate */
     -webkit-app-region: drag; 
     display: flex;
     align-items: center;
+    
     justify-content: space-between;
-    padding: 5px;
+
+    padding: 0px 0px 0px 5px;
+
     border-bottom: 1px solid black;
     position: relative;
 }
@@ -56,10 +59,37 @@ body {
     transform: translateX(-50%);
 }
 
+.main-window-controls {
+    display: flex;
+    gap: 8px;
+    padding-right: 12px;
+    align-items: center;
+}
+
 .main-window-controls button {
-    border-radius: 6px;
+    border: none;
+    border-radius: 0px;
+    background: transparent;
+
+    padding: 8px 0px;
+    
     -webkit-app-region: no-drag; 
     cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.main-window-controls button img {
+    image-rendering: pixelated;
+
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+
+    pointer-events: none;
+    -webkit-user-drag: none;
 }
 
 .select-description {
@@ -72,13 +102,17 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+
+    gap: 8px;
 }
 
 .cat_buttons button {
+    border-radius: 8px;
+
     height: 88px;
     width: 252px;
-    margin-bottom: 2px;
-    padding: 10px 15px;
+
+    padding: 10px 20px;
 }
 
 .tuxedo_info, .orange_info, .black_info {
@@ -96,6 +130,8 @@ body {
     width: 252px;
     height: 28px;
     
+    border-radius: 8px;
+
     font-family: 'Inter';
     font-size: 10px;
     
@@ -103,7 +139,10 @@ body {
     justify-content: center;
     align-items: center;
 
-    margin: 20px auto;
+    padding: 0px 20px;
+
+    margin: 12px auto;
+    
     cursor: pointer;
 }
 
