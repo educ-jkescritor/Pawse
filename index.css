@@ -1,0 +1,128 @@
+@font-face {
+    font-family: 'Inter';
+    src: url('assets/fonts/Inter_18pt-Regular.ttf') format('truetype');
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('assets/fonts/Inter_18pt-Medium.ttf') format('truetype');
+    font-weight: 500;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('assets/fonts/Inter_18pt-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('assets/fonts/Inter_18pt-Bold.ttf') format('truetype');
+    font-weight: 700;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0px;
+    padding: 0px;
+}
+
+.main-titlebar {
+    /* width: 100%; /* or whatever height your custom assets dictate */
+    /* height: 40px; /* or whatever height your custom assets dictate */
+    -webkit-app-region: drag; 
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px;
+    border-bottom: 1px solid black;
+    position: relative;
+}
+
+.main-titlebar button {
+    border-radius: 6px;
+    -webkit-app-region: no-drag; 
+    cursor: pointer;
+}
+
+.app-title{
+    position: absolute;
+    /* adjusts the PAWSE title accordingly in the top bar */
+    left: 23%;
+    transform: translateX(-50%);
+}
+
+.main-window-controls button {
+    border-radius: 6px;
+    -webkit-app-region: no-drag; 
+    cursor: pointer;
+}
+
+.select-description {
+    font-family: 'Inter';
+    font-size: 10px;
+    text-align: center;
+}
+
+.cat_buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.cat_buttons button {
+    height: 88px;
+    width: 252px;
+    margin-bottom: 2px;
+    padding: 10px 15px;
+}
+
+.tuxedo_info, .orange_info, .black_info {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+
+    font-family: 'Inter';
+    font-size: 10px;
+
+    width: 70%;
+}
+
+.confirmation_button {
+    width: 252px;
+    height: 28px;
+    
+    font-family: 'Inter';
+    font-size: 10px;
+    
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    margin: 20px auto;
+    cursor: pointer;
+}
+
+.cat_image {
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+}
+
+/*
+.medium_text {
+    font-size: 16px;
+    font-family: 'Inter';
+    font-weight: 500;
+}
+
+.regular_text {
+    font-size: 10px;
+    font-family: 'Inter';
+    font-weight: 400;
+}
+*/
