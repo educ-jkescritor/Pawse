@@ -4,51 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!--<title>Document</title>-->
+    <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="settings.css">
 </head>
 <body>
     <header class="settings-titlebar">
-        <div>MENU</div>
-        <div class="settings-window-controls">            
+        <div class="font-pixel-16-bold">MENU</div>
+        <div class="settings-window-controls">
             <button id="minimize-btn">_</button>
             <button id="close-btn">X</button>
         </div>
     </header>
     <div class="settings">
         <div class="side-bar">
-            <button id="dashboard-btn">Dashboard</button>
-            <button id="about-btn">About</button>
-            <button id="settings-btn">Settings</button>
+            <button id="dashboard-btn" class="font-inter-16-medium">Dashboard</button>
+            <button id="about-btn" class="font-inter-16-medium">About</button>
+            <button id="settings-btn" class="font-inter-16-medium">Settings</button>
         </div>
         <div class="main-bar">
             <div id="dashboard-content">
-                <h1>Your Progress</h1>
+                <h1 class="font-pixel-36-medium">Your Progress</h1>
                 <div class="analytics-content">
                     <div class="analytics-card">
-                        <span>TOTAL FOCUS TIME<br></span>
-                        <span>TODAY<br></span>
-                        <span class="card-data" id="today_work_seconds">0</span>
+                        <span class="font-inter-10-medium">TOTAL FOCUS TIME<br></span>
+                        <span class="font-inter-10-medium">TODAY<br></span>
+                        <span class="card-data font-inter-20-semibold" id="today_work_seconds">0</span>
                     </div>
                     <div class="analytics-card">
-                        <span>COMPLETED<br></span>
-                        <span>POMODOROS<br></span>
-                        <span class="card-data" id="historical_pomodoro">0</span>
+                        <span class="font-inter-10-medium">COMPLETED<br></span>
+                        <span class="font-inter-10-medium">POMODOROS<br></span>
+                        <span class="card-data font-inter-20-semibold" id="historical_pomodoro">0</span>
                     </div>
                     <div class="analytics-card">
-                        <span>FAVORITE<br></span>
-                        <span>COMPANION<br></span>
-                        <span class="card-data" id="favorite_cat">None</span>
+                        <span class="font-inter-10-medium">FAVORITE<br></span>
+                        <span class="font-inter-10-medium">COMPANION<br></span>
+                        <span class="card-data font-inter-20-semibold" id="favorite_cat">None</span>
                     </div>
                 </div>
-                <h1>This Week's Focus</h1>
+                <h1 class="font-pixel-20-medium">This Week's Focus</h1>
                 <div>
 
                 </div>
             </div>
-            <div id="about-content" class="hidden">
+            <div id="about-content" class="hidden font-inter-12-regular">
                 Welcome to the About!
             </div>
-            <div id="settings-content" class="hidden">
+            <div id="settings-content" class="hidden font-inter-12-regular">
                 Welcome to the Settings!
             </div>
         </div>

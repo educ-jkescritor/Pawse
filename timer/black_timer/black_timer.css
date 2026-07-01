@@ -1,7 +1,15 @@
 #black_timer {
     text-align: center;
-    font-size: 48px;
+    font-family: 'Pixelify Sans', sans-serif;
+    font-size: 64px;
+    font-weight: 700;
     margin-top: 10px;
+    color: var(--theme-classic-solid);
+}
+
+body {
+    background: linear-gradient(180deg, var(--theme-classic-light), var(--bg-main));
+    color: var(--text-black);
 }
 
 .timer-controls {
@@ -9,4 +17,13 @@
     justify-content: center;
     gap: 20px;
     margin-top: 20px;
+}
+
+.timer-controls button {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    border: 1px solid var(--stroke-color);
+    background: var(--topbar-fill);
+    color: var(--text-black);
 }

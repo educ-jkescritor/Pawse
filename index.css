@@ -22,6 +22,41 @@
     font-weight: 700;
 }
 
+@font-face {
+    font-family: 'Pixelify Sans';
+    src: url('assets/fonts/PixelifySans-Bold.ttf') format('truetype');
+    font-weight: 700;
+}
+
+:root {
+    --font-inter: 'Inter', sans-serif;
+    --font-pixel: 'Pixelify Sans', sans-serif;
+    /* --- TEXT COLORS --- */
+    --text-black: #141414;
+    --text-gray: #5F5F5F;
+
+    /* --- UI LAYOUT COLORS --- */
+    --bg-main: #F6F8F7;
+    --stroke-color: #E4E4E7;
+    --topbar-fill: #FAFAFA;
+
+    /* --- SYSTEM ALERTS (Blue) --- */
+    --sys-blue-solid: #35A6F1;
+    --sys-blue-grad: #A8DCFF;
+
+    /* --- CLASSIC TIMER (Green) --- */
+    --theme-classic-solid: #CFE58A;
+    --theme-classic-light: #ECFEA9;
+
+    /* --- SPRINT TIMER (Orange) --- */
+    --theme-sprint-solid: #F8C47F;
+    --theme-sprint-light: #FEE1A9;
+
+    /* --- FOCUSED TIMER (Purple) --- */
+    --theme-focused-solid: #BDA9FE;
+    --theme-focused-light: #E0A9FE;
+}
+
 * {
     box-sizing: border-box;
 }
@@ -29,26 +64,134 @@
 body {
     margin: 0px;
     padding: 0px;
+    font-family: var(--font-inter);
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--text-black);
+    background: var(--bg-main);
+}
+
+.font-pixel-20-medium {
+    font-family: var(--font-pixel);
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.font-pixel-36-medium {
+    font-family: var(--font-pixel);
+    font-size: 36px;
+    font-weight: 700;
+}
+
+.font-pixel-16-bold {
+    font-family: var(--font-pixel);
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.font-pixel-24-bold {
+    font-family: var(--font-pixel);
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.font-inter-10-regular {
+    font-family: var(--font-inter);
+    font-size: 10px;
+    font-weight: 400;
+}
+
+.font-inter-12-regular {
+    font-family: var(--font-inter);
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.font-inter-10-medium {
+    font-family: var(--font-inter);
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.font-inter-12-medium {
+    font-family: var(--font-inter);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.font-inter-16-medium {
+    font-family: var(--font-inter);
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.font-inter-20-semibold {
+    font-family: var(--font-inter);
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.text-black {
+    color: var(--text-black);
+}
+
+.text-gray {
+    color: var(--text-gray);
+}
+
+.text-system-blue {
+    color: var(--sys-blue-solid);
+}
+
+.text-classic {
+    color: var(--theme-classic-solid);
+}
+
+.text-sprint {
+    color: var(--theme-sprint-solid);
+}
+
+.text-focused {
+    color: var(--theme-focused-solid);
+}
+
+.cat-label {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    padding: 2px 6px;
+    border-radius: 8px;
+    color: var(--text-black);
+}
+
+.cat-label-classic {
+    background: var(--theme-classic-light);
+}
+
+.cat-label-sprint {
+    background: var(--theme-sprint-light);
+}
+
+.cat-label-focused {
+    background: var(--theme-focused-light);
 }
 
 .main-titlebar {
     /* width: 100%; /* or whatever height your custom assets dictate */
-    height: 40px; /* or whatever height your custom assets dictate */
-    -webkit-app-region: drag; 
+    height: 40px;
+    -webkit-app-region: drag;
     display: flex;
     align-items: center;
-    
     justify-content: space-between;
-
     padding: 0px 0px 0px 5px;
-
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid var(--stroke-color);
+    background: var(--topbar-fill);
     position: relative;
 }
 
 .main-titlebar button {
     border-radius: 6px;
-    -webkit-app-region: no-drag; 
+    -webkit-app-region: no-drag;
     cursor: pointer;
 }
 
@@ -57,6 +200,10 @@ body {
     /* adjusts the PAWSE title accordingly in the top bar */
     left: 23%;
     transform: translateX(-50%);
+    font-family: var(--font-pixel);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-black);
 }
 
 .main-window-controls {
@@ -72,8 +219,8 @@ body {
     background: transparent;
 
     padding: 8px 0px;
-    
-    -webkit-app-region: no-drag; 
+
+    -webkit-app-region: no-drag;
     cursor: pointer;
 
     display: flex;
@@ -92,27 +239,53 @@ body {
     -webkit-user-drag: none;
 }
 
-.select-description {
-    font-family: 'Inter';
-    font-size: 10px;
+.main-content{
+    padding: 10px 20px;
+}
+
+.main-text {
     text-align: center;
 }
 
+.main-text p {
+    margin: 0;
+}
+
 .cat_buttons {
+    padding: 8px 0px 8px 0px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 100%;
 
     gap: 8px;
 }
 
 .cat_buttons button {
     border-radius: 8px;
+    border: 1px solid var(--stroke-color);
 
-    height: 88px;
-    width: 252px;
+    width: 100%;
+    min-height: 80px;
 
-    padding: 10px 20px;
+    padding: 8px 12px 8px 12px;
+    display: flex;
+    align-items: center;
+}
+
+#tuxedo_cat {
+    background: linear-gradient(180deg, #FFF 0%, var(--theme-classic-light) 100%);
+    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
+}
+
+#orange_cat {
+    background: linear-gradient(180deg, #FFF 0%, var(--theme-sprint-light) 100%);
+    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
+}
+
+#black_cat {
+    background: linear-gradient(180deg, #FFF 0%, var(--theme-focused-light) 100%);
+    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
 }
 
 .tuxedo_info, .orange_info, .black_info {
@@ -120,30 +293,21 @@ body {
     flex-direction: column;
     text-align: left;
 
-    font-family: 'Inter';
-    font-size: 10px;
-
     width: 70%;
 }
 
 .confirmation_button {
-    width: 252px;
-    height: 28px;
-    
-    border-radius: 8px;
-
-    font-family: 'Inter';
-    font-size: 10px;
-    
+    width: 100%;
     display: flex;
+    padding: 8px 24px;
     justify-content: center;
     align-items: center;
-
-    padding: 0px 20px;
-
-    margin: 12px auto;
-    
     cursor: pointer;
+
+    border: none;
+    border-radius: 8px;
+    color: var(--bg-main);
+    background: var(--sys-blue-solid);
 }
 
 .cat_image {
@@ -151,17 +315,3 @@ body {
     flex-direction: column;
     text-align: right;
 }
-
-/*
-.medium_text {
-    font-size: 16px;
-    font-family: 'Inter';
-    font-weight: 500;
-}
-
-.regular_text {
-    font-size: 10px;
-    font-family: 'Inter';
-    font-weight: 400;
-}
-*/
