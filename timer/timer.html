@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link rel="stylesheet" href="../../index.css">
-    <link rel="stylesheet" href="black_timer.css">
+    <link rel="stylesheet" href="../index.css">
+    <link rel="stylesheet" href="timer.css">
 </head>
 <body>
     <header class="main-titlebar">
@@ -19,13 +19,19 @@
             <button id="close-btn">X</button>
         </div>
     </header>
-    <h1 id="black_timer">50:00</h1>
+    <h1 id="timer-display">00:00</h1>
+    <div class="session-counter">
+        <span class="fish-icon">🐟︎</span>
+        <span class="fish-icon">🐟︎</span>
+        <span class="fish-icon">🐟︎</span>
+        <span class="fish-icon">🐟︎</span>
+    </div>
     <div class="timer-controls">
         <button id="sound-btn">SOUND: OFF</button>
         <button id="play-btn">PAUSE</button>
         <button id="skip-btn">SKIP</button>
     </div>
-    <script src="black_timer.js"></script>
-    <script src="../../titlebar.js"></script>
+    <script src="timer.js"></script>
+    <script src="../titlebar.js"></script>
 </body>
 </html>

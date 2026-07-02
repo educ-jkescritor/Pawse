@@ -1,4 +1,4 @@
-#orange_timer {
+#timer-display {
     text-align: center;
     font-size: 48px;
     margin-top: 10px;
@@ -9,4 +9,18 @@
     justify-content: center;
     gap: 20px;
     margin-top: 20px;
+}
+
+.session-counter{
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.fish-icon {
+    opacity: 0.3;
+}
+
+.fish-icon.active {
+    opacity: 1;
 }
