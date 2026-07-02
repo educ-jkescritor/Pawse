@@ -206,10 +206,15 @@ body {
     /* adjusts the PAWSE title accordingly in the top bar */
     left: 23%;
     transform: translateX(-50%);
-    font-family: var(--font-pixel);
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-black);
+}
+
+.main-sidebar {
+    display: flex;
+    align-items: center;
+    
+    gap: 8px;
+
+    margin: 8px 0px 8px 12px;
 }
 
 .main-window-controls {

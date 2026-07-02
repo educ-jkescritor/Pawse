@@ -23,11 +23,26 @@ body {
     position: relative;
 }
 
-.app-title {
-    font-family: var(--font-pixel);
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-black);
+.settings-titlebar button {
+    border-radius: 6px;
+    -webkit-app-region: no-drag; 
+    cursor: pointer;
+}
+
+.app-title{
+    position: absolute;
+    /* adjusts the PAWSE title accordingly in the top bar */
+    left: 23%;
+    transform: translateX(-50%);
+}
+
+.settings-sidebar {
+    display: flex;
+    align-items: center;
+    
+    gap: 8px;
+
+    margin: 8px 0px 8px 12px;
 }
 
 .settings-window-controls {
@@ -94,7 +109,7 @@ body {
     overflow: hidden;
 }
 
-.hidden {
+.hidden{
     display: none;
 }
 
