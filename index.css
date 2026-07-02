@@ -95,6 +95,12 @@ body {
     font-weight: 700;
 }
 
+.font-pixel-64-bold {
+    font-family: var(--font-pixel);
+    font-size: 64px;
+    font-weight: 700;
+}
+
 .font-inter-10-regular {
     font-family: var(--font-inter);
     font-size: 10px;
@@ -263,11 +269,9 @@ body {
 
 .cat_buttons button {
     border-radius: 8px;
-    border: 1px solid var(--stroke-color);
-
     width: 100%;
     min-height: 80px;
-
+    border: none;
     padding: 8px 12px 8px 12px;
     display: flex;
     align-items: center;

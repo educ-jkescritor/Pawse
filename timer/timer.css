@@ -1,15 +1,13 @@
 .main-titlebar {
     /* width: 100%; /* or whatever height your custom assets dictate */
-    height: 40px; /* or whatever height your custom assets dictate */
-    -webkit-app-region: drag; 
+    height: 40px;
+    -webkit-app-region: drag;
     display: flex;
     align-items: center;
-    
     justify-content: space-between;
-
     padding: 0px 0px 0px 5px;
-
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid var(--stroke-color);
+    background: var(--topbar-fill);
     position: relative;
 }
 
@@ -24,6 +22,10 @@
     /* adjusts the PAWSE title accordingly in the top bar */
     left: 23%;
     transform: translateX(-50%);
+    font-family: var(--font-pixel);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-black);
 }
 
 .main-window-controls {
@@ -59,20 +61,21 @@
     -webkit-user-drag: none;
 }
 
-#timer-display {
-    text-align: center;
-    font-size: 48px;
-    margin-top: 10px;
+.main-content{
+    padding: 10px 20px;
 }
 
-.timer-controls {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 20px;
+#timer-container{
+    width: 100%;
+    border: 1px solid var(--stroke-color);
+    text-align: center;
+    line-height: 1; /* controls the space consumed by the text */
 }
 
 .session-counter{
+    width: 100%;
+    padding: 4px;
+    border: 1px solid var(--stroke-color);
     display: flex;
     justify-content: center;
     gap: 10px;
@@ -84,4 +87,22 @@
 
 .fish-icon.active {
     opacity: 1;
+}
+
+.cat-area {
+    width: 100%;
+    height: 220px;
+    padding: 8px 0px;
+    border: 1px solid var(--stroke-color);
+    justify-content: center;
+}
+
+.timer-controls {
+    width: 100%;
+    padding: 4px 0px;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+
+    border: 1px solid var(--stroke-color);
 }
