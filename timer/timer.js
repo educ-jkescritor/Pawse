@@ -34,6 +34,11 @@ let actualBreak = 0;
 let workCount = 0;
 let breakCount = 0;
 
+let modalOverlay = document.getElementById("modal-overlay");
+let dialogTitle = document.getElementById("dialog-title");
+let dialogMessage = document.getElementById("dialog-message");
+let dialogBtn = document.getElementById("dialog-btn");
+
 function formatTime(remainingTime) {
     let minutes = Math.floor(remainingTime / 60);
     let secs = remainingTime % 60;
@@ -76,12 +81,27 @@ function skipTimer(completedCycle) {
     if (workingTime == true) {
         workingTime = false;
         if (cycleCount === 3) {
-            window.alert("Time for a long break!");
-            remainingTime = catConfig.longBreakTime;
+            showModal (
+                "Long Break Time!",
+                "Time for a long break!",
+                "Start Break",
+                function () {
+                    remainingTime = catConfig.longBreakTime;
+                    document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                    startTimer();
+                }
+            );
         } else {
-            window.alert("Time for a short break!");
-            remainingTime = catConfig.shortBreakTime;
-
+            showModal (
+                "Short Break Time!",
+                "Time for a short break!",
+                "Start Break",
+                function () {
+                    remainingTime = catConfig.shortBreakTime;
+                    document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                    startTimer();
+                }
+            );
         }
     } else {     
         workingTime = true;
@@ -103,18 +123,29 @@ function skipTimer(completedCycle) {
 
             window.mainAPI.savesession(sessionData);
 
-            window.alert(`You have completed ${cycleCount} cycles! Back to the main menu.`);
-            window.location.replace("../index.html");
-
+            showModal (
+                "Session Complete!",
+                `You have completed ${cycleCount} cycles! Back to the main menu.`,
+                "Back to Main Menu",
+                function () {
+                    window.location.replace("../index.html");
+                }
+            )
             return;
         } else {
-            window.alert(`Back to work! You have completed ${cycleCount} cycle(s)! Keep going!`); 
+            showModal (
+                "Back to Work!",
+                `Back to work! You have completed ${cycleCount} cycle(s)! Keep going!`,
+                "Start Work",
+                function () {
+                    remainingTime = catConfig.workTime;
+                    document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                    startTimer();
+                }
+            ); 
         }
     }
-    document.getElementById("timer-display").textContent = formatTime(remainingTime);
-    startTimer();
     document.getElementById("play-icon").src = "../assets/icons/play-btn.png";
-    // playButton.textContent = "PAUSE";
     isRunning = true;   
 }
 
@@ -171,3 +202,16 @@ function updateSessionCounter() {
         }
     });
 };
+
+function showModal(title, message, btnText, nextAction) {
+    dialogTitle.innerText = title;
+    dialogMessage.innerText = message;
+    dialogBtn.innerText = btnText;   
+
+    modalOverlay.classList.remove("hidden");
+
+    dialogBtn.onclick = function() {
+        modalOverlay.classList.add("hidden");
+        nextAction();
+    }
+}
