@@ -8,32 +8,29 @@ body {
     height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .settings-titlebar {
-    /* width: 100%; /* or whatever height your custom assets dictate */
-    height: 40px; /* or whatever height your custom assets dictate */
-    -webkit-app-region: drag; 
+    height: 40px;
     display: flex;
     align-items: center;
-    
     justify-content: space-between;
-
     padding: 0px 0px 0px 5px;
-
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid var(--stroke-color);
+    background: var(--topbar-fill);
     position: relative;
+    -webkit-app-region: drag;
 }
 
 .settings-titlebar button {
     border-radius: 6px;
-    -webkit-app-region: no-drag; 
+    -webkit-app-region: no-drag;
     cursor: pointer;
 }
 
-.app-title{
+.app-title {
     position: absolute;
-    /* adjusts the PAWSE title accordingly in the top bar */
     left: 23%;
     transform: translateX(-50%);
 }
@@ -49,12 +46,9 @@ body {
     border: none;
     border-radius: 0px;
     background: transparent;
-
     padding: 8px 0px;
-    
-    -webkit-app-region: no-drag; 
+    -webkit-app-region: no-drag;
     cursor: pointer;
-
     display: flex;
     align-items: center;
     justify-content: center;
@@ -62,11 +56,9 @@ body {
 
 .settings-window-controls button img {
     image-rendering: pixelated;
-
     width: 24px;
     height: 24px;
     object-fit: contain;
-
     pointer-events: none;
     -webkit-user-drag: none;
 }
@@ -75,22 +67,21 @@ body {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    
     gap: 12px;
     width: 100%;
-    
     background: transparent;
     border: none;
     cursor: pointer;
-}   
+}
 
 .top-card {
-    padding: 16px 16px 0px 16px
+    padding: 16px 16px 0px 16px;
 }
 
 .bottom-card {
-    padding: 0px 16px 16px 16px
+    padding: 0px 16px 16px 16px;
 }
+
 .nav-icon {
     width: 20px;
     height: 20px;
@@ -101,45 +92,41 @@ body {
     margin-top: auto;
 }
 
-.settings{
+.settings {
     display: flex;
     flex: 1;
     overflow: hidden;
 }
 
-.hidden{
+.hidden {
     display: none;
 }
 
 .side-bar {
     width: 180px;
-    border-right: 1px solid black;
-
+    border-right: 1px solid var(--stroke-color);
     display: flex;
     flex-direction: column;
 }
 
-.main-bar{
+.main-bar {
     flex: 1;
     overflow-y: auto;
 }
 
 #dashboard-content h1 {
     font-size: 20px;
-    padding-left: 24px;
-    margin-bottom: 24px;
-    margin-top: 32px;
     padding: 0px 24px;
+    margin-top: 32px;
+    margin-bottom: 24px;
 }
 
 .analytics-card {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    
     width: 153px;
     height: 102px;
-
     border-radius: 12px;
     background-color: #CBE7FF;
 }
@@ -159,7 +146,6 @@ body {
 
 .about-header {
     padding: 32px 24px 24px 24px;
-
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -168,7 +154,6 @@ body {
 .companions-section h1 {
     text-align: left;
     padding-left: 24px;
-
     margin-top: 0px;
     margin-bottom: 24px;
     font-size: 20px;
@@ -177,17 +162,14 @@ body {
 .companion-card {
     padding: 0px 24px;
     margin-bottom: 16px;
-
     display: flex;
     flex-direction: row;
 }
 
 .companion-text {
     margin: 10px 10px 10px 144px;
-
     display: flex;
     flex-direction: column;
-
     gap: 8px;
 }
 
@@ -212,4 +194,5 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+}
 }

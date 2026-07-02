@@ -113,7 +113,8 @@ function skipTimer(completedCycle) {
     }
     document.getElementById("timer-display").textContent = formatTime(remainingTime);
     startTimer();
-    playButton.textContent = "PAUSE";
+    document.getElementById("play-icon").src = "../assets/icons/play-btn.png";
+    // playButton.textContent = "PAUSE";
     isRunning = true;   
 }
 
@@ -132,23 +133,25 @@ let playButton = document.getElementById("play-btn");
 let skipButton = document.getElementById("skip-btn");
 
 soundButton.addEventListener("click", () => {
+    const soundIcon = document.getElementById("sound-icon");
     if(soundEnabled) {
         soundEnabled = false;
-        soundButton.textContent = "SOUND: OFF";
+        soundIcon.src = "../assets/icons/soundoff-btn.png";
     }else{
         soundEnabled = true;
-        soundButton.textContent = "SOUND: ON";
+        soundIcon.src = "../assets/icons/soundon-btn.png";
     }
 });
 
 playButton.addEventListener("click", () => {
+    const playIcon = document.getElementById("play-icon");
     if(isRunning) {
         pauseTimer();
-        playButton.textContent = "PLAY";
+        playIcon.src="../assets/icons/play-btn.png";
         isRunning = false;
     }else{
         startTimer();
-        playButton.textContent = "PAUSE";
+        playIcon.src="../assets/icons/pause-btn.png";
         isRunning = true;
     }   
 });

@@ -4,15 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!--<title>Document</title>-->
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="settings.css">
 </head>
 <body>
     <header class="settings-titlebar">
-        <div class="">
+        <div>
             <span>L</span>
-	        <span class="app-title">PAWSE</span>
+            <span class="app-title">PAWSE</span>
         </div>
-        <div class="settings-window-controls">            
+        <div class="settings-window-controls">
             <button id="minimize-btn">
                 <img src="assets/icons/minimize-btn.png" alt="minimize">
             </button>
@@ -40,25 +42,25 @@
         </div>
         <div class="main-bar">
             <div id="dashboard-content">
-                <h1>Your Progress</h1>
+                <h1 class="font-pixel-36-medium">Your Progress</h1>
                 <div class="analytics-content">
                     <div class="analytics-card">
-                        <span>TOTAL FOCUS TIME<br></span>
-                        <span>TODAY<br></span>
-                        <span class="card-data" id="today_work_seconds">0</span>
+                        <span class="font-inter-10-medium">TOTAL FOCUS TIME<br></span>
+                        <span class="font-inter-10-medium">TODAY<br></span>
+                        <span class="card-data font-inter-20-semibold" id="today_work_seconds">0</span>
                     </div>
                     <div class="analytics-card">
-                        <span>COMPLETED<br></span>
-                        <span>POMODOROS<br></span>
-                        <span class="card-data" id="historical_pomodoro">0</span>
+                        <span class="font-inter-10-medium">COMPLETED<br></span>
+                        <span class="font-inter-10-medium">POMODOROS<br></span>
+                        <span class="card-data font-inter-20-semibold" id="historical_pomodoro">0</span>
                     </div>
                     <div class="analytics-card">
-                        <span>FAVORITE<br></span>
-                        <span>COMPANION<br></span>
-                        <span class="card-data" id="favorite_cat">None</span>
+                        <span class="font-inter-10-medium">FAVORITE<br></span>
+                        <span class="font-inter-10-medium">COMPANION<br></span>
+                        <span class="card-data font-inter-20-semibold" id="favorite_cat">None</span>
                     </div>
                 </div>
-                <h1>This Week's Focus</h1>
+                <h1 class="font-pixel-20-medium">This Week's Focus</h1>
                 <div>
 
                 </div>
@@ -122,7 +124,7 @@
                     </div>
                 </div>
             </div>
-            <div id="settings-content" class="hidden">
+            <div id="settings-content" class="hidden font-inter-12-regular">
                 Welcome to the Settings!
             </div>
         </div>

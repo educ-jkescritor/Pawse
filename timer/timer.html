@@ -25,18 +25,38 @@
             </button>
         </div>
     </header>
-    <h1 id="timer-display">00:00</h1>
-    <div class="session-counter">
-        <span class="fish-icon">🐟︎</span>
-        <span class="fish-icon">🐟︎</span>
-        <span class="fish-icon">🐟︎</span>
-        <span class="fish-icon">🐟︎</span>
+
+    <div class="main-content">
+        <div id="timer-container">
+            <span id="timer-display" class="font-pixel-64-bold">00:00</span>
+        </div>
+
+        <div class="session-counter">
+            <span class="fish-icon">🐟︎</span>
+            <span class="fish-icon">🐟︎</span>
+            <span class="fish-icon">🐟︎</span>
+            <span class="fish-icon">🐟︎</span>
+        </div>
+
+        <div class="cat-area">
+
+        </div>
+
+        <div class="timer-controls">
+            <button id="sound-btn" title="Toggle Sound">
+                <img src="../assets/icons/soundoff-btn.png" alt="Sound" id="sound-icon">
+            </button>
+            <button id="play-btn" title="Play/Pause">
+                <img src="../assets/icons/play-btn.png" alt="Play/Pause" id="play-icon">
+            </button>
+            <button id="skip-btn" title="Skip">
+                <img src="../assets/icons/skip-btn.png" alt="Skip">
+            </button>
+        </div>
+
     </div>
-    <div class="timer-controls">
-        <button id="sound-btn">SOUND: OFF</button>
-        <button id="play-btn">PAUSE</button>
-        <button id="skip-btn">SKIP</button>
     </div>
+
     <script src="timer.js"></script>
     <script src="../titlebar.js"></script>
 </body>
