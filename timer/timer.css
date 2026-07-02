@@ -67,7 +67,7 @@
 
 #timer-container{
     width: 100%;
-    border: 1px solid var(--stroke-color);
+    border: 1px solid var(--stroke-color); /* To be removed */
     text-align: center;
     line-height: 1; /* controls the space consumed by the text */
 }
@@ -75,7 +75,7 @@
 .session-counter{
     width: 100%;
     padding: 4px;
-    border: 1px solid var(--stroke-color);
+    border: 1px solid var(--stroke-color); /* To be removed */
     display: flex;
     justify-content: center;
     gap: 10px;
@@ -93,7 +93,7 @@
     width: 100%;
     height: 220px;
     padding: 8px 0px;
-    border: 1px solid var(--stroke-color);
+    border: 1px solid var(--stroke-color); /* To be removed */
     justify-content: center;
 }
 
@@ -105,4 +105,23 @@
     gap: 24px;
 
     border: 1px solid var(--stroke-color);
+}
+
+.timer-controls button {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: var(--sys-blue-solid);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.timer-controls button img {
+        width: 20px;
+        height: 20px;
+        object-fit: contain;
+        /* pointer-events: none; Prevents dragging issues */
 }
