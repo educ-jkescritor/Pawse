@@ -189,6 +189,10 @@ p {
     overflow: hidden;
 }
 
+.hidden{
+    display: none;
+} */
+
 /* #dashboard-content h1 {
     font-size: 20px;
     padding: 0px 24px;
