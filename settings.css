@@ -11,51 +11,29 @@ body {
     overflow: hidden;
 }
 
+/* --- TOP BAR --- */
+
 .settings-titlebar {
+    width: 100%;
     height: 40px;
     -webkit-app-region: drag;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0px 0px 0px 5px;
+    padding: 8px 12px;
     border-bottom: 1px solid var(--stroke-color);
     background: var(--topbar-fill);
     position: relative;
 }
 
-.settings-titlebar button {
-    border-radius: 6px;
-    -webkit-app-region: no-drag; 
-    cursor: pointer;
-}
-
-.app-title{
-    position: absolute;
-    /* adjusts the PAWSE title accordingly in the top bar */
-    left: 23%;
-    transform: translateX(-50%);
-}
-
-.settings-sidebar {
-    display: flex;
-    align-items: center;
-    
-    gap: 8px;
-
-    margin: 8px 0px 8px 12px;
-}
-
 .settings-window-controls {
-    margin-left: auto;
     display: flex;
     gap: 8px;
-    padding-right: 12px;
     align-items: center;
 }
 
 .settings-window-controls button {
     border: none;
-    border-radius: 0px;
     background: transparent;
     padding: 8px 0px;
     -webkit-app-region: no-drag;
@@ -72,6 +50,17 @@ body {
     object-fit: contain;
     pointer-events: none;
     -webkit-user-drag: none;
+}
+
+/* --- SIDE BAR --- */
+
+.settings-sidebar {
+    display: flex;
+    align-items: center;
+    
+    gap: 8px;
+
+    margin: 8px 0px 8px 12px;
 }
 
 .nav-card {
