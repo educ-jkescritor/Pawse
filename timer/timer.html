@@ -10,7 +10,7 @@
 <body>
     <header class="main-titlebar">
         <div class="main-sidebar">
-            <button id="settings-btn">O</button>
+            <button id="menu-btn">O</button>
         </div>
         <div class="app-title">PAWSE</div>
         <div class="main-window-controls">
@@ -47,7 +47,7 @@
                 <img src="../assets/icons/soundoff-btn.png" alt="Sound" id="sound-icon">
             </button>
             <button id="play-btn" title="Play/Pause">
-                <img src="../assets/icons/play-btn.png" alt="Play/Pause" id="play-icon">
+                <img src="../assets/icons/pause-btn.png" alt="Play/Pause" id="play-icon">
             </button>
             <button id="skip-btn" title="Skip">
                 <img src="../assets/icons/skip-btn.png" alt="Skip">
@@ -60,6 +60,16 @@
             <h2 id="dialog-title">Dialog Title</h2>
             <p id="dialog-message">Dialog Message</p>
             <button id="dialog-btn" class="confirmation_button">Button</button>
+        </div>
+    </div>
+
+    <div id="resize-modal-overlay" class="hidden">
+        <div class="custom-dialog">
+            <h2 id="select-mode">Select Mode</h2>
+            <div class="resize-option">
+                <button id="timer-only" class="confirmation_button">Timer Only</button>
+                <button id="cat-only" class="confirmation_button">Cat Only</button>
+            </div>
         </div>
     </div>
 

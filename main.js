@@ -69,6 +69,24 @@ ipcMain.on('maximize-window', (event) => {
   }
 });
 
+ipcMain.on('resize-window', (event, mode) => {
+  const senderWindow = BrowserWindow.fromWebContents(event.sender);
+  
+  // Temporarily unlock the window so Electron allows us to change its size programmatically
+  senderWindow.setResizable(true);
+  
+  if (mode === 'timer-only') {
+    senderWindow.setSize(240, 100); 
+  } else if (mode === 'cat-only') {
+    senderWindow.setSize(240, 240); 
+  } else {
+    senderWindow.setSize(310, 430); 
+  }
+  
+  // Lock the window again so the user cannot manually drag the edges
+  senderWindow.setResizable(false);
+});
+
 ipcMain.on('close-window', (event) => {
   const senderWindow = BrowserWindow.fromWebContents(event.sender);
   senderWindow.close();

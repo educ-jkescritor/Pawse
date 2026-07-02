@@ -127,7 +127,7 @@
 }
 
 /* --- CUSTOM MODAL STYLES --- */
-#modal-overlay {
+#modal-overlay, #resize-modal-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -140,6 +140,12 @@
     align-items: center;
 }
 
+.resize-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+}
 .hidden {
     display: none !important; /* The magic invisibility cloak */
 }
@@ -153,4 +159,30 @@
     width: 320px; /* Forces a consistent, wide shape */
     max-width: 80%;
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* --- MINI MODE ILLUSIONS --- */
+body.timer-only-mode .main-titlebar,
+body.timer-only-mode .cat-area, 
+body.timer-only-mode .session-counter,
+body.timer-only-mode .timer-controls {
+    display: none !important;
+}
+
+body.cat-only-mode .main-titlebar,
+body.cat-only-mode #timer-container, 
+body.cat-only-mode .timer-controls, 
+body.cat-only-mode .session-counter {
+    display: none !important;
+}
+
+body.timer-only-mode .main-content,
+body.cat-only-mode .main-content {
+    padding: 0;
+}
+
+body.timer-only-mode, 
+body.cat-only-mode {
+    -webkit-app-region: drag; /* Makes the entire window draggable */
+    user-select: none; /* Prevents text highlighting while dragging */
 }

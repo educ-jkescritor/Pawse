@@ -215,3 +215,40 @@ function showModal(title, message, btnText, nextAction) {
         nextAction();
     }
 }
+
+let resizeModal = document.getElementById("resize-modal-overlay");
+
+if (resizeModal !== null) {
+    resizeModal.addEventListener("click", function(event) {
+        if (event.target === resizeModal) {
+            resizeModal.classList.add("hidden");
+        }
+    });   
+}
+
+
+
+let timerOnlyButton = document.getElementById("timer-only");
+let catOnlyButton = document.getElementById("cat-only");
+
+if (timerOnlyButton !== null) {
+    timerOnlyButton.onclick = function() {
+        resizeModal.classList.add("hidden");
+        document.body.classList.add("timer-only-mode");
+        window.mainAPI.resize('timer-only');
+    }
+
+    catOnlyButton.onclick = function() {
+        resizeModal.classList.add("hidden");
+        document.body.classList.add("cat-only-mode");
+        window.mainAPI.resize('cat-only');
+    }
+}
+
+// ESCAPE HATCH: Double-click anywhere to restore the window!
+document.body.addEventListener('dblclick', () => {
+    if (document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode")) {
+        document.body.classList.remove("timer-only-mode", "cat-only-mode");
+        window.mainAPI.resize('default');
+    }
+});
