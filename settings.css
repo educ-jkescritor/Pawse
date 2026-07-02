@@ -31,11 +31,13 @@ body {
     cursor: pointer;
 }
 
-.app-title{
-    position: absolute;
-    /* adjusts the PAWSE title accordingly in the top bar */
-    left: 23%;
-    transform: translateX(-50%);
+.settings-sidebar {
+    display: flex;
+    align-items: center;
+    
+    gap: 8px;
+
+    margin: 8px 0px 8px 12px;
 }
 
 .settings-window-controls {
@@ -108,7 +110,7 @@ body {
 }
 
 .hidden{
-    display: none;
+    display: none !important;
 }
 
 .side-bar {
@@ -212,4 +214,33 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+#settings-content {
+    padding: 32px 24px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    
+    gap: 8px;
+}
+
+.workflow, .audio, .system {
+    padding: 10px;
+
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.settings-item {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    width: 100%;
 }

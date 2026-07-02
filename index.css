@@ -52,11 +52,13 @@ body {
     cursor: pointer;
 }
 
-.app-title{
-    position: absolute;
-    /* adjusts the PAWSE title accordingly in the top bar */
-    left: 23%;
-    transform: translateX(-50%);
+.main-sidebar {
+    display: flex;
+    align-items: center;
+    
+    gap: 8px;
+
+    margin: 8px 0px 8px 12px;
 }
 
 .main-window-controls {
