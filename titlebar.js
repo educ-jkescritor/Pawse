@@ -1,4 +1,4 @@
-let settingsButton = document.getElementById("settings-btn");
+let settingsButton = document.getElementById("menu-btn");
 settingsButton.onclick = function settingsWindow() {
     window.mainAPI.settings();
 }
