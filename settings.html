@@ -35,19 +35,19 @@
                 </button>
 
                 <div class="utilities">
-                    <button id="settings-btn">
-                        <img src="assets/icons/settings.png" alt="settings">
-                        <p class="font-inter-12-medium">Settings</p>
-                    </button>
                     <button id="about-btn">
                         <img src="assets/icons/info.png" alt="about">
                         <p class="font-inter-12-medium">About</p>
+                    </button>
+                    <button id="settings-btn">
+                        <img src="assets/icons/settings.png" alt="settings">
+                        <p class="font-inter-12-medium">Settings</p>
                     </button>
                 </div>
             </div>
 
             <!-- RIGHT CONTENT AREA -->
-            <div class="main-bar">
+            <div id="dashboard-content" class="main-bar">
                 <p class="font-inter-20-semibold">Your Progress</span>
 
                 <div class="analytics-container">
@@ -80,15 +80,17 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- <div id="about-content" class="hidden">
-                    <div class="about-header">
-                        <h1>About PAWSE</h1>
-                        <span>Version 1.0.0 | Cat-themed Productivity Timer</span>
-                        <span>Sample Mission Statement: PAWSE was created to replace stressful alarms with gentle companions, helping you build healthy focus habits without the burnout.</span>
-                    </div>
-                    <div class="companions-section">
-                        <h1>Meet Your Companions</h1>
+            <div id="about-content" class="main-bar hidden">
+                <div class="about-header">
+                    <p class="font-inter-20-semibold">About PAWSE</p>
+                    <p class="font-inter-12-regular">Version 1.0.0 | Cat-themed Productivity Timer</p>
+                    <p class="font-inter-12-regular">Sample Mission Statement: PAWSE was created to replace stressful alarms with gentle companions, helping you build healthy focus habits without the burnout.</p>
+                </div>
+
+                <div class="companions-section">
+                        <p class="font-inter-16-medium">Meet Your Companions</p>
                         <div class="companion-card tuxedo-info">
                             <span>image</span>
                             <div class="companion-text">
@@ -139,11 +141,12 @@
                             <span>Report a Bug</span>
                         </div>
                     </div>
-                </div>
-                <div id="settings-content" class="hidden">
-                    Welcome to the Settings!
-                </div>  -->
             </div>
+
+            <div id="settings-content" class="main-bar hidden">
+                    Welcome to the Settings!
+            </div>
+        </div>
     </div>
 
     <script src="settings.js"></script>

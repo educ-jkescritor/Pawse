@@ -149,6 +149,11 @@ p {
     justify-content: flex-end;
 }
 
+/* HIDDEN */
+.hidden{
+    display: none;
+} */
+
 /* .nav-card {
     display: flex;
     align-items: center;
@@ -183,10 +188,6 @@ p {
     flex: 1;
     overflow: hidden;
 }
-
-.hidden{
-    display: none;
-} */
 
 /* #dashboard-content h1 {
     font-size: 20px;
