@@ -1,4 +1,29 @@
-let remainingTime = 25 * 60;
+const catConfiguration = {   
+    orange: {
+        workTime: 15 * 60,
+        shortBreakTime: 3 * 60,
+        longBreakTime: 12 * 60,
+        dbId: "orange_cat"
+    },
+    tuxedo: {
+        workTime: 25 * 60,
+        shortBreakTime: 5 * 60,
+        longBreakTime: 20 * 60,
+        dbId: "tuxedo_cat"
+    },   
+    black: {
+        workTime: 50 * 60,
+        shortBreakTime: 10 * 60,
+        longBreakTime: 40 * 60,
+        dbId: "black_cat"
+    }
+}
+
+const urlParams = new URLSearchParams(window.location.search);
+const catType = urlParams.get('cat');
+const catConfig = catConfiguration[catType];
+
+let remainingTime = catConfig.workTime;
 let workingTime = true;
 let cycleCount = 0;
 let timerId = null;
@@ -15,6 +40,8 @@ function formatTime(remainingTime) {
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
+document.getElementById("timer-display").textContent = formatTime(remainingTime);     
+
 function startTimer() {
     timerId = setInterval(() => {
         remainingTime--;
@@ -25,7 +52,8 @@ function startTimer() {
             actualBreak++;
         }
 
-        document.getElementById("tuxedo_timer").textContent = formatTime(remainingTime);        
+        document.getElementById("timer-display").textContent = formatTime(remainingTime);     
+
         if(remainingTime === 0) {
             setTimeout(() => {    
                 skipTimer(true);
@@ -49,15 +77,15 @@ function skipTimer(completedCycle) {
         workingTime = false;
         if (cycleCount === 3) {
             window.alert("Time for a long break!");
-            remainingTime = 20 * 60;
+            remainingTime = catConfig.longBreakTime;
         } else {
             window.alert("Time for a short break!");
-            remainingTime = 5 * 60;
+            remainingTime = catConfig.shortBreakTime;
 
         }
     } else {     
         workingTime = true;
-        remainingTime = 25 * 60;
+        remainingTime = catConfig.workTime;
         cycleCount++;
         
         updateSessionCounter();
@@ -65,7 +93,7 @@ function skipTimer(completedCycle) {
         if (cycleCount === 4) {
 
             let sessionData = {
-                cat_type: 'tuxedo_cat',
+                cat_type: catConfig.dbId,
                 total_work_seconds: actualWork,
                 total_break_seconds: actualBreak,
                 total_work: workCount,
@@ -76,14 +104,14 @@ function skipTimer(completedCycle) {
             window.mainAPI.savesession(sessionData);
 
             window.alert(`You have completed ${cycleCount} cycles! Back to the main menu.`);
-            window.location.replace("../../index.html");
+            window.location.replace("../index.html");
 
             return;
         } else {
             window.alert(`Back to work! You have completed ${cycleCount} cycle(s)! Keep going!`); 
         }
     }
-    document.getElementById("tuxedo_timer").textContent = formatTime(remainingTime);
+    document.getElementById("timer-display").textContent = formatTime(remainingTime);
     startTimer();
     playButton.textContent = "PAUSE";
     isRunning = true;   

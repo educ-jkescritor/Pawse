@@ -1,0 +1,87 @@
+.main-titlebar {
+    /* width: 100%; /* or whatever height your custom assets dictate */
+    height: 40px; /* or whatever height your custom assets dictate */
+    -webkit-app-region: drag; 
+    display: flex;
+    align-items: center;
+    
+    justify-content: space-between;
+
+    padding: 0px 0px 0px 5px;
+
+    border-bottom: 1px solid black;
+    position: relative;
+}
+
+.main-titlebar button {
+    border-radius: 6px;
+    -webkit-app-region: no-drag; 
+    cursor: pointer;
+}
+
+.app-title{
+    position: absolute;
+    /* adjusts the PAWSE title accordingly in the top bar */
+    left: 23%;
+    transform: translateX(-50%);
+}
+
+.main-window-controls {
+    display: flex;
+    gap: 8px;
+    padding-right: 12px;
+    align-items: center;
+}
+
+.main-window-controls button {
+    border: none;
+    border-radius: 0px;
+    background: transparent;
+
+    padding: 8px 0px;
+    
+    -webkit-app-region: no-drag; 
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.main-window-controls button img {
+    image-rendering: pixelated;
+
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+
+    pointer-events: none;
+    -webkit-user-drag: none;
+}
+
+#timer-display {
+    text-align: center;
+    font-size: 48px;
+    margin-top: 10px;
+}
+
+.timer-controls {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.session-counter{
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.fish-icon {
+    opacity: 0.3;
+}
+
+.fish-icon.active {
+    opacity: 1;
+}
