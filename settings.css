@@ -13,6 +13,7 @@ body {
 
 .settings-titlebar {
     height: 40px;
+    -webkit-app-region: drag;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -20,22 +21,17 @@ body {
     border-bottom: 1px solid var(--stroke-color);
     background: var(--topbar-fill);
     position: relative;
-    -webkit-app-region: drag;
-}
-
-.settings-titlebar button {
-    border-radius: 6px;
-    -webkit-app-region: no-drag;
-    cursor: pointer;
 }
 
 .app-title {
-    position: absolute;
-    left: 23%;
-    transform: translateX(-50%);
+    font-family: var(--font-pixel);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-black);
 }
 
 .settings-window-controls {
+    margin-left: auto;
     display: flex;
     gap: 8px;
     padding-right: 12px;
@@ -194,5 +190,4 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-}
 }
