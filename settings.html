@@ -152,51 +152,78 @@
                 <div id="settings-content" class="tab-panel hidden">
                     <p class="font-inter-20-semibold">Settings</p>
 
-                    <div class="settings-section">                
+                    <div class="settings-group">                
                         <p class="font-inter-12-medium">WORKFLOW</p>
                         <div class="settings-item strict-mode">
                             <p class="font-inter-12-regular">Strict Mode</p>
-                            <input type="checkbox" class="strict-toggle">
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="strict-toggle">
+                                <span class="slider"></span>
+                            </label>
                         </div>
                         <div class="settings-item auto-start-breaks">
                             <p class="font-inter-12-regular">Auto-Start Breaks</p>
-                            <input type="checkbox" class="break-toggle">
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="break-toggle">
+                                <span class="slider"></span>
+                            </label>
                         </div>
                         <div class="settings-item auto-start-pomodoros">
                             <p class="font-inter-12-regular">Auto-Start Pomodoros</p>
-                            <input type="checkbox" class="pomodoro-toggle">
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="pomodoro-toggle">
+                                <span class="slider"></span>
+                            </label>
                         </div>
                     </div>
 
-                    <div class="settings-section">
+                    <div class="settings-group">
                         <p class="font-inter-12-medium">AUDIO</p>
                         <div class="settings-item ambient-volume">
                             <p class="font-inter-12-regular">Master Ambient Volume</p>
-                            <input type="checkbox" class="ambient-toggle">
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="ambient-toggle">
+                                <span class="slider"></span>
+                            </label>
                         </div>
                         <div class="settings-item long-break-interval">
                             <p class="font-inter-12-regular">Companion Purr Volume</p>
-                            <input type="checkbox" class="purr-toggle">
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="purr-toggle">
+                                <span class="slider"></span>
+                            </label>
                         </div>
                         <div class="settings-item long-break-interval">
                             <p class="font-inter-12-regular">Tick Sound</p>
-                            <input type="checkbox" class="tick-toggle">
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="tick-toggle">
+                                <span class="slider"></span>
+                            </label>
                         </div>
                     </div>
 
-                    <div class="settings-section">
+                    <div class="settings-group">
                         <p class="font-inter-12-medium">SYSTEM</p>
                         <div class="settings-item always-on-top">
                             <p class="font-inter-12-regular">Always on Top</p>
-                            <input type="checkbox" class="top-toggle">
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="top-toggle">
+                                <span class="slider"></span>
+                            </label>
                         </div>
                         <div class="settings-item launch-on-startup">
-                            <p class="font-inter-12-regular text-gray">Launch on Startup</p>
-                            <input type="checkbox" class="startup-toggle">
+                            <p class="font-inter-12-regular text-gray disabled">Launch on Startup</p>
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="startup-toggle" disabled>
+                                <span class="slider"></span>
+                            </label>
                         </div>
                         <div class="settings-item visual-theme">
-                            <p class="font-inter-12-regular text-gray">Select your visual theme</p>
-                            <input type="checkbox" class="theme-toggle">
+                            <p class="font-inter-12-regular text-gray disabled">Select your visual theme</p>
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="theme-toggle" disabled>
+                                <span class="slider"></span>
+                            </label>
                         </div>
                     </div>
                 </div>

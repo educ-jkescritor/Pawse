@@ -238,55 +238,76 @@ p {
 }
 
 /* SETTINGS */
-.settings-section {
+.settings-group {
+    width: 100%;
+    padding: 0px 12px;;
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
 .settings-item {
+    width: 100%;
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
 }
 
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 34px;
+    height: 20px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: var(--stroke-color);
+    transition: 0.4s;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: var(--bg-main);
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked + .slider {
+    background-color: var(--sys-blue-solid);
+}
+
+.toggle-switch input:checked + .slider:before {
+    transform: translateX(14px);
+}
+
+.settings-item.disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.settings-item.disabled * {
+    pointer-events: none;
+}
+
 /* HIDDEN */
 .hidden{
     display: none;
-}
-
-/* .nav-card {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 12px;
-    width: 100%;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-}
-
-.top-card {
-    padding: 16px 16px 0px 16px;
-}
-
-.bottom-card {
-    padding: 0px 16px 16px 16px;
-}
-
-.nav-icon {
-    width: 20px;
-    height: 20px;
-    object-fit: contain;
-}
-
-.bottom-nav {
-    margin-top: auto;
-}
-
-.settings {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
 }
