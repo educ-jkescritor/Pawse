@@ -1,14 +1,23 @@
+let selectedCat = null;
+
 let orangeButton = document.getElementById("orange_cat");
-orangeButton.onclick = function orangeScreen() {
-    window.location.assign("timer/timer.html?cat=orange");
+orangeButton.onclick = function () {
+    selectedCat = "orange";
 }
 
 let tuxedoButton = document.getElementById("tuxedo_cat");
-tuxedoButton.onclick = function tuxedoScreen() {
-    window.location.assign("timer/timer.html?cat=tuxedo");
+tuxedoButton.onclick = function () {
+    selectedCat = "tuxedo";
 }
 
 let blackButton = document.getElementById("black_cat");
-blackButton.onclick = function blackScreen() {
-    window.location.assign("timer/timer.html?cat=black");
+blackButton.onclick = function () {
+    selectedCat = "black";
+}
+
+let confirmButton = document.querySelector(".confirmation_button");
+confirmButton.onclick = function () {
+    if (selectedCat) {
+        window.location.assign(`timer/timer.html?cat=${selectedCat}`);
+    }
 }

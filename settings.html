@@ -8,127 +8,232 @@
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="settings.css">
 </head>
-<body>
-    <header class="settings-titlebar">
-        <div>
-            <span>L</span>
-            <span class="app-title">PAWSE</span>
-        </div>
-        <div class="settings-window-controls">
-            <button id="minimize-btn">
-                <img src="assets/icons/minimize-btn.png" alt="minimize">
-            </button>
-            <button id="close-btn">
-                <img src="assets/icons/close-btn.png" alt="close">
-            </button>
-        </div>
-    </header>
-    <div class="settings">
-        <div class="side-bar">
-            <button id="dashboard-btn" class="nav-card top-card">
-                <img src="assets/icons/menu.png" alt="dashboard" class="nav-icon menu-icon">
-                <span>Dashboard</span>
-            </button>
-            <div class="bottom-nav">
-                <button id="settings-btn" class="nav-card bottom-card">
-                    <img src="assets/icons/settings.png" alt="settings" class="nav-icon settings-icon">
-                    <span>Settings</span>
-                </button>
-                <button id="about-btn" class="nav-card bottom-card">
-                    <img src="assets/icons/info.png" alt="about" class="nav-icon info-icon">
-                    <span>About</span>
-                </button>
-            </div>
-        </div>
-        <div class="main-bar">
-            <div id="dashboard-content">
-                <h1 class="font-pixel-36-medium">Your Progress</h1>
-                <div class="analytics-content">
-                    <div class="analytics-card">
-                        <span class="font-inter-10-medium">TOTAL FOCUS TIME<br></span>
-                        <span class="font-inter-10-medium">TODAY<br></span>
-                        <span class="card-data font-inter-20-semibold" id="today_work_seconds">0</span>
-                    </div>
-                    <div class="analytics-card">
-                        <span class="font-inter-10-medium">COMPLETED<br></span>
-                        <span class="font-inter-10-medium">POMODOROS<br></span>
-                        <span class="card-data font-inter-20-semibold" id="historical_pomodoro">0</span>
-                    </div>
-                    <div class="analytics-card">
-                        <span class="font-inter-10-medium">FAVORITE<br></span>
-                        <span class="font-inter-10-medium">COMPANION<br></span>
-                        <span class="card-data font-inter-20-semibold" id="favorite_cat">None</span>
-                    </div>
-                </div>
-                <h1 class="font-pixel-20-medium">This Week's Focus</h1>
-                <div>
 
+<body>
+    <div class="page-container">
+        <!-- TOP BAR -->
+        <header class="settings-titlebar">
+            <div class="app-title font-pixel-16-bold">PAWSE</div>
+            <div class="main-window-controls">
+                <button id="minimize-btn">
+                    <img src="assets/icons/minimize-btn.png" alt="minimize">
+                </button>
+                <button id="close-btn">
+                    <img src="assets/icons/close-btn.png" alt="close">
+                </button>
+            </div>
+        </header>
+
+        <!-- SETTINGS LAYOUT -->
+        <div class="settings-layout">
+
+            <!-- LEFT SIDE BAR -->
+            <div class="side-bar">
+                <button id="dashboard-btn">
+                    <img src="assets/icons/menu.png" alt="dashboard">
+                    <p class="font-inter-12-medium">Dashboard</p>
+                </button>
+
+                <div class="utilities">
+                    <button id="about-btn">
+                        <img src="assets/icons/info.png" alt="about">
+                        <p class="font-inter-12-medium">About</p>
+                    </button>
+                    <button id="settings-btn">
+                        <img src="assets/icons/settings.png" alt="settings">
+                        <p class="font-inter-12-medium">Settings</p>
+                    </button>
                 </div>
             </div>
-            <div id="about-content" class="hidden">
-                <div class="about-header">
-                    <h1>About PAWSE</h1>
-                    <span>Version 1.0.0 | Cat-themed Productivity Timer</span>
-                    <span>Sample Mission Statement: PAWSE was created to replace stressful alarms with gentle companions, helping you build healthy focus habits without the burnout.</span>
-                </div>
-                <div class="companions-section">
-                    <h1>Meet Your Companions</h1>
-                    <div class="companion-card tuxedo-info">
-                        <span>image</span>
-                        <div class="companion-text">
-                            <span>Tuxedo Cat</span>
-                            <div class="companion-attributes">
-                                <span>Classic</span>
-                                <span>20m Work</span>
-                                <span>5m Short Break</span>
-                                <span>20m Long Break</span>
-                            </div>
-                        <span>Methodical and refined, Tux believes in working smart, not hard. His balanced 25-minute intervals ensure steady progress. He rewards your focus with a steady, rhythmic purr.</span>
+
+            <!-- RIGHT CONTENT AREA -->
+            <div class="main-bar">
+                <div id="dashboard-content" class="tab-panel">
+                    <p class="font-inter-20-semibold">Your Progress</span>
+
+                    <div class="analytics-container">
+                        <div class="analytics-card">
+                            <span class="font-inter-10-regular">TOTAL FOCUS TIME<br></span>
+                            <span class="font-inter-16-medium">TODAY<br></span>
+                            <span class="card-data font-pixel-36-medium" id="today_work_seconds">0</span>
+                        </div>
+                        <div class="analytics-card">
+                            <span class="font-inter-10-regular">COMPLETED<br></span>
+                            <span class="font-inter-16-medium">POMODOROS<br></span>
+                            <span class="card-data font-pixel-36-medium" id="historical_pomodoro">0</span>
+                        </div>
+                        <div class="analytics-card" id="favorite-cat-card">
+                            <span class="font-inter-10-regular">FAVORITE<br></span>
+                            <span class="font-inter-16-medium">COMPANION<br></span>
+                            <span class="card-data font-pixel-36-medium" id="favorite_cat">None</span>
                         </div>
                     </div>
-                    <div class="companion-card orange-info">
-                        <span>image</span>
-                        <div class="companion-text">
-                            <span>Orange Cat</span>
-                            <div class="companion-attributes">
-                                <span>Sprint</span>
-                                <span>15m Work</span>
-                                <span>3m Short Break</span>
-                                <span>12m Long Break</span>
+
+                    <div class="graph-container">
+                        <p class="font-inter-16-medium">This Week's Focus</p>
+                        <div class="graph">
+                            <div class="week-selection">
+                                <p class="font-inter-10-regular text-gray">This Week</p>
+                                <!-- insert chevron icon -->
                             </div>
-                        <span>Methodical and refined, Tux believes in working smart, not hard. His balanced 25-minute intervals ensure steady progress. He rewards your focus with a steady, rhythmic purr.</span>
-                        </div>
-                    </div>
-                    <div class="companion-card black-info">
-                        <span>image</span>
-                        <div class="companion-text">
-                            <span>Black Cat</span>
-                            <div class="companion-attributes">
-                                <span>Sprint</span>
-                                <span>50m Work</span>
-                                <span>10m Short Break</span>
-                                <span>40m Long Break</span>
+                            <div class="graph-bars">
+                                <!-- insert graph bars here w/ day labels -->
                             </div>
-                        <span>Methodical and refined, Tux believes in working smart, not hard. His balanced 25-minute intervals ensure steady progress. He rewards your focus with a steady, rhythmic purr.</span>
                         </div>
                     </div>
                 </div>
-                <div class="about-footer">
-                    <div class="footer-credit">
-                        <span>Designed & Developed with meowskrrt </span>
+
+                <div id="about-content" class="tab-panel hidden">
+                    <div class="about-header">
+                        <p class="font-inter-20-semibold">About PAWSE</p>
+                        <p class="font-inter-12-regular">Version 1.0.0 | Cat-themed Productivity Timer</p>
+                        <p class="font-inter-12-regular">PAWSE was created to replace stressful alarms with gentle companions, helping you build healthy focus habits without the burnout.</p>
                     </div>
-                    <div class="footer-link">
-                        <span>Website Link<br></span>
-                        <span>GitHub<br></span>
-                        <span>Report a Bug</span>
+                    
+                    <div class="companions-section">
+                        <p class="font-inter-16-medium">Meet Your Companions</p>
+                        <div class="companion-card tuxedo-info">
+                            <span>image</span> 
+                            <!-- Insert image here -->
+                            <div class="companion-text">
+                                <p class="font-inter-16-medium">Tux - The Tuxedo Cat</p>
+                                <div class="companion-attributes">
+                                    <p class="font-inter-10-medium">Classic</p>
+                                    <p class="font-inter-10-regular">20m Work</p>
+                                    <p class="font-inter-10-regular">5m Short Break</p>
+                                    <p class="font-inter-10-regular">20m Long Break</p>
+                                </div>
+                                <p class="font-inter-12-regular">Methodical and refined, Tux believes in working smart, not hard. His balanced 25-minute intervals ensure steady progress. He rewards your focus with a steady, rhythmic purr.</p>
+                            </div>
+                        </div>
+
+                        <div class="companion-card orange-info">
+                            <span>image</span>
+                            <!-- Insert image here -->
+                            <div class="companion-text">
+                                <p class="font-inter-16-medium">Ginger - The Orange Cat</p>
+                                <div class="companion-attributes">
+                                    <p class="font-inter-10-medium">Sprint</p>
+                                    <p class="font-inter-10-regular">15m Work</p>
+                                    <p class="font-inter-10-regular">3m Short Break</p>
+                                    <p class="font-inter-10-regular">12m Long Break</p>
+                                </div>
+                                <p class="font-inter-12-regular">Methodical and refined, Tux believes in working smart, not hard. His balanced 25-minute intervals ensure steady progress. He rewards your focus with a steady, rhythmic purr.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="companion-card black-info">
+                            <span>image</span>
+                            <!-- Insert image here -->
+                            <div class="companion-text">
+                                <p class="font-inter-16-medium">Void - The Black Cat</p>
+                                <div class="companion-attributes">
+                                    <p class="font-inter-10-medium">Focused</p>
+                                    <p class="font-inter-10-regular">50m Work</p>
+                                    <p class="font-inter-10-regular">10m Short Break</p>
+                                    <p class="font-inter-10-regular">40m Long Break</p>
+                                </div>
+                                <p class="font-inter-12-regular">Methodical and refined, Tux believes in working smart, not hard. His balanced 25-minute intervals ensure steady progress. He rewards your focus with a steady, rhythmic purr.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="about-footer">
+                        <div class="footer-credit">
+                            <p class="font-inter-12-medium">Designed & Developed with meowskrrt </p>
+                        </div>
+                        <div class="footer-links">
+                            <p class="font-inter-12-regular">GitHub</p>
+                            <!-- Insert hyperlink -->
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div id="settings-content" class="hidden font-inter-12-regular">
-                Welcome to the Settings!
+
+                <div id="settings-content" class="tab-panel hidden">
+                    <p class="font-inter-20-semibold">Settings</p>
+
+                    <!-- Workflow Settings -->
+                    <div class="settings-group">                
+                        <p class="font-inter-12-medium">WORKFLOW</p>
+                        <div class="settings-item strict-mode">
+                            <p class="font-inter-12-regular">Strict Mode</p>
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="strict-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="settings-item auto-start-breaks">
+                            <p class="font-inter-12-regular">Auto-Start Breaks</p>
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="break-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="settings-item auto-start-pomodoros">
+                            <p class="font-inter-12-regular">Auto-Start Pomodoros</p>
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="pomodoro-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Audio Settings -->
+                    <div class="settings-group">
+                        <p class="font-inter-12-medium">AUDIO</p>
+                        <div class="settings-item ambient-volume">
+                            <p class="font-inter-12-regular">Master Ambient Volume</p>
+                            <div class="slider-container">
+                                <span class="font-inter-10-regular slider-value">50%</span>
+                                <input type="range" min="0" max="100" value="50" class="volume-slider ambient-slider">
+                            </div>
+                        </div>
+                        <div class="settings-item long-break-interval">
+                            <p class="font-inter-12-regular">Companion Purr Volume</p>
+                            <div class="slider-container">
+                                <span class="font-inter-10-regular slider-value">50%</span>
+                                <input type="range" min="0" max="100" value="50" class="volume-slider purr-slider">
+                            </div>
+                        </div>
+                        <div class="settings-item long-break-interval">
+                            <p class="font-inter-12-regular">Tick Sound</p>
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="tick-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- System Settings -->
+                    <div class="settings-group">
+                        <p class="font-inter-12-medium">SYSTEM</p>
+                        <div class="settings-item always-on-top">
+                            <p class="font-inter-12-regular">Always on Top</p>
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="top-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="settings-item launch-on-startup">
+                            <p class="font-inter-12-regular text-gray disabled">Launch on Startup</p>
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="startup-toggle" disabled>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="settings-item visual-theme">
+                            <p class="font-inter-12-regular text-gray disabled">Select your visual theme</p>
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="theme-toggle" disabled>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    
     <script src="settings.js"></script>
 </body>
 </html>
