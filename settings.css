@@ -91,13 +91,17 @@ p {
 /* --- RIGHT CONTENT AREA --- */
 .main-bar {
     flex: 1;
-    display: flex;
     overflow-y: auto; /* Enables vertical scrolling only inside the content area */
     padding: 24px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
 }
+
+.tab-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* DASHBOARD */
 
 .analytics-container {
     display: flex;

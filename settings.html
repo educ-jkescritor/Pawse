@@ -35,20 +35,20 @@
                 </button>
 
                 <div class="utilities">
-                    <button id="settings-btn">
-                        <img src="assets/icons/settings.png" alt="settings">
-                        <p class="font-inter-12-medium">Settings</p>
-                    </button>
                     <button id="about-btn">
                         <img src="assets/icons/info.png" alt="about">
                         <p class="font-inter-12-medium">About</p>
+                    </button>
+                    <button id="settings-btn">
+                        <img src="assets/icons/settings.png" alt="settings">
+                        <p class="font-inter-12-medium">Settings</p>
                     </button>
                 </div>
             </div>
 
             <!-- RIGHT CONTENT AREA -->
             <div class="main-bar">
-                <div id="dashboard-content">
+                <div id="dashboard-content" class="tab-panel">
                     <p class="font-inter-20-semibold">Your Progress</span>
 
                     <div class="analytics-container">
@@ -83,7 +83,7 @@
                     </div>
                 </div>
 
-                <div id="about-content" class="hidden">
+                <div id="about-content" class="tab-panel hidden">
                     <div class="about-header">
                             <h1>About PAWSE</h1>
                             <span>Version 1.0.0 | Cat-themed Productivity Timer</span>
@@ -142,58 +142,59 @@
                             </div>
                         </div>
                     </div>
-                    <div id="settings-content" class="hidden">
-                        <div>
-                            <span>Settings</span>
+                </div>
+
+                <div id="settings-content" class="tab-panel hidden">
+                    <div>
+                        <span>Settings</span>
+                    </div>
+                    <div class="workflow">                
+                        <span>WORKFLOW</span>
+                        <div class="settings-item strict-mode">
+                            <span>Strict Mode</span>
+                            <input type="checkbox" class="strict-toggle">
                         </div>
-                        <div class="workflow">                
-                            <span>WORKFLOW</span>
-                            <div class="settings-item strict-mode">
-                                <span>Strict Mode</span>
-                                <input type="checkbox" class="strict-toggle">
-                            </div>
-                            <div class="settings-item auto-start-breaks">
-                                <span>Auto-Start Breaks</span>
-                                <input type="checkbox" class="break-toggle">
-                            </div>
-                            <div class="settings-item auto-start-pomodoros">
-                                <span>Auto-Start Pomodoros</span>
-                                <input type="checkbox" class="pomodoro-toggle">
-                            </div>
-                            <div class="settings-item long-break-interval">
-                                <span>Long Break Interval</span>
-                                <input type="checkbox" class="interval-toggle">
-                            </div>
+                        <div class="settings-item auto-start-breaks">
+                            <span>Auto-Start Breaks</span>
+                            <input type="checkbox" class="break-toggle">
                         </div>
-                        <div class="audio">
-                            <span>AUDIO</span>
-                            <div class="settings-item ambient-volume">
-                                <span>Master Ambient Volume</span>
-                                <input type="checkbox" class="ambient-toggle">
-                            </div>
-                            <div class="settings-item long-break-interval">
-                                <span>Companion Purr Volume</span>
-                                <input type="checkbox" class="purr-toggle">
-                            </div>
-                            <div class="settings-item long-break-interval">
-                                <span>Tick Sound</span>
-                                <input type="checkbox" class="tick-toggle">
-                            </div>
+                        <div class="settings-item auto-start-pomodoros">
+                            <span>Auto-Start Pomodoros</span>
+                            <input type="checkbox" class="pomodoro-toggle">
                         </div>
-                        <div class="system">
-                            <span>SYSTEM</span>
-                            <div class="settings-item always-on-top">
-                                <span>Always on Top</span>
-                                <input type="checkbox" class="top-toggle">
-                            </div>
-                            <div class="settings-item launch-on-startup">
-                                <span>Launch on Startup</span>
-                                <input type="checkbox" class="startup-toggle">
-                            </div>
-                            <div class="settings-item visual-theme">
-                                <span>Select your visual theme</span>
-                                <input type="checkbox" class="theme-toggle">
-                            </div>
+                        <div class="settings-item long-break-interval">
+                            <span>Long Break Interval</span>
+                            <input type="checkbox" class="interval-toggle">
+                        </div>
+                    </div>
+                    <div class="audio">
+                        <span>AUDIO</span>
+                        <div class="settings-item ambient-volume">
+                            <span>Master Ambient Volume</span>
+                            <input type="checkbox" class="ambient-toggle">
+                        </div>
+                        <div class="settings-item long-break-interval">
+                            <span>Companion Purr Volume</span>
+                            <input type="checkbox" class="purr-toggle">
+                        </div>
+                        <div class="settings-item long-break-interval">
+                            <span>Tick Sound</span>
+                            <input type="checkbox" class="tick-toggle">
+                        </div>
+                    </div>
+                    <div class="system">
+                        <span>SYSTEM</span>
+                        <div class="settings-item always-on-top">
+                            <span>Always on Top</span>
+                            <input type="checkbox" class="top-toggle">
+                        </div>
+                        <div class="settings-item launch-on-startup">
+                            <span>Launch on Startup</span>
+                            <input type="checkbox" class="startup-toggle">
+                        </div>
+                        <div class="settings-item visual-theme">
+                            <span>Select your visual theme</span>
+                            <input type="checkbox" class="theme-toggle">
                         </div>
                     </div>
                 </div>
