@@ -153,6 +153,90 @@ p {
     justify-content: flex-end;
 }
 
+/* ABOUT */
+.about-header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.companions-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.companion-card {
+    padding: 10px;
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+}
+
+.companion-text {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.companion-attributes {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+
+.companion-attributes p {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 8px;
+    border-radius: 16px;
+    border: 1px solid transparent; /* Prevents layout shifting */
+    white-space: nowrap;
+}
+
+.tuxedo-info {
+    --cat-solid: var(--theme-classic-solid);
+    --cat-outline: #A0CC14;
+}
+
+.orange-info {
+    --cat-solid: var(--theme-sprint-solid);
+    --cat-outline: #F89819;
+}
+
+.black-info {
+    --cat-solid: var(--theme-focused-solid);
+    --cat-outline: #764CFE;
+}
+
+/* Variant A: First child (Classic, Sprint, Focused) */
+.companion-attributes p:first-child {
+    background-color: var(--cat-solid);
+    color: var(--text-black);
+}
+
+/* Variant B: Other children (Intervals) */
+.companion-attributes p:not(:first-child) {
+    border: 1.5px solid var(--cat-outline);
+    background-color: transparent;
+    color: var(--cat-outline);
+}
+
+.about-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.footer-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 /* HIDDEN */
 .hidden{
     display: none;
