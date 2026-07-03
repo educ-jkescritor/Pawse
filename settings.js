@@ -49,3 +49,78 @@ async function loadAnalytics() {
 }
 
 loadAnalytics();
+
+// const volumeSliders = document.querySelectorAll('.volume-slider');
+
+// volumeSliders.forEach(slider => {
+//     const updateSliderFill = (el) => {
+//         const val = el.value;
+//         const textLabel = el.previousElementSibling;
+//         if (textLabel) {
+//             textLabel.textContent = `${val}%`;
+//         }
+//         el.style.background = `linear-gradient(to right, var(--sys-blue-solid) 0%,
+//         var(--sys-blue-solid) ${val}%, var(--stroke-color) ${val}%, var(--stroke-color) 100%)`;
+//     };
+
+//     updateSliderFill(slider);
+//     slider.addEventListener('input', (event)=> {
+//             updateSliderFill(event.target);
+//     });
+
+//     // slider.addEventListener('input', (event)=> {
+//     //     const val = event.target.value;
+//     //     const textLabel = event.target.
+//     // previousElementSibling; /* Finds the adjacent .slider-value span */
+//     //     textLabel.textContent = `${val}%`;
+//     // });
+// });
+
+// Persistent volume sliders (retains configuration on load)
+const volumeSliders = document.querySelectorAll('.volume-slider');
+
+volumeSliders.forEach(slider => {
+    // 1. Determine a unique key for each slider using its HTML class
+    let storageKey = '';
+    if (slider.classList.contains('ambient-slider')) {
+        storageKey = 'ambientVolume';
+    } else if (slider.classList.contains('purr-slider')) {
+        storageKey = 'purrVolume';
+    }
+
+    // 2. Load the saved value on window startup (default to 50 if empty)
+    if (storageKey) {
+        const savedValue = localStorage.getItem(storageKey);
+        if (savedValue !== null) {
+            slider.value = savedValue;
+        }
+    }
+
+    // Function to calculate and apply colors and text
+    const updateSliderFill = (el) => {
+        const val = el.value;
+
+        // Update text percentage
+        const textLabel = el.previousElementSibling;
+        if (textLabel) {
+            textLabel.textContent = `${val}%`;
+        }
+
+        // Update background gradient (blue follows value percentage)
+        el.style.background = `linear-gradient(to right, var(--sys-blue-solid) 0%,
+        var(--sys-blue-solid) ${val}%, var(--stroke-color) ${val}%, var(--stroke-color) 100%)`;
+    };
+
+        // Initialize layout with the loaded values
+        updateSliderFill(slider);
+
+        // Update dynamically and save to localStorage on slide
+        slider.addEventListener('input', (event) => {
+            updateSliderFill(event.target);
+
+            // 3. Save to localStorage dynamically as the user drags
+            if (storageKey) {
+                localStorage.setItem(storageKey, event.target.value);
+            }
+        });
+});
