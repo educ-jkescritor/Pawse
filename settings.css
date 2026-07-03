@@ -211,13 +211,11 @@ p {
     --cat-outline: #764CFE;
 }
 
-/* Variant A: First child (Classic, Sprint, Focused) */
 .companion-attributes p:first-child {
     background-color: var(--cat-solid);
     color: var(--text-black);
 }
 
-/* Variant B: Other children (Intervals) */
 .companion-attributes p:not(:first-child) {
     border: 1.5px solid var(--cat-outline);
     background-color: transparent;
@@ -317,10 +315,8 @@ p {
     width: 24px;
     text-align: right;
     color: var(--text-gray);
-    /* user-select: none; */
 }
 
-/* Custom styling for the range bar (track)*/
 .volume-slider {
     -webkit-appearance: none;
     appearance: none;
@@ -332,7 +328,6 @@ p {
     cursor: pointer;
 }
 
-/* Style the knob(Chrome/Safari/Opera/Electron) */
 .volume-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;

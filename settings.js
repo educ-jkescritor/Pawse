@@ -50,32 +50,6 @@ async function loadAnalytics() {
 
 loadAnalytics();
 
-// const volumeSliders = document.querySelectorAll('.volume-slider');
-
-// volumeSliders.forEach(slider => {
-//     const updateSliderFill = (el) => {
-//         const val = el.value;
-//         const textLabel = el.previousElementSibling;
-//         if (textLabel) {
-//             textLabel.textContent = `${val}%`;
-//         }
-//         el.style.background = `linear-gradient(to right, var(--sys-blue-solid) 0%,
-//         var(--sys-blue-solid) ${val}%, var(--stroke-color) ${val}%, var(--stroke-color) 100%)`;
-//     };
-
-//     updateSliderFill(slider);
-//     slider.addEventListener('input', (event)=> {
-//             updateSliderFill(event.target);
-//     });
-
-//     // slider.addEventListener('input', (event)=> {
-//     //     const val = event.target.value;
-//     //     const textLabel = event.target.
-//     // previousElementSibling; /* Finds the adjacent .slider-value span */
-//     //     textLabel.textContent = `${val}%`;
-//     // });
-// });
-
 // Persistent volume sliders (retains configuration on load)
 const volumeSliders = document.querySelectorAll('.volume-slider');
 
