@@ -307,6 +307,43 @@ p {
     pointer-events: none;
 }
 
+.slider-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.slider-value {
+    width: 24px;
+    text-align: right;
+    color: var(--text-gray);
+    /* user-select: none; */
+}
+
+/* Custom styling for the range bar (track)*/
+.volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100px; 
+    height: 6px;
+    border-radius: 3px;
+    background: var(--stroke-color);
+    outline: none;
+    cursor: pointer;
+}
+
+/* Style the knob(Chrome/Safari/Opera/Electron) */
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--stroke-color);
+    border-radius: 50%;
+    background: var(--bg-main);
+    transition: transform 0.1s ease;
+}
+
 /* HIDDEN */
 .hidden{
     display: none;

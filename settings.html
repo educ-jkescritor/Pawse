@@ -152,6 +152,7 @@
                 <div id="settings-content" class="tab-panel hidden">
                     <p class="font-inter-20-semibold">Settings</p>
 
+                    <!-- Workflow Settings -->
                     <div class="settings-group">                
                         <p class="font-inter-12-medium">WORKFLOW</p>
                         <div class="settings-item strict-mode">
@@ -177,21 +178,22 @@
                         </div>
                     </div>
 
+                    <!-- Audio Settings -->
                     <div class="settings-group">
                         <p class="font-inter-12-medium">AUDIO</p>
                         <div class="settings-item ambient-volume">
                             <p class="font-inter-12-regular">Master Ambient Volume</p>
-                            <label class="toggle-switch">
-                                <input type="checkbox" class="ambient-toggle">
-                                <span class="slider"></span>
-                            </label>
+                            <div class="slider-container">
+                                <span class="font-inter-10-regular slider-value">0%</span>
+                                <input type="range" min="0" max="100" value="50" class="volume-slider ambient-slider">
+                            </div>
                         </div>
                         <div class="settings-item long-break-interval">
                             <p class="font-inter-12-regular">Companion Purr Volume</p>
-                            <label class="toggle-switch">
-                                <input type="checkbox" class="purr-toggle">
-                                <span class="slider"></span>
-                            </label>
+                            <div class="slider-container">
+                                <span class="font-inter-10-regular slider-value">0%</span>
+                                <input type="range" min="0" max="100" value="50" class="volume-slider purr-slider">
+                            </div>
                         </div>
                         <div class="settings-item long-break-interval">
                             <p class="font-inter-12-regular">Tick Sound</p>
@@ -202,6 +204,7 @@
                         </div>
                     </div>
 
+                    <!-- System Settings -->
                     <div class="settings-group">
                         <p class="font-inter-12-medium">SYSTEM</p>
                         <div class="settings-item always-on-top">
