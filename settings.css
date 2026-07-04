@@ -92,13 +92,17 @@ p {
 .main-bar {
     flex: 1;
     overflow-y: auto; /* Enables vertical scrolling only inside the content area */
-    padding: 24px;
+    padding: 32px 24px; /* 32px top and bottom, 24px left and right */
 }
 
 .tab-panel {
     display: flex;
     flex-direction: column;
     gap: 24px;
+}
+
+#dashboard-content {
+    height: 100%; /* Force it to exactly fill the main-bar content box */
 }
 
 /* DASHBOARD */
@@ -137,13 +141,12 @@ p {
 
 .graph {
     width: 100%;
-    height: 100%;
+    flex: 1; /* Stretch to exactly fill the remaining height instead of a fixed height */
     padding: 8px 16px;
     border-radius: 8px;
     background: #FFFFFF;
-    /* gap: 8px;
     display: flex;
-    flex-direction: column; */
+    flex-direction: column;
 }
 
 .week-selection {
@@ -151,6 +154,39 @@ p {
     padding: 4px;
     display: flex;
     justify-content: flex-end;
+}
+
+.graph-bars {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end; /* Bars grow from the bottom */
+    justify-content: space-between;
+    padding-top: 16px;
+}
+
+.bar-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    height: 100%;
+    justify-content: flex-end;
+}
+
+.bar {
+    width: 16px;
+    background-color: var(--sys-blue-solid);
+    border-radius: 4px;
+    transition: height 0.5s ease;
+}
+
+.bar:hover {
+    background-color: var(--sys-focused-solid); /* Deep purple highlight */
+}
+
+.bar-label {
+    color: var(--text-gray);
 }
 
 /* ABOUT */

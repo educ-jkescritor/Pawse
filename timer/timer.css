@@ -163,26 +163,160 @@
 
 /* --- MINI MODE ILLUSIONS --- */
 body.timer-only-mode .main-titlebar,
-body.timer-only-mode .cat-area, 
-body.timer-only-mode .session-counter,
-body.timer-only-mode .timer-controls {
+body.cat-only-mode .main-titlebar {
+    /* Repurpose the titlebar as a slim drag handle at the top */
+    display: flex !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 12px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    z-index: 1000;
+    -webkit-app-region: drag;
+}
+
+body.timer-only-mode .main-titlebar > *,
+body.cat-only-mode .main-titlebar > * {
+    /* Hide the buttons/text inside the titlebar in mini mode */
     display: none !important;
 }
 
-body.cat-only-mode .main-titlebar,
-body.cat-only-mode #timer-container, 
-body.cat-only-mode .timer-controls, 
+body.timer-only-mode .cat-area, 
+body.timer-only-mode .session-counter {
+    display: none !important;
+}
+
 body.cat-only-mode .session-counter {
     display: none !important;
+}
+
+/* Dim overlay and centered buttons on hover for mini modes */
+body.timer-only-mode .timer-controls,
+body.cat-only-mode .timer-controls {
+    display: flex !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Cinematic dimming */
+    align-items: flex-end; /* Move buttons to the bottom */
+    padding-bottom: 24px; /* Spacing from the bottom edge */
+    justify-content: center;
+    border: none;
+    z-index: 500;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+body.timer-only-mode:hover .timer-controls,
+body.cat-only-mode:hover .timer-controls {
+    opacity: 1;
+}
+
+/* Show timer on hover in cat-only mode */
+body.cat-only-mode #timer-container {
+    display: flex !important;
+    position: absolute;
+    top: 0; 
+    left: 0;
+    width: 100%;
+    height: 100%; /* Take full height so the flex centers it perfectly */
+    justify-content: center;
+    align-items: center;
+    transform: translateY(-18px); /* Shift up to match visual center above buttons without causing layout distortion */
+    z-index: 501; /* Above the dark overlay */
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border: none;
+    pointer-events: none; /* Let clicks pass through to buttons/drag handle */
+}
+
+body.cat-only-mode:hover #timer-container {
+    opacity: 1;
+}
+
+body.cat-only-mode #timer-display {
+    color: #FFFFFF;
+    text-shadow: 0px 2px 8px rgba(0, 0, 0, 0.8); /* Ensures it's readable over any cat image */
+}
+
+/* Make sure the buttons themselves are clickable and not draggable in mini modes */
+body.timer-only-mode .timer-controls button,
+body.cat-only-mode .timer-controls button {
+    -webkit-app-region: no-drag;
 }
 
 body.timer-only-mode .main-content,
 body.cat-only-mode .main-content {
     padding: 0;
+    height: 100vh; /* Ensure the content fills the small window */
+    width: 100vw;
+    position: relative;
+}
+
+body.timer-only-mode #timer-container {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
+body.cat-only-mode .cat-area {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    margin: 0;
+    padding: 0;
+    transform: translateY(-18px); /* Retain visual shift for the cat area */
 }
 
 body.timer-only-mode, 
 body.cat-only-mode {
-    -webkit-app-region: drag; /* Makes the entire window draggable */
+    -webkit-app-region: no-drag; /* We disable full-window drag so hover works everywhere */
     user-select: none; /* Prevents text highlighting while dragging */
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    overflow: hidden;
+}
+
+.restore-btn {
+    display: none !important; /* Hidden in default mode */
+}
+
+body.timer-only-mode .restore-btn,
+body.cat-only-mode .restore-btn {
+    display: flex !important;
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 24px !important;
+    height: 24px !important;
+    background: transparent !important;
+    padding: 0;
+    z-index: 1001; /* Ensure it stays above the top drag bar */
+}
+
+body.timer-only-mode .restore-btn img,
+body.cat-only-mode .restore-btn img {
+    width: 18px;
+    height: 18px;
+    opacity: 0.8;
+}
+
+body.timer-only-mode .restore-btn:hover img,
+body.cat-only-mode .restore-btn:hover img {
+    opacity: 1;
 }
