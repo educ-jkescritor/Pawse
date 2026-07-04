@@ -48,6 +48,9 @@ function formatTime(remainingTime) {
 document.getElementById("timer-display").textContent = formatTime(remainingTime);     
 
 function startTimer() {
+    document.getElementById("play-icon").src = "../assets/icons/pause-btn.png";
+    isRunning = true;
+
     timerId = setInterval(() => {
         remainingTime--;
 
@@ -68,7 +71,7 @@ function startTimer() {
 }
 
 function skipTimer(completedCycle) {
-    clearInterval(timerId);
+    pauseTimer();
 
     if (completedCycle == true) {
         if (workingTime == true) {
@@ -145,12 +148,12 @@ function skipTimer(completedCycle) {
             ); 
         }
     }
-    document.getElementById("play-icon").src = "../assets/icons/play-btn.png";
-    isRunning = true;   
 }
 
 function pauseTimer() {
     clearInterval(timerId);
+    document.getElementById("play-icon").src = "../assets/icons/play-btn.png";
+    isRunning = false;
 }
 
 function soundControl() {
@@ -175,15 +178,10 @@ soundButton.addEventListener("click", () => {
 });
 
 playButton.addEventListener("click", () => {
-    const playIcon = document.getElementById("play-icon");
     if(isRunning) {
         pauseTimer();
-        playIcon.src="../assets/icons/play-btn.png";
-        isRunning = false;
-    }else{
+    } else {
         startTimer();
-        playIcon.src="../assets/icons/pause-btn.png";
-        isRunning = true;
     }   
 });
 
@@ -204,6 +202,18 @@ function updateSessionCounter() {
 };
 
 function showModal(title, message, btnText, nextAction) {
+    const isMiniMode = document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode");
+
+    if (isMiniMode) {
+        // If the session completes, we must restore the window size before returning to the main menu
+        if (title === "Session Complete!") {
+            document.body.classList.remove("timer-only-mode", "cat-only-mode");
+            window.mainAPI.resize('default');
+        }
+        nextAction();
+        return;
+    }
+
     dialogTitle.innerText = title;
     dialogMessage.innerText = message;
     dialogBtn.innerText = btnText;   
@@ -245,10 +255,11 @@ if (timerOnlyButton !== null) {
     }
 }
 
-// ESCAPE HATCH: Double-click anywhere to restore the window!
-document.body.addEventListener('dblclick', () => {
-    if (document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode")) {
+
+let restoreBtn = document.getElementById("restore-btn");
+if (restoreBtn) {
+    restoreBtn.addEventListener('click', () => {
         document.body.classList.remove("timer-only-mode", "cat-only-mode");
         window.mainAPI.resize('default');
-    }
-});
+    });
+}

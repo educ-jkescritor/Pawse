@@ -43,9 +43,55 @@ async function loadAnalytics() {
     const historicalPomodoroElement = document.getElementById("historical_pomodoro");
     const favoriteCatElement = document.getElementById("favorite_cat");
 
-    todayWorkSecondsElement.textContent = data.today_work_seconds;
-    historicalPomodoroElement.textContent = data.historical_pomodoro;
-    favoriteCatElement.textContent = data.favorite_cat;
+    // Format seconds into Xh Ym
+    const totalSeconds = data.today_work_seconds || 0;
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    
+    let timeString = `${hours}h ${minutes}m`;
+
+    todayWorkSecondsElement.textContent = timeString;
+    historicalPomodoroElement.textContent = data.historical_pomodoro || 0;
+
+    // Map cat_type to display name
+    const catDisplayNames = {
+        'orange_cat': 'Ginger',
+        'tuxedo_cat': 'Tux',
+        'black_cat': 'Void'
+    };
+    
+    favoriteCatElement.textContent = catDisplayNames[data.favorite_cat] || 'None';
+
+    // Graph Generation
+    const graphBarsContainer = document.querySelector(".graph-bars");
+    if (graphBarsContainer && data.weekly_data) {
+        graphBarsContainer.innerHTML = ''; // Clear existing
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        
+        // Find max hours for scaling, default to at least 1 hour to prevent divide by zero
+        const maxHours = Math.max(...data.weekly_data, 1); 
+        
+        data.weekly_data.forEach((hours, index) => {
+            const heightPercent = (hours / maxHours) * 100;
+            
+            const barWrapper = document.createElement("div");
+            barWrapper.className = "bar-wrapper";
+            
+            const bar = document.createElement("div");
+            bar.className = "bar";
+            // The height of the bar container is essentially 100%, we apply height to bar
+            bar.style.height = `${heightPercent}%`;
+            bar.title = `${hours} hours`;
+            
+            const label = document.createElement("span");
+            label.className = "bar-label font-inter-10-regular";
+            label.textContent = days[index];
+            
+            barWrapper.appendChild(bar);
+            barWrapper.appendChild(label);
+            graphBarsContainer.appendChild(barWrapper);
+        });
+    }
 }
 
 loadAnalytics();
