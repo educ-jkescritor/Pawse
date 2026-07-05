@@ -466,3 +466,30 @@ ease;
 .cat_buttons button.selected .cat_image img {
     transform: scale(1.4);
 } */
+
+/* Companion text color animation on selection and hover */
+/* Base Selection Lock */
+.main-content:has(#tuxedo_cat.selected) #companion-title-text {
+    color: var(--theme-classic-solid) !important;
+}
+.main-content:has(#orange_cat.selected) #companion-title-text {
+    color: var(--theme-sprint-solid) !important;
+}
+.main-content:has(#black_cat.selected) #companion-title-text {
+    color: var(--theme-focused-solid) !important;
+}
+
+/* Hover Previews (Placed after to override selection on hover) */
+.main-content:has(#tuxedo_cat:hover) #companion-title-text {
+    color: var(--theme-classic-solid) !important;
+}
+.main-content:has(#orange_cat:hover) #companion-title-text {
+    color: var(--theme-sprint-solid) !important;
+}
+.main-content:has(#black_cat:hover) #companion-title-text {
+    color: var(--theme-focused-solid) !important;
+}
+
+#companion-title-text {
+    transition: color 0.3s ease;
+}
