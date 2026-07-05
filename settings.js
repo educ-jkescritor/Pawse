@@ -36,8 +36,8 @@ let dashboardContent = document.getElementById("dashboard-content");
 let aboutContent = document.getElementById("about-content");
 let settingsContent = document.getElementById("settings-content");
 
-async function loadAnalytics() {
-    const data = await window.mainAPI.loadanalytics();
+async function loadAnalytics(weeksAgo = 0) {
+    const data = await window.mainAPI.loadanalytics(weeksAgo);
 
     const todayWorkSecondsElement = document.getElementById("today_work_seconds");
     const historicalPomodoroElement = document.getElementById("historical_pomodoro");
@@ -144,3 +144,44 @@ volumeSliders.forEach(slider => {
             }
         });
 });
+
+// Workflow Settings Logic
+const strictToggle = document.querySelector('.strict-toggle');
+const breakToggle = document.querySelector('.break-toggle');
+const pomodoroToggle = document.querySelector('.pomodoro-toggle');
+
+if (strictToggle) {
+    strictToggle.checked = localStorage.getItem('strictMode') === 'true';
+    strictToggle.addEventListener('change', (e) => localStorage.setItem('strictMode', e.target.checked));
+}
+
+if (breakToggle) {
+    breakToggle.checked = localStorage.getItem('autoStartBreaks') === 'true';
+    breakToggle.addEventListener('change', (e) => localStorage.setItem('autoStartBreaks', e.target.checked));
+}
+
+if (pomodoroToggle) {
+    pomodoroToggle.checked = localStorage.getItem('autoStartPomodoros') === 'true';
+    pomodoroToggle.addEventListener('change', (e) => localStorage.setItem('autoStartPomodoros', e.target.checked));
+}
+
+// Graph Dropdown Logic
+const weekDropdown = document.getElementById('week-dropdown');
+if (weekDropdown) {
+    weekDropdown.addEventListener('change', (e) => {
+        loadAnalytics(parseInt(e.target.value));
+    });
+}
+
+// System Settings Logic
+const topToggle = document.querySelector('.top-toggle');
+if (topToggle) {
+    topToggle.checked = localStorage.getItem('alwaysOnTop') === 'true';
+    topToggle.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        localStorage.setItem('alwaysOnTop', isChecked);
+        if (window.mainAPI && window.mainAPI.setAlwaysOnTop) {
+            window.mainAPI.setAlwaysOnTop(isChecked);
+        }
+    });
+}

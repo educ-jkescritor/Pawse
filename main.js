@@ -3,11 +3,13 @@ const path = require("path");
 const { db, generateAnalytics } = require("./database.js");
 
 let set = null;
+let globalAlwaysOnTop = false;
 
 function createWindow() {
   const win = new BrowserWindow({
     width: 310, // initially 292 from initial build
     height: 430, // initially 430 from initial build
+    alwaysOnTop: globalAlwaysOnTop,
     resizable: false,
     maximizable: false,
     fullscreenable: false,
@@ -33,6 +35,7 @@ function settingsWindow() {
   set = new BrowserWindow({
     width: 720, // initially 292 from initial build
     height: 430, // initially 430 from initial build
+    alwaysOnTop: globalAlwaysOnTop,
     resizable: false,
     maximizable: false,
     fullscreenable: false,
@@ -122,13 +125,31 @@ ipcMain.on('save-session', (event, data) => {
   });
 });
 
-ipcMain.handle('load-analytics', async () => {
+ipcMain.on('set-always-on-top', (event, isAlwaysOnTop) => {
+  globalAlwaysOnTop = isAlwaysOnTop;
+  const activeWindow = BrowserWindow.fromWebContents(event.sender);
+  
+  // Set all background windows first
+  BrowserWindow.getAllWindows().forEach((window) => {
+    if (window !== activeWindow) {
+      window.setAlwaysOnTop(isAlwaysOnTop);
+    }
+  });
+
+  // Set the active window last so it stays on top of the others, and focus it to clear Windows DWM lag
+  if (activeWindow) {
+    activeWindow.setAlwaysOnTop(isAlwaysOnTop);
+    activeWindow.focus();
+  }
+});
+
+ipcMain.handle('load-analytics', async (event, weeksAgo) => {
   try {
-    const analyticsData = await generateAnalytics();
+    const analyticsData = await generateAnalytics(weeksAgo);
     return analyticsData;
-  } catch (err) {
-    console.error("Error generating analytics:", err);
-    throw err;
+  } catch (error) {
+    console.error("Error generating analytics:", error);
+    throw error;
   }
 });
 

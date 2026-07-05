@@ -1,3 +1,9 @@
+if (localStorage.getItem('alwaysOnTop') === 'true') {
+    if (window.mainAPI && window.mainAPI.setAlwaysOnTop) {
+        window.mainAPI.setAlwaysOnTop(true);
+    }
+}
+
 let selectedCat = null;
 
 // Store buttons in a dictionary

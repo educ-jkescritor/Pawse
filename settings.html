@@ -73,8 +73,12 @@
                         <p class="font-inter-16-medium">This Week's Focus</p>
                         <div class="graph">
                             <div class="week-selection">
-                                <p class="font-inter-10-regular text-gray">This Week</p>
-                                <!-- insert chevron icon -->
+                                <select id="week-dropdown" class="font-inter-10-regular text-gray" style="background: transparent; border: none; outline: none; cursor: pointer; color: var(--text-gray, #888);">
+                                    <option value="0">This Week</option>
+                                    <option value="1">One Week Ago</option>
+                                    <option value="2">Two Weeks Ago</option>
+                                    <option value="3">Three Weeks Ago</option>
+                                </select>
                             </div>
                             <div class="graph-bars">
                                 <!-- insert graph bars here w/ day labels -->

@@ -47,9 +47,25 @@ function formatTime(remainingTime) {
 
 document.getElementById("timer-display").textContent = formatTime(remainingTime);     
 
+const catSprite = document.getElementById("cat-sprite");
+
+function updateCatState() {
+    const catClass = catConfig.dbId; // e.g. 'orange_cat', 'tuxedo_cat', 'black_cat'
+    
+    if (workingTime) {
+        catSprite.className = `cat-sprite ${catClass} working`;
+        catSprite.style.backgroundImage = `url('../assets/sprites/${catConfig.dbId}_work.png')`;
+        catSprite.style.animationPlayState = isRunning ? "running" : "paused";
+    } else {
+        catSprite.className = `cat-sprite ${catClass} breaking`;
+        catSprite.style.backgroundImage = `url('../assets/sprites/${catConfig.dbId}_static.png')`;
+    }
+}
+
 function startTimer() {
     document.getElementById("play-icon").src = "../assets/icons/pause-btn.png";
     isRunning = true;
+    updateCatState();
 
     timerId = setInterval(() => {
         remainingTime--;
@@ -83,31 +99,46 @@ function skipTimer(completedCycle) {
 
     if (workingTime == true) {
         workingTime = false;
+        updateCatState();
+        const autoStartBreaks = localStorage.getItem('autoStartBreaks') === 'true';
         if (cycleCount === 3) {
-            showModal (
-                "Long Break Time!",
-                "Time for a long break!",
-                "Start Break",
-                function () {
-                    remainingTime = catConfig.longBreakTime;
-                    document.getElementById("timer-display").textContent = formatTime(remainingTime);
-                    startTimer();
-                }
-            );
+            if (autoStartBreaks) {
+                remainingTime = catConfig.longBreakTime;
+                document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                startTimer();
+            } else {
+                showModal (
+                    "Long Break Time!",
+                    "Time for a long break!",
+                    "Start Break",
+                    function () {
+                        remainingTime = catConfig.longBreakTime;
+                        document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                        startTimer();
+                    }
+                );
+            }
         } else {
-            showModal (
-                "Short Break Time!",
-                "Time for a short break!",
-                "Start Break",
-                function () {
-                    remainingTime = catConfig.shortBreakTime;
-                    document.getElementById("timer-display").textContent = formatTime(remainingTime);
-                    startTimer();
-                }
-            );
+            if (autoStartBreaks) {
+                remainingTime = catConfig.shortBreakTime;
+                document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                startTimer();
+            } else {
+                showModal (
+                    "Short Break Time!",
+                    "Time for a short break!",
+                    "Start Break",
+                    function () {
+                        remainingTime = catConfig.shortBreakTime;
+                        document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                        startTimer();
+                    }
+                );
+            }
         }
     } else {     
         workingTime = true;
+        updateCatState();
         remainingTime = catConfig.workTime;
         cycleCount++;
         
@@ -136,16 +167,23 @@ function skipTimer(completedCycle) {
             )
             return;
         } else {
-            showModal (
-                "Back to Work!",
-                `Back to work! You have completed ${cycleCount} cycle(s)! Keep going!`,
-                "Start Work",
-                function () {
-                    remainingTime = catConfig.workTime;
-                    document.getElementById("timer-display").textContent = formatTime(remainingTime);
-                    startTimer();
-                }
-            ); 
+            const autoStartPomodoros = localStorage.getItem('autoStartPomodoros') === 'true';
+            if (autoStartPomodoros) {
+                remainingTime = catConfig.workTime;
+                document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                startTimer();
+            } else {
+                showModal (
+                    "Back to Work!",
+                    `Back to work! You have completed ${cycleCount} cycle(s)! Keep going!`,
+                    "Start Work",
+                    function () {
+                        remainingTime = catConfig.workTime;
+                        document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                        startTimer();
+                    }
+                ); 
+            }
         }
     }
 }
@@ -154,6 +192,7 @@ function pauseTimer() {
     clearInterval(timerId);
     document.getElementById("play-icon").src = "../assets/icons/play-btn.png";
     isRunning = false;
+    updateCatState();
 }
 
 function soundControl() {
@@ -185,7 +224,15 @@ playButton.addEventListener("click", () => {
     }   
 });
 
+const strictMode = localStorage.getItem('strictMode') === 'true';
+if (strictMode) {
+    skipButton.disabled = true;
+    skipButton.style.opacity = "0.5";
+    skipButton.style.cursor = "not-allowed";
+}
+
 skipButton.addEventListener("click", () => {
+    if (strictMode) return;
     skipTimer(false);
 });
 

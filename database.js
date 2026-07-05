@@ -85,7 +85,7 @@ function clearMockData() {
     });   
 }
 
-function generateAnalytics() {
+function generateAnalytics(weeksAgo = 0) {
     return new Promise((resolve, reject) => {
         const analyticData = {
             today_work_seconds: 0,
@@ -97,8 +97,6 @@ function generateAnalytics() {
         const todayWorkQuery = `SELECT SUM(total_work_seconds) AS today_work_seconds FROM session WHERE date(date_completed, 'localtime') = date('now', 'localtime')`;
         const historicalPomodoroQuery = `SELECT SUM(total_pomodoro) AS historical_pomodoro FROM session`;
         const favoriteCatQuery = `SELECT cat_type, COUNT(*) AS favorite_cat FROM session GROUP BY cat_type ORDER BY favorite_cat DESC LIMIT 1`;
-        const weeklyDataQuery = `SELECT date_completed, total_work_seconds FROM session`;
-        
         db.get(todayWorkQuery, [], (err, row1) => {
             if (!err && row1 && row1.today_work_seconds) analyticData.today_work_seconds = row1.today_work_seconds;
 
@@ -108,31 +106,34 @@ function generateAnalytics() {
                 db.get(favoriteCatQuery, [], (err, row3) => {
                     if (!err && row3 && row3.cat_type) analyticData.favorite_cat = row3.cat_type;
 
-                    db.all(weeklyDataQuery, [], (err, rows) => {
-                        if (!err && rows) {
-                            const now = new Date();
-                            const startOfWeek = new Date(now);
-                            startOfWeek.setDate(now.getDate() - now.getDay());
-                            startOfWeek.setHours(0,0,0,0);
-                            const endOfWeek = new Date(startOfWeek);
-                            endOfWeek.setDate(startOfWeek.getDate() + 7);
+                    // Determine local start of week (Sunday 00:00:00) based on weeksAgo
+                    const now = new Date();
+                    const startOfWeek = new Date(now);
+                    startOfWeek.setDate(now.getDate() - now.getDay() - (weeksAgo * 7));
+                    startOfWeek.setHours(0,0,0,0);
+                    
+                    const endOfWeek = new Date(startOfWeek);
+                    endOfWeek.setDate(startOfWeek.getDate() + 7);
+                    
+                    // Convert local boundaries to UTC string format (YYYY-MM-DD HH:MM:SS) for SQLite
+                    const startOfWeekUTC = startOfWeek.toISOString().replace('T', ' ').substring(0, 19);
+                    const endOfWeekUTC = endOfWeek.toISOString().replace('T', ' ').substring(0, 19);
+                    
+                    const weeklyDataQuery = `SELECT date_completed, total_work_seconds FROM session WHERE date_completed >= ? AND date_completed < ?`;
 
+                    db.all(weeklyDataQuery, [startOfWeekUTC, endOfWeekUTC], (err, rows) => {
+                        if (!err && rows) {
                             rows.forEach(row => {
+                                // Parse the UTC date from database to get local day
                                 const dateString = row.date_completed.replace(' ', 'T') + 'Z';
                                 const localDate = new Date(dateString);
-                                if (localDate >= startOfWeek && localDate < endOfWeek) {
-                                    analyticData.weekly_data[localDate.getDay()] += row.total_work_seconds;
-                                }
+                                
+                                analyticData.weekly_data[localDate.getDay()] += row.total_work_seconds;
                             });
+                            
                             for (let i = 0; i < 7; i++) {
                                 analyticData.weekly_data[i] = Number((analyticData.weekly_data[i] / 3600).toFixed(1));
                             }
-                        }
-
-                        // Simulation mode: If no data this week, populate with simulated hours
-                        const sum = analyticData.weekly_data.reduce((a,b) => a+b, 0);
-                        if (sum === 0) {
-                            analyticData.weekly_data = [0, 2.5, 4.0, 3.5, 5.0, 1.5, 0]; // Simulating Monday-Friday
                         }
 
                         resolve(analyticData);
