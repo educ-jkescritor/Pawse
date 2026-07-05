@@ -94,10 +94,21 @@ function generateAnalytics(weeksAgo = 0) {
             weekly_data: [0, 0, 0, 0, 0, 0, 0] // Sun to Sat
         };
 
-        const todayWorkQuery = `SELECT SUM(total_work_seconds) AS today_work_seconds FROM session WHERE date(date_completed, 'localtime') = date('now', 'localtime')`;
+        // Establish accurate local timezone bounds for "Today" using JavaScript
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        
+        const todayEnd = new Date(todayStart);
+        todayEnd.setDate(todayStart.getDate() + 1);
+        
+        const todayStartUTC = todayStart.toISOString().replace('T', ' ').substring(0, 19);
+        const todayEndUTC = todayEnd.toISOString().replace('T', ' ').substring(0, 19);
+
+        const todayWorkQuery = `SELECT SUM(total_work_seconds) AS today_work_seconds FROM session WHERE date_completed >= ? AND date_completed < ?`;
         const historicalPomodoroQuery = `SELECT SUM(total_pomodoro) AS historical_pomodoro FROM session`;
         const favoriteCatQuery = `SELECT cat_type, COUNT(*) AS favorite_cat FROM session GROUP BY cat_type ORDER BY favorite_cat DESC LIMIT 1`;
-        db.get(todayWorkQuery, [], (err, row1) => {
+        
+        db.get(todayWorkQuery, [todayStartUTC, todayEndUTC], (err, row1) => {
             if (!err && row1 && row1.today_work_seconds) analyticData.today_work_seconds = row1.today_work_seconds;
 
             db.get(historicalPomodoroQuery, [], (err, row2) => {

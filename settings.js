@@ -63,7 +63,7 @@ async function loadAnalytics(weeksAgo = 0) {
     // Format seconds into Xh Ym
     const totalSeconds = data.today_work_seconds || 0;
     const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const minutes = Math.round((totalSeconds % 3600) / 60);
     
     let timeString = `${hours}h ${minutes}m`;
 
