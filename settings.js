@@ -160,6 +160,16 @@ const updateSliderFill = (el) => {
     const textLabel = el.previousElementSibling;
     if (textLabel) textLabel.textContent = `${val}%`;
     el.style.background = `linear-gradient(to right, var(--sys-blue-solid) 0%, var(--sys-blue-solid) ${val}%, var(--stroke-color) ${val}%, var(--stroke-color) 100%)`;
+
+    // UI/UX: Grayish design when sound is at 0%
+    const parentItem = el.closest('.settings-item');
+    if (parentItem) {
+        if (val === '0') {
+            parentItem.style.opacity = '0.5';
+        } else {
+            parentItem.style.opacity = '1';
+        }
+    }
 };
 
 volumeSliders.forEach(slider => {
@@ -188,6 +198,9 @@ volumeSliders.forEach(slider => {
         if (storageKey) {
             localStorage.setItem(storageKey, event.target.value);
         }
+        
+        // Check if master mute triggered (both 0%)
+        if (typeof updateTickLock === 'function') updateTickLock();
     });
 });
 
@@ -231,11 +244,35 @@ if (pomodoroToggle) {
 }
 
 // Audio Settings Logic
+// Audio Settings Logic
 const tickToggle = document.querySelector('.tick-toggle');
 if (tickToggle) {
     tickToggle.checked = localStorage.getItem('tickSound') === 'true';
     tickToggle.addEventListener('change', (e) => localStorage.setItem('tickSound', e.target.checked));
 }
+
+function updateTickLock() {
+    const tickElement = document.querySelector('.tick-toggle');
+    if (!tickElement) return;
+    
+    let ambVol = parseInt(localStorage.getItem('ambientVolume'));
+    if (isNaN(ambVol)) ambVol = 50;
+    
+    let purVol = parseInt(localStorage.getItem('purrVolume'));
+    if (isNaN(purVol)) purVol = 50;
+    
+    const isMasterMuted = (ambVol === 0 && purVol === 0);
+    
+    const parentItem = tickElement.closest('.settings-item');
+    if (parentItem) {
+        if (isMasterMuted) {
+            parentItem.style.opacity = '0.5';
+        } else {
+            parentItem.style.opacity = '1';
+        }
+    }
+}
+updateTickLock();
 
 // Custom Graph Dropdown Logic
 const dropdownTrigger = document.getElementById('dropdown-trigger');
@@ -301,6 +338,7 @@ window.addEventListener('storage', (e) => {
             slider.value = e.newValue;
             updateSliderFill(slider);
         }
+        updateTickLock();
     }
     if (e.key === 'purrVolume') {
         const slider = document.querySelector('.purr-slider');
@@ -308,6 +346,7 @@ window.addEventListener('storage', (e) => {
             slider.value = e.newValue;
             updateSliderFill(slider);
         }
+        updateTickLock();
     }
     if (e.key === 'tickSound') {
         const toggle = document.querySelector('.tick-toggle');
