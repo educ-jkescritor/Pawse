@@ -165,6 +165,13 @@ if (pomodoroToggle) {
     pomodoroToggle.addEventListener('change', (e) => localStorage.setItem('autoStartPomodoros', e.target.checked));
 }
 
+// Audio Settings Logic
+const tickToggle = document.querySelector('.tick-toggle');
+if (tickToggle) {
+    tickToggle.checked = localStorage.getItem('tickSound') === 'true';
+    tickToggle.addEventListener('change', (e) => localStorage.setItem('tickSound', e.target.checked));
+}
+
 // Graph Dropdown Logic
 const weekDropdown = document.getElementById('week-dropdown');
 if (weekDropdown) {

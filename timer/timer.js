@@ -34,6 +34,22 @@ let actualBreak = 0;
 let workCount = 0;
 let breakCount = 0;
 
+// Initialize Ambient Audio
+const ambientAudio = new Audio('../assets/sounds/ambient.mp3');
+ambientAudio.loop = true;
+
+const savedAmbientVolume = localStorage.getItem('ambientVolume');
+const ambientVol = savedAmbientVolume !== null ? parseInt(savedAmbientVolume) : 50;
+
+if (ambientVol > 0) {
+    ambientAudio.volume = ambientVol / 100;
+    ambientAudio.play().catch(e => console.log("Autoplay blocked:", e));
+}
+
+// Initialize Tick Audio
+const tickAudio = new Audio('../assets/sounds/tick.mp3');
+let tickEnabled = localStorage.getItem('tickSound') === 'true';
+
 let modalOverlay = document.getElementById("modal-overlay");
 let dialogTitle = document.getElementById("dialog-title");
 let dialogMessage = document.getElementById("dialog-message");
@@ -104,6 +120,12 @@ function startTimer() {
 
     timerId = setInterval(() => {
         remainingTime--;
+
+        if (tickEnabled && soundEnabled) {
+            // Skip the first 0.15 seconds of the MP3 to bypass "dead air" padding
+            tickAudio.currentTime = 0.10;
+            tickAudio.play().catch(e => console.log("Tick blocked:", e));
+        }
 
         if(workingTime == true) {
             actualWork++;
@@ -245,9 +267,11 @@ soundButton.addEventListener("click", () => {
     if(soundEnabled) {
         soundEnabled = false;
         soundIcon.src = "../assets/icons/soundoff-btn.png";
+        ambientAudio.muted = true;
     }else{
         soundEnabled = true;
         soundIcon.src = "../assets/icons/soundon-btn.png";
+        ambientAudio.muted = false;
     }
 });
 
