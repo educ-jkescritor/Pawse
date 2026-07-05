@@ -146,6 +146,25 @@ if (strictToggle) {
     strictToggle.addEventListener('change', (e) => localStorage.setItem('strictMode', e.target.checked));
 }
 
+function updateStrictLock() {
+    if (!strictToggle) return;
+    const isRunning = localStorage.getItem('timerRunning') === 'true';
+    
+    strictToggle.disabled = isRunning;
+    
+    const parentItem = strictToggle.closest('.settings-item');
+    if (parentItem) {
+        if (isRunning) {
+            parentItem.style.opacity = '0.5';
+            parentItem.style.pointerEvents = 'none';
+        } else {
+            parentItem.style.opacity = '1';
+            parentItem.style.pointerEvents = 'auto';
+        }
+    }
+}
+updateStrictLock();
+
 if (breakToggle) {
     breakToggle.checked = localStorage.getItem('autoStartBreaks') === 'true';
     breakToggle.addEventListener('change', (e) => localStorage.setItem('autoStartBreaks', e.target.checked));
@@ -203,5 +222,8 @@ window.addEventListener('storage', (e) => {
     if (e.key === 'tickSound') {
         const toggle = document.querySelector('.tick-toggle');
         if (toggle) toggle.checked = (e.newValue === 'true');
+    }
+    if (e.key === 'timerRunning') {
+        updateStrictLock();
     }
 });
