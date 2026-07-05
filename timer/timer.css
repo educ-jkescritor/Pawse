@@ -1,99 +1,43 @@
-.main-titlebar {
-    /* width: 100%; /* or whatever height your custom assets dictate */
-    height: 40px;
-    -webkit-app-region: drag;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0px 0px 0px 5px;
-    border-bottom: 1px solid var(--stroke-color);
-    background: var(--topbar-fill);
-    position: relative;
-}
-
-.main-titlebar button {
-    border-radius: 6px;
-    -webkit-app-region: no-drag; 
-    cursor: pointer;
-}
-
-.app-title{
-    position: absolute;
-    /* adjusts the PAWSE title accordingly in the top bar */
-    left: 23%;
-    transform: translateX(-50%);
-    font-family: var(--font-pixel);
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text-black);
-}
-
-.main-window-controls {
-    display: flex;
-    gap: 8px;
-    padding-right: 12px;
-    align-items: center;
-}
-
-.main-window-controls button {
-    border: none;
-    border-radius: 0px;
-    background: transparent;
-
-    padding: 8px 0px;
-    
-    -webkit-app-region: no-drag; 
-    cursor: pointer;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.main-window-controls button img {
-    image-rendering: pixelated;
-
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-
-    pointer-events: none;
-    -webkit-user-drag: none;
-}
-
+/* --- MAIN CONTENT --- */
 .main-content{
     padding: 10px 20px;
 }
 
 #timer-container{
     width: 100%;
-    border: 1px solid var(--stroke-color); /* To be removed */
     text-align: center;
     line-height: 1; /* controls the space consumed by the text */
 }
 
 .session-counter{
     width: 100%;
-    padding: 4px;
-    border: 1px solid var(--stroke-color); /* To be removed */
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 .fish-icon {
-    opacity: 0.3;
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    background-image: url('../assets/icons/uncompleted-fish.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    image-rendering: pixelated;
+    transform: scale(1.5);
 }
 
 .fish-icon.active {
-    opacity: 1;
+    background-image: url('../assets/icons/completed-fish.png');
 }
+
+/* --- CAT AREA --- */
 
 .cat-area {
     width: 100%;
     height: 220px;
     padding: 8px 0px;
-    border: 1px solid var(--stroke-color); /* To be removed */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -151,8 +95,6 @@
     display: flex;
     justify-content: center;
     gap: 24px;
-
-    border: 1px solid var(--stroke-color);
 }
 
 .timer-controls button {
@@ -168,10 +110,9 @@
 }
 
 .timer-controls button img {
-        width: 20px;
-        height: 20px;
-        object-fit: contain;
-        /* pointer-events: none; Prevents dragging issues */
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
 }
 
 /* --- CUSTOM MODAL STYLES --- */
@@ -188,25 +129,39 @@
     align-items: center;
 }
 
+.custom-dialog {
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background-color: var(--bg-main);
+    border-radius: 8px;
+    text-align: center;
+    color: var(--text-black);
+    width: 80%;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.text-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#dialog-title,
+#dialog-message,
+#select-mode {
+    margin: 0;
+}
+
 .resize-options {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-top: 15px;
-}
-.hidden {
-    display: none !important; /* The magic invisibility cloak */
+    gap: 8px;
 }
 
-.custom-dialog {
-    background-color: #fff;
-    padding: 24px 32px;
-    border-radius: 12px;
-    text-align: center;
-    color: black;
-    width: 320px; /* Forces a consistent, wide shape */
-    max-width: 80%;
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+.hidden {
+    display: none !important; /* The magic invisibility cloak */
 }
 
 /* --- MINI MODE ILLUSIONS --- */
