@@ -47,6 +47,9 @@ const purrAudio = new Audio('../assets/sounds/purr.mp3');
 purrAudio.loop = true;
 const tickAudio = new Audio('../assets/sounds/tick.mp3');
 let tickEnabled = false;
+const alarmAudio = new Audio('../assets/sounds/alarm.mp3');
+alarmAudio.loop = true;
+alarmAudio.volume = 0.35; // Reduced default volume so it doesn't overpower BGM
 
 function updateAudioSettings() {
     let ambVol = parseInt(localStorage.getItem('ambientVolume'));
@@ -73,11 +76,13 @@ function updateAudioSettings() {
         soundEnabled = false;
         ambientAudio.muted = true;
         purrAudio.muted = true;
+        alarmAudio.muted = true;
         if (soundIcon) soundIcon.src = "../assets/icons/soundoff-btn.png";
     } else {
         soundEnabled = true;
         ambientAudio.muted = false;
         purrAudio.muted = false;
+        alarmAudio.muted = false;
         if (soundIcon) soundIcon.src = "../assets/icons/soundon-btn.png";
     }
 
@@ -434,8 +439,17 @@ function showModal(title, message, btnText, nextAction) {
     dialogBtn.innerText = btnText;   
 
     modalOverlay.classList.remove("hidden");
+    
+    // Start playing the alarm on a loop if the user has it enabled in Settings
+    if (localStorage.getItem('alarmSound') !== 'false') {
+        alarmAudio.play().catch(e => console.log("Alarm blocked:", e));
+    }
 
     dialogBtn.onclick = function() {
+        // Stop the alarm when the user proceeds
+        alarmAudio.pause();
+        alarmAudio.currentTime = 0;
+        
         modalOverlay.classList.add("hidden");
         nextAction();
     }
