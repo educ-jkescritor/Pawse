@@ -27,6 +27,10 @@ function createWindow() {
 
   win.loadFile("index.html");
 
+  win.once('ready-to-show', () => {
+    win.setSize(310, 430);
+  });
+
   win.on('closed', () => {
     if(set) {
       set.close();
@@ -55,6 +59,10 @@ function settingsWindow() {
   });
 
   set.loadFile("settings.html");
+
+  set.once('ready-to-show', () => {
+    set.setSize(720, 430);
+  });
 
   set.on('closed', () => {
     set = null;
