@@ -1,7 +1,7 @@
 const catConfiguration = {   
     orange: {
-        workTime: 15 * 60,
-        shortBreakTime: 3 * 60,
+        workTime: 0.5 * 60,
+        shortBreakTime: 0.5 * 60,
         longBreakTime: 12 * 60,
         dbId: "orange_cat"
     },
@@ -83,28 +83,41 @@ function skipTimer(completedCycle) {
 
     if (workingTime == true) {
         workingTime = false;
+        const autoStartBreaks = localStorage.getItem('autoStartBreaks') === 'true';
         if (cycleCount === 3) {
-            showModal (
-                "Long Break Time!",
-                "Time for a long break!",
-                "Start Break",
-                function () {
-                    remainingTime = catConfig.longBreakTime;
-                    document.getElementById("timer-display").textContent = formatTime(remainingTime);
-                    startTimer();
-                }
-            );
+            if (autoStartBreaks) {
+                remainingTime = catConfig.longBreakTime;
+                document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                startTimer();
+            } else {
+                showModal (
+                    "Long Break Time!",
+                    "Time for a long break!",
+                    "Start Break",
+                    function () {
+                        remainingTime = catConfig.longBreakTime;
+                        document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                        startTimer();
+                    }
+                );
+            }
         } else {
-            showModal (
-                "Short Break Time!",
-                "Time for a short break!",
-                "Start Break",
-                function () {
-                    remainingTime = catConfig.shortBreakTime;
-                    document.getElementById("timer-display").textContent = formatTime(remainingTime);
-                    startTimer();
-                }
-            );
+            if (autoStartBreaks) {
+                remainingTime = catConfig.shortBreakTime;
+                document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                startTimer();
+            } else {
+                showModal (
+                    "Short Break Time!",
+                    "Time for a short break!",
+                    "Start Break",
+                    function () {
+                        remainingTime = catConfig.shortBreakTime;
+                        document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                        startTimer();
+                    }
+                );
+            }
         }
     } else {     
         workingTime = true;
@@ -136,16 +149,23 @@ function skipTimer(completedCycle) {
             )
             return;
         } else {
-            showModal (
-                "Back to Work!",
-                `Back to work! You have completed ${cycleCount} cycle(s)! Keep going!`,
-                "Start Work",
-                function () {
-                    remainingTime = catConfig.workTime;
-                    document.getElementById("timer-display").textContent = formatTime(remainingTime);
-                    startTimer();
-                }
-            ); 
+            const autoStartPomodoros = localStorage.getItem('autoStartPomodoros') === 'true';
+            if (autoStartPomodoros) {
+                remainingTime = catConfig.workTime;
+                document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                startTimer();
+            } else {
+                showModal (
+                    "Back to Work!",
+                    `Back to work! You have completed ${cycleCount} cycle(s)! Keep going!`,
+                    "Start Work",
+                    function () {
+                        remainingTime = catConfig.workTime;
+                        document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                        startTimer();
+                    }
+                ); 
+            }
         }
     }
 }
@@ -185,7 +205,15 @@ playButton.addEventListener("click", () => {
     }   
 });
 
+const strictMode = localStorage.getItem('strictMode') === 'true';
+if (strictMode) {
+    skipButton.disabled = true;
+    skipButton.style.opacity = "0.5";
+    skipButton.style.cursor = "not-allowed";
+}
+
 skipButton.addEventListener("click", () => {
+    if (strictMode) return;
     skipTimer(false);
 });
 
