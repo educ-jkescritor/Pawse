@@ -6,21 +6,49 @@ if (localStorage.getItem('alwaysOnTop') === 'true') {
 
 let selectedCat = null;
 
-let orangeButton = document.getElementById("orange_cat");
-orangeButton.onclick = function () {
-    selectedCat = "orange";
+// Store buttons in a dictionary
+const buttons = {
+    tuxedo: document.getElementById("tuxedo_cat"),
+    orange: document.getElementById("orange_cat"),
+    black: document.getElementById("black_cat")
+};
+
+// Helper function to handle visual class swaps and value updating
+function selectCompanion(catKey) {
+    selectedCat = catKey;
+
+    // Remove 'selected' class from all buttons
+    Object.values(buttons).forEach(btn => {
+        if (btn) btn.classList.remove("selected");
+    });
+
+    // Add 'selected' class to the clicked button
+    const selectedBtn = buttons[catKey];
+    if (selectedBtn) {
+        selectedBtn.classList.add("selected");
+    }
 }
 
-let tuxedoButton = document.getElementById("tuxedo_cat");
-tuxedoButton.onclick = function () {
-    selectedCat = "tuxedo";
+// Attach event listeners safely
+if (buttons.orange) {
+    buttons.orange.onclick = function () {
+        selectCompanion("orange");
+    };
 }
 
-let blackButton = document.getElementById("black_cat");
-blackButton.onclick = function () {
-    selectedCat = "black";
+if (buttons.tuxedo) {
+    buttons.tuxedo.onclick = function () {
+        selectCompanion("tuxedo");
+    };
 }
 
+if (buttons.black) {
+    buttons.black.onclick = function () {
+        selectCompanion("black");
+    };
+}
+
+// Confirmation handling
 let confirmButton = document.querySelector(".confirmation_button");
 confirmButton.onclick = function () {
     if (selectedCat) {
