@@ -34,21 +34,55 @@ let actualBreak = 0;
 let workCount = 0;
 let breakCount = 0;
 
-// Initialize Ambient Audio
+// Initialize Audio Objects
 const ambientAudio = new Audio('../assets/sounds/ambient.mp3');
 ambientAudio.loop = true;
+const purrAudio = new Audio('../assets/sounds/purr.mp3');
+purrAudio.loop = true;
+const tickAudio = new Audio('../assets/sounds/tick.mp3');
+let tickEnabled = false;
 
-const savedAmbientVolume = localStorage.getItem('ambientVolume');
-const ambientVol = savedAmbientVolume !== null ? parseInt(savedAmbientVolume) : 50;
+function updateAudioSettings() {
+    let ambVol = parseInt(localStorage.getItem('ambientVolume'));
+    if (isNaN(ambVol)) ambVol = 50;
+    
+    let purVol = parseInt(localStorage.getItem('purrVolume'));
+    if (isNaN(purVol)) purVol = 50;
+    
+    let tickStr = localStorage.getItem('tickSound');
+    tickEnabled = tickStr === null ? true : (tickStr === 'true');
 
-if (ambientVol > 0) {
-    ambientAudio.volume = ambientVol / 100;
-    ambientAudio.play().catch(e => console.log("Autoplay blocked:", e));
+    ambientAudio.volume = ambVol / 100;
+    purrAudio.volume = purVol / 100;
+
+    const soundIcon = document.getElementById("sound-icon");
+
+    // Smart Mute if everything is zeroed out in settings
+    if (ambVol === 0 && purVol === 0 && !tickEnabled) {
+        soundEnabled = false;
+        ambientAudio.muted = true;
+        purrAudio.muted = true;
+        if (soundIcon) soundIcon.src = "../assets/icons/soundoff-btn.png";
+    } else if (soundEnabled) {
+        ambientAudio.muted = false;
+        purrAudio.muted = false;
+        if (soundIcon) soundIcon.src = "../assets/icons/soundon-btn.png";
+    }
+
+    // Play if allowed
+    if (ambVol > 0 && soundEnabled) ambientAudio.play().catch(e => {});
+    if (purVol > 0 && soundEnabled && workingTime) purrAudio.play().catch(e => {});
 }
 
-// Initialize Tick Audio
-const tickAudio = new Audio('../assets/sounds/tick.mp3');
-let tickEnabled = localStorage.getItem('tickSound') === 'true';
+// Listen for settings changes from the Settings window
+window.addEventListener('storage', (e) => {
+    if (['ambientVolume', 'purrVolume', 'tickSound'].includes(e.key)) {
+        updateAudioSettings();
+    }
+});
+
+// Run once on load
+updateAudioSettings();
 
 let modalOverlay = document.getElementById("modal-overlay");
 let dialogTitle = document.getElementById("dialog-title");
@@ -268,10 +302,34 @@ soundButton.addEventListener("click", () => {
         soundEnabled = false;
         soundIcon.src = "../assets/icons/soundoff-btn.png";
         ambientAudio.muted = true;
+        purrAudio.muted = true;
+
+        // Force settings UI to visually drop to 0 / Off
+        localStorage.setItem('ambientVolume', '0');
+        localStorage.setItem('purrVolume', '0');
+        localStorage.setItem('tickSound', 'false');
     }else{
         soundEnabled = true;
         soundIcon.src = "../assets/icons/soundon-btn.png";
         ambientAudio.muted = false;
+        purrAudio.muted = false;
+
+        // Smart defaults: if they unmute but everything was zeroed out, restore defaults
+        let ambVol = parseInt(localStorage.getItem('ambientVolume'));
+        let purVol = parseInt(localStorage.getItem('purrVolume'));
+        let tickStr = localStorage.getItem('tickSound');
+        
+        let isAmbZero = (isNaN(ambVol) || ambVol === 0);
+        let isPurrZero = (isNaN(purVol) || purVol === 0);
+        let isTickOff = (tickStr === 'false');
+
+        if (isAmbZero && isPurrZero && isTickOff) {
+            localStorage.setItem('ambientVolume', '50');
+            localStorage.setItem('purrVolume', '50');
+            localStorage.setItem('tickSound', 'true');
+        }
+
+        updateAudioSettings(); // Re-apply everything
     }
 });
 

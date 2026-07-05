@@ -99,6 +99,14 @@ loadAnalytics();
 // Persistent volume sliders (retains configuration on load)
 const volumeSliders = document.querySelectorAll('.volume-slider');
 
+// Function to calculate and apply colors and text
+const updateSliderFill = (el) => {
+    const val = el.value;
+    const textLabel = el.previousElementSibling;
+    if (textLabel) textLabel.textContent = `${val}%`;
+    el.style.background = `linear-gradient(to right, var(--sys-blue-solid) 0%, var(--sys-blue-solid) ${val}%, var(--stroke-color) ${val}%, var(--stroke-color) 100%)`;
+};
+
 volumeSliders.forEach(slider => {
     // 1. Determine a unique key for each slider using its HTML class
     let storageKey = '';
@@ -116,33 +124,16 @@ volumeSliders.forEach(slider => {
         }
     }
 
-    // Function to calculate and apply colors and text
-    const updateSliderFill = (el) => {
-        const val = el.value;
+    // Initialize layout with the loaded values
+    updateSliderFill(slider);
 
-        // Update text percentage
-        const textLabel = el.previousElementSibling;
-        if (textLabel) {
-            textLabel.textContent = `${val}%`;
+    // Update dynamically and save to localStorage on slide
+    slider.addEventListener('input', (event) => {
+        updateSliderFill(event.target);
+        if (storageKey) {
+            localStorage.setItem(storageKey, event.target.value);
         }
-
-        // Update background gradient (blue follows value percentage)
-        el.style.background = `linear-gradient(to right, var(--sys-blue-solid) 0%,
-        var(--sys-blue-solid) ${val}%, var(--stroke-color) ${val}%, var(--stroke-color) 100%)`;
-    };
-
-        // Initialize layout with the loaded values
-        updateSliderFill(slider);
-
-        // Update dynamically and save to localStorage on slide
-        slider.addEventListener('input', (event) => {
-            updateSliderFill(event.target);
-
-            // 3. Save to localStorage dynamically as the user drags
-            if (storageKey) {
-                localStorage.setItem(storageKey, event.target.value);
-            }
-        });
+    });
 });
 
 // Workflow Settings Logic
@@ -192,3 +183,25 @@ if (topToggle) {
         }
     });
 }
+
+// Dynamically update UI if localStorage changes from another window (like the Timer screen)
+window.addEventListener('storage', (e) => {
+    if (e.key === 'ambientVolume') {
+        const slider = document.querySelector('.ambient-slider');
+        if (slider) {
+            slider.value = e.newValue;
+            updateSliderFill(slider);
+        }
+    }
+    if (e.key === 'purrVolume') {
+        const slider = document.querySelector('.purr-slider');
+        if (slider) {
+            slider.value = e.newValue;
+            updateSliderFill(slider);
+        }
+    }
+    if (e.key === 'tickSound') {
+        const toggle = document.querySelector('.tick-toggle');
+        if (toggle) toggle.checked = (e.newValue === 'true');
+    }
+});
