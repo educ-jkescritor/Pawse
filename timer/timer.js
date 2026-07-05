@@ -63,8 +63,8 @@ function updateAudioSettings() {
 
     const soundIcon = document.getElementById("sound-icon");
 
-    // Smart Mute if everything is zeroed out in settings
-    if (ambVol === 0 && purVol === 0 && !tickEnabled) {
+    // Smart Mute if ambient and purr are zeroed out in settings
+    if (ambVol === 0 && purVol === 0) {
         soundEnabled = false;
         ambientAudio.muted = true;
         purrAudio.muted = true;
@@ -161,7 +161,7 @@ function startTimer() {
     timerId = setInterval(() => {
         remainingTime--;
 
-        if (tickEnabled && soundEnabled) {
+        if (tickEnabled) {
             // Skip the first 0.15 seconds of the MP3 to bypass "dead air" padding
             tickAudio.currentTime = 0.10;
             tickAudio.play().catch(e => console.log("Tick blocked:", e));
@@ -310,29 +310,25 @@ soundButton.addEventListener("click", () => {
         ambientAudio.muted = true;
         purrAudio.muted = true;
 
-        // Force settings UI to visually drop to 0 / Off
+        // Force settings UI to visually drop to 0 / Off for ambient and purr only
         localStorage.setItem('ambientVolume', '0');
         localStorage.setItem('purrVolume', '0');
-        localStorage.setItem('tickSound', 'false');
     }else{
         soundEnabled = true;
         soundIcon.src = "../assets/icons/soundon-btn.png";
         ambientAudio.muted = false;
         purrAudio.muted = false;
 
-        // Smart defaults: if they unmute but everything was zeroed out, restore defaults
+        // Smart defaults: if they unmute but ambient/purr was zeroed out, restore defaults
         let ambVol = parseInt(localStorage.getItem('ambientVolume'));
         let purVol = parseInt(localStorage.getItem('purrVolume'));
-        let tickStr = localStorage.getItem('tickSound');
         
         let isAmbZero = (isNaN(ambVol) || ambVol === 0);
         let isPurrZero = (isNaN(purVol) || purVol === 0);
-        let isTickOff = (tickStr === 'false');
 
-        if (isAmbZero && isPurrZero && isTickOff) {
+        if (isAmbZero && isPurrZero) {
             localStorage.setItem('ambientVolume', '50');
             localStorage.setItem('purrVolume', '50');
-            localStorage.setItem('tickSound', 'true');
         }
 
         updateAudioSettings(); // Re-apply everything
