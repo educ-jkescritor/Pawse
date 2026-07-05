@@ -129,7 +129,7 @@ async function loadAnalytics(weeksAgo = 0) {
             // Normalize animation speed (velocity) regardless of height
             // 100% height = 1000ms, 50% height = 500ms
             const durationMs = Math.max((heightPercent / 100) * 1000, 300); // 300ms floor for tiny bounce
-            bar.style.transition = `height ${durationMs}ms cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s ease`;
+            bar.style.transition = `height ${durationMs}ms cubic-bezier(0.175, 0.885, 0.32, 1.275), background-position 0.3s ease`;
             
             // Start at 0% for animation
             bar.style.height = `0%`;
@@ -154,7 +154,16 @@ async function loadAnalytics(weeksAgo = 0) {
             }
             
             const label = document.createElement("span");
-            label.className = "bar-label font-inter-10-regular";
+            
+            // Highlight today's date if viewing the current week
+            if (weeksAgo === 0 && index === new Date().getDay()) {
+                label.className = "bar-label font-inter-10-medium";
+                label.style.color = "var(--text-black)";
+                label.style.fontWeight = "bold";
+            } else {
+                label.className = "bar-label font-inter-10-regular";
+            }
+            
             label.textContent = days[index];
             
             barWrapper.appendChild(bar);
@@ -388,3 +397,23 @@ window.addEventListener('storage', (e) => {
         updateStrictLock();
     }
 });
+
+// Dashboard Real-Time Clock
+function updateDashboardDateTime() {
+    const dtElement = document.getElementById("dashboard-datetime");
+    if (!dtElement) return;
+
+    const now = new Date();
+    
+    // Format: "Jul 6, 2026 • 02:53:15 AM"
+    const optionsDate = { year: 'numeric', month: 'short', day: 'numeric' };
+    const optionsTime = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
+    
+    const dateStr = now.toLocaleDateString('en-US', optionsDate);
+    const timeStr = now.toLocaleTimeString('en-US', optionsTime);
+    
+    dtElement.textContent = `${dateStr} • ${timeStr}`;
+}
+
+updateDashboardDateTime();
+setInterval(updateDashboardDateTime, 1000);

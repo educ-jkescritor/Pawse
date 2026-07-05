@@ -117,6 +117,13 @@ p {
     height: 100%; /* Force it to exactly fill the main-bar content box */
 }
 
+.dashboard-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    width: 100%;
+}
+
 /* DASHBOARD */
 
 .analytics-container {
@@ -179,7 +186,7 @@ p {
 .graph {
     width: 100%;
     flex: 1; /* Stretch to exactly fill the remaining height instead of a fixed height */
-    padding: 8px 16px;
+    padding: 12px 16px 16px 16px; /* 12px top offsets the 4px header padding, 16px bottom ensures equal breathing room */
     border-radius: 8px;
     background: #FFFFFF;
     box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
@@ -330,27 +337,18 @@ p {
 .bar {
     position: relative; /* Position relative for tooltip placement */
     width: 40px; /* Increased from 16px to make bars thicker */
-    background-color: var(--sys-blue-solid);
+    background-image: linear-gradient(180deg, #FFFFFF 0%, #A8DCFF 50%, #A8DCFF 100%);
+    background-size: 100% 200%;
+    background-position: top;
     border-radius: 4px;
-    transition: height 1.0s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s ease;
+    transition: height 1.0s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-position 0.3s ease;
 }
 
 .bar:hover {
-    background-color: var(--sys-blue-solid); /* Default hover color */
+    background-position: bottom;
 }
 
-/* Dynamic Hover colors matched to the user's favorite companion */
-.graph-bars.tuxedo_cat .bar:hover {
-    background-color: var(--theme-classic-solid); /* Balanced Tux Green */
-}
-
-.graph-bars.orange_cat .bar:hover {
-    background-color: var(--theme-sprint-solid); /* Sprint Ginger Orange */
-}
-
-.graph-bars.black_cat .bar:hover {
-    background-color: var(--theme-focused-solid); /* Focused Void Purple */
-}
+/* Removed dynamic cat colors to enforce uniform #A8DCFF blue gradient */
 
 /* Custom Tooltip Styling */
 .bar-tooltip {
