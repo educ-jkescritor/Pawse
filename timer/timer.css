@@ -15,24 +15,26 @@
     border: 1px solid var(--stroke-color);
     display: flex;
     justify-content: center;
-    gap: 4px;
+    gap: 12px;
 }
 
 .fish-icon {
-    width: 24px; /* Set your preferred size */
-    height: 24px;
+    width: 16px;
+    height: 16px;
     display: inline-block;
     background-image: url('../assets/icons/uncompleted-fish.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    image-rendering: pixelated; /* Keeps pixel art crisp */
+    image-rendering: pixelated;
+    transform: scale(1.5);
 }
 
-/* Swaps to completed fish when JS adds the 'active' class */
 .fish-icon.active {
     background-image: url('../assets/icons/completed-fish.png');
 }
+
+/* --- CAT AREA --- */
 
 .cat-area {
     width: 100%;
@@ -96,7 +98,6 @@
     display: flex;
     justify-content: center;
     gap: 24px;
-
     border: 1px solid var(--stroke-color);
 }
 
@@ -113,10 +114,9 @@
 }
 
 .timer-controls button img {
-        width: 20px;
-        height: 20px;
-        object-fit: contain;
-        /* pointer-events: none; Prevents dragging issues */
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
 }
 
 /* --- CUSTOM MODAL STYLES --- */
