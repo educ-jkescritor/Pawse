@@ -14,22 +14,39 @@ function hideAllContents() {
     settingsContent.classList.add("hidden");
 }  
 
+// Tab button selection state handling
+const sidebarButtons = [
+    document.getElementById("dashboard-btn"),
+    document.getElementById("about-btn"),
+    document.getElementById("settings-btn")
+];
+
+function setActiveTab(activeButton) {
+    sidebarButtons.forEach(btn => {
+        if (btn) btn.classList.remove("active");
+    });
+    if (activeButton) activeButton.classList.add("active");
+}
+
 let dashboardButton = document.getElementById("dashboard-btn");
 dashboardButton.onclick = function() {
     hideAllContents();
     dashboardContent.classList.remove("hidden");
+    setActiveTab(dashboardButton);
 }
 
 let aboutButton = document.getElementById("about-btn");
 aboutButton.onclick = function() {
     hideAllContents();
     aboutContent.classList.remove("hidden");
+    setActiveTab(aboutButton);
 }
 
 let settingsButton = document.getElementById("settings-btn");
 settingsButton.onclick = function() {
     hideAllContents();
     settingsContent.classList.remove("hidden");
+    setActiveTab(settingsButton);
 }
 
 let dashboardContent = document.getElementById("dashboard-content");    
