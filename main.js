@@ -112,6 +112,7 @@ ipcMain.on('close-window', (event) => {
 
 ipcMain.on('settings-window', (event) => {
   if(set){
+    if (set.isMinimized()) set.restore();
     set.focus();
   }else{
     settingsWindow();
