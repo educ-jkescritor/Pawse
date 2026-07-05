@@ -86,9 +86,19 @@ function updateAudioSettings() {
         if (soundIcon) soundIcon.src = "../assets/icons/soundon-btn.png";
     }
 
-    // Play if allowed
-    if (ambVol > 0 && soundEnabled) ambientAudio.play().catch(e => {});
-    if (purVol > 0 && soundEnabled && workingTime) purrAudio.play().catch(e => {});
+    // Play or Pause based on strict state conditions
+    if (ambVol > 0 && soundEnabled) {
+        ambientAudio.play().catch(e => {});
+    } else {
+        ambientAudio.pause();
+    }
+    
+    // Purr only plays during working time and when timer is running
+    if (purVol > 0 && soundEnabled && workingTime && isRunning) {
+        purrAudio.play().catch(e => {});
+    } else {
+        purrAudio.pause();
+    }
 }
 
 // Listen for settings changes from the Settings window
@@ -201,6 +211,7 @@ function startTimer() {
     document.getElementById("play-icon").src = "../assets/icons/pause-btn.png";
     isRunning = true;
     updateCatState();
+    updateAudioSettings();
 
     timerId = setInterval(() => {
         remainingTime--;
@@ -334,6 +345,7 @@ function pauseTimer() {
     document.getElementById("play-icon").src = "../assets/icons/play-btn.png";
     isRunning = false;
     updateCatState();
+    updateAudioSettings();
 }
 
 function soundControl() {
