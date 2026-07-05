@@ -242,6 +242,28 @@ body.cat-only-mode .main-titlebar > * {
     display: none !important;
 }
 
+/* Subtle, visible drag handle indicator line at the top */
+body.timer-only-mode .main-titlebar::after,
+body.cat-only-mode .main-titlebar::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 3px;
+    background-color: var(--stroke-color);
+    border-radius: 2px;
+    opacity: 0.6;
+    transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+body.timer-only-mode:hover .main-titlebar::after,
+body.cat-only-mode:hover .main-titlebar::after {
+    opacity: 1;
+    background-color: var(--sys-blue-solid); /* Highlights in app blue on hover to signal dragging */
+}
+
 body.timer-only-mode .cat-area, 
 body.timer-only-mode .session-counter {
     display: none !important;
