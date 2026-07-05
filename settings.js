@@ -317,6 +317,12 @@ if (dropdownTrigger && dropdownMenu) {
             const val = item.getAttribute('data-value');
             selectedWeekLabel.textContent = item.textContent;
             
+            // Dynamically update the chart header title
+            const chartHeader = document.getElementById('chart-header-title');
+            if (chartHeader) {
+                chartHeader.textContent = item.textContent;
+            }
+            
             // Toggle active classes
             dropdownItems.forEach(i => i.classList.remove('active'));
             item.classList.add('active');
