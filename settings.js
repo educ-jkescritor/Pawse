@@ -70,14 +70,18 @@ async function loadAnalytics(weeksAgo = 0) {
     todayWorkSecondsElement.textContent = timeString;
     historicalPomodoroElement.textContent = data.historical_pomodoro || 0;
 
-    // Map cat_type to display name
-    const catDisplayNames = {
-        'orange_cat': 'Ginger',
-        'tuxedo_cat': 'Tux',
-        'black_cat': 'Void'
+    // Map cat_type to corresponding face image
+    const catFaceImages = {
+        'orange_cat': './assets/photos/orange-cat-face.png',
+        'tuxedo_cat': './assets/photos/tuxedo-cat-face.png',
+        'black_cat': './assets/photos/black-cat-face.png'
     };
     
-    favoriteCatElement.textContent = catDisplayNames[data.favorite_cat] || 'None';
+    if (data.favorite_cat && catFaceImages[data.favorite_cat]) {
+        favoriteCatElement.innerHTML = `<img src="${catFaceImages[data.favorite_cat]}" alt="${data.favorite_cat}" class="favorite-cat-img">`;
+    } else {
+        favoriteCatElement.textContent = 'None';
+    }
 
     // Update favorite companion card theme class
     const favoriteCatCard = document.getElementById("favorite-cat-card");
