@@ -14,22 +14,39 @@ function hideAllContents() {
     settingsContent.classList.add("hidden");
 }  
 
+// Tab button selection state handling
+const sidebarButtons = [
+    document.getElementById("dashboard-btn"),
+    document.getElementById("about-btn"),
+    document.getElementById("settings-btn")
+];
+
+function setActiveTab(activeButton) {
+    sidebarButtons.forEach(btn => {
+        if (btn) btn.classList.remove("active");
+    });
+    if (activeButton) activeButton.classList.add("active");
+}
+
 let dashboardButton = document.getElementById("dashboard-btn");
 dashboardButton.onclick = function() {
     hideAllContents();
     dashboardContent.classList.remove("hidden");
+    setActiveTab(dashboardButton);
 }
 
 let aboutButton = document.getElementById("about-btn");
 aboutButton.onclick = function() {
     hideAllContents();
     aboutContent.classList.remove("hidden");
+    setActiveTab(aboutButton);
 }
 
 let settingsButton = document.getElementById("settings-btn");
 settingsButton.onclick = function() {
     hideAllContents();
     settingsContent.classList.remove("hidden");
+    setActiveTab(settingsButton);
 }
 
 let dashboardContent = document.getElementById("dashboard-content");    
@@ -62,11 +79,36 @@ async function loadAnalytics(weeksAgo = 0) {
     
     favoriteCatElement.textContent = catDisplayNames[data.favorite_cat] || 'None';
 
+    // Update favorite companion card theme class
+    const favoriteCatCard = document.getElementById("favorite-cat-card");
+    if (favoriteCatCard) {
+        favoriteCatCard.classList.remove('orange_cat', 'tuxedo_cat', 'black_cat');
+        if (data.favorite_cat) {
+            favoriteCatCard.classList.add(data.favorite_cat);
+        }
+    }
+
     // Graph Generation
     const graphBarsContainer = document.querySelector(".graph-bars");
     if (graphBarsContainer && data.weekly_data) {
         graphBarsContainer.innerHTML = ''; // Clear existing
+        
+        // Dynamic hover support: style bars according to user's favorite companion
+        graphBarsContainer.classList.remove('orange_cat', 'tuxedo_cat', 'black_cat');
+        if (data.favorite_cat) {
+            graphBarsContainer.classList.add(data.favorite_cat);
+        }
+        
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        
+        // Check if there is any data recorded for this week
+        const hasData = data.weekly_data.some(hours => hours > 0);
+        if (!hasData) {
+            const noDataMsg = document.createElement("div");
+            noDataMsg.className = "no-data-message font-inter-10-medium";
+            noDataMsg.textContent = "No sessions recorded for this week";
+            graphBarsContainer.appendChild(noDataMsg);
+        }
         
         // Find max hours for scaling, default to at least 1 hour to prevent divide by zero
         const maxHours = Math.max(...data.weekly_data, 1); 
@@ -81,7 +123,20 @@ async function loadAnalytics(weeksAgo = 0) {
             bar.className = "bar";
             // The height of the bar container is essentially 100%, we apply height to bar
             bar.style.height = `${heightPercent}%`;
-            bar.title = `${hours} hours`;
+            
+            // Only add tooltip if there is actual time spent
+            if (hours > 0) {
+                // Custom Tooltip element for styled hours display
+                const tooltip = document.createElement("span");
+                tooltip.className = "bar-tooltip font-inter-10-medium";
+                
+                // Format decimal hours to human readable "Xh Ym"
+                const h = Math.floor(hours);
+                const m = Math.round((hours - h) * 60);
+                tooltip.textContent = `${h}h ${m}m`;
+                
+                bar.appendChild(tooltip);
+            }
             
             const label = document.createElement("span");
             label.className = "bar-label font-inter-10-regular";
@@ -182,11 +237,46 @@ if (tickToggle) {
     tickToggle.addEventListener('change', (e) => localStorage.setItem('tickSound', e.target.checked));
 }
 
-// Graph Dropdown Logic
-const weekDropdown = document.getElementById('week-dropdown');
-if (weekDropdown) {
-    weekDropdown.addEventListener('change', (e) => {
-        loadAnalytics(parseInt(e.target.value));
+// Custom Graph Dropdown Logic
+const dropdownTrigger = document.getElementById('dropdown-trigger');
+const dropdownMenu = document.getElementById('dropdown-menu');
+const dropdownContainer = document.getElementById('week-dropdown-container');
+const selectedWeekLabel = document.getElementById('selected-week-label');
+const dropdownItems = document.querySelectorAll('.dropdown-item');
+
+if (dropdownTrigger && dropdownMenu) {
+    // Toggle menu visibility
+    dropdownTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdownMenu.classList.toggle('hidden');
+        dropdownContainer.classList.toggle('open');
+    });
+
+    // Handle item selection
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const val = item.getAttribute('data-value');
+            selectedWeekLabel.textContent = item.textContent;
+            
+            // Toggle active classes
+            dropdownItems.forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            
+            // Close dropdown
+            dropdownMenu.classList.add('hidden');
+            dropdownContainer.classList.remove('open');
+            
+            // Load requested week's analytics
+            loadAnalytics(parseInt(val));
+        });
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (dropdownContainer && !dropdownContainer.contains(e.target)) {
+            dropdownMenu.classList.add('hidden');
+            dropdownContainer.classList.remove('open');
+        }
     });
 }
 

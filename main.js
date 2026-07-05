@@ -10,12 +10,15 @@ function createWindow() {
     width: 310, // initially 292 from initial build
     height: 430, // initially 430 from initial build
     alwaysOnTop: globalAlwaysOnTop,
-    resizable: false,
+    resizable: true, // Keep resizable true to allow programmatic resizing on Windows
+    minWidth: 310,
+    maxWidth: 310,
+    minHeight: 430,
+    maxHeight: 430,
     maximizable: false,
     fullscreenable: false,
     frame: false,
     transparent: false,
-    userContentSize: true,
     webPreferences: {
       contextIsolation: true,
       preload: path.join(__dirname, "preload.js")
@@ -23,6 +26,10 @@ function createWindow() {
   });
 
   win.loadFile("index.html");
+
+  win.once('ready-to-show', () => {
+    win.setSize(310, 430);
+  });
 
   win.on('closed', () => {
     if(set) {
@@ -36,7 +43,11 @@ function settingsWindow() {
     width: 720, // initially 292 from initial build
     height: 430, // initially 430 from initial build
     alwaysOnTop: globalAlwaysOnTop,
-    resizable: false,
+    resizable: true, // Keep resizable true to match main window's OS frame styling
+    minWidth: 720,
+    maxWidth: 720,
+    minHeight: 430,
+    maxHeight: 430,
     maximizable: false,
     fullscreenable: false,
     frame: false,
@@ -48,6 +59,10 @@ function settingsWindow() {
   });
 
   set.loadFile("settings.html");
+
+  set.once('ready-to-show', () => {
+    set.setSize(720, 430);
+  });
 
   set.on('closed', () => {
     set = null;
@@ -75,19 +90,19 @@ ipcMain.on('maximize-window', (event) => {
 ipcMain.on('resize-window', (event, mode) => {
   const senderWindow = BrowserWindow.fromWebContents(event.sender);
   
-  // Temporarily unlock the window so Electron allows us to change its size programmatically
-  senderWindow.setResizable(true);
-  
   if (mode === 'timer-only') {
+    senderWindow.setMinimumSize(240, 100);
+    senderWindow.setMaximumSize(240, 100);
     senderWindow.setSize(240, 100); 
   } else if (mode === 'cat-only') {
+    senderWindow.setMinimumSize(240, 240);
+    senderWindow.setMaximumSize(240, 240);
     senderWindow.setSize(240, 240); 
   } else {
+    senderWindow.setMinimumSize(310, 430);
+    senderWindow.setMaximumSize(310, 430);
     senderWindow.setSize(310, 430); 
   }
-  
-  // Lock the window again so the user cannot manually drag the edges
-  senderWindow.setResizable(false);
 });
 
 ipcMain.on('close-window', (event) => {
