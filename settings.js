@@ -256,6 +256,12 @@ if (pomodoroToggle) {
 
 // Audio Settings Logic
 // Audio Settings Logic
+const alarmToggle = document.querySelector('.alarm-toggle');
+if (alarmToggle) {
+    alarmToggle.checked = localStorage.getItem('alarmSound') !== 'false';
+    alarmToggle.addEventListener('change', (e) => localStorage.setItem('alarmSound', e.target.checked));
+}
+
 const tickToggle = document.querySelector('.tick-toggle');
 if (tickToggle) {
     tickToggle.checked = localStorage.getItem('tickSound') === 'true';
@@ -358,6 +364,10 @@ window.addEventListener('storage', (e) => {
             updateSliderFill(slider);
         }
         updateTickLock();
+    }
+    if (e.key === 'alarmSound') {
+        const toggle = document.querySelector('.alarm-toggle');
+        if (toggle) toggle.checked = (e.newValue !== 'false');
     }
     if (e.key === 'tickSound') {
         const toggle = document.querySelector('.tick-toggle');
