@@ -153,15 +153,15 @@
 }
 
 #dialog-title,
-#dialog-message {
+#dialog-message,
+#select-mode {
     margin: 0;
 }
 
 .resize-options {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    margin-top: 15px;
+    gap: 8px;
 }
 
 .hidden {
