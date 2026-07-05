@@ -15,6 +15,19 @@ const buttons = {
 
 // Helper function to handle visual class swaps and value updating
 function selectCompanion(catKey) {
+    // If the clicked card is already selected, unlock/deselect it
+    if (selectedCat === catKey) {
+        selectedCat = null;
+        if (buttons[catKey]) {
+            buttons[catKey].classList.remove("selected");
+        }
+        if (confirmButton) {
+            confirmButton.disabled = true;
+        }
+        return;
+    }
+
+    // Otherwise, select the new card
     selectedCat = catKey;
 
     // Remove 'selected' class from all buttons
