@@ -143,13 +143,13 @@ ipcMain.on('set-always-on-top', (event, isAlwaysOnTop) => {
   }
 });
 
-ipcMain.handle('load-analytics', async () => {
+ipcMain.handle('load-analytics', async (event, weeksAgo) => {
   try {
-    const analyticsData = await generateAnalytics();
+    const analyticsData = await generateAnalytics(weeksAgo);
     return analyticsData;
-  } catch (err) {
-    console.error("Error generating analytics:", err);
-    throw err;
+  } catch (error) {
+    console.error("Error generating analytics:", error);
+    throw error;
   }
 });
 

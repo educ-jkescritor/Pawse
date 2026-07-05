@@ -94,7 +94,55 @@
     height: 220px;
     padding: 8px 0px;
     border: 1px solid var(--stroke-color); /* To be removed */
+    display: flex;
     justify-content: center;
+    align-items: center;
+}
+
+.cat-sprite {
+    width: 512px; /* All cats now use exactly 512px wide frames */
+    height: 512px;
+    flex-shrink: 0; /* Prevents flexbox from crushing the exact frame size */
+    background-repeat: no-repeat;
+    background-position: 0px 0px;
+    transform: scale(0.4); /* Scale 512px down to ~204px to fit the 220px height container nicely */
+    transform-origin: center;
+    image-rendering: pixelated; /* Keeps pixel art crisp */
+    display: none; /* hidden by default or blank */
+}
+
+.cat-sprite.working {
+    display: block;
+    background-size: 3584px 512px; /* 3584px total width for 7 frames */
+    animation-name: workAnimation;
+    animation-duration: 0.7s;
+    animation-timing-function: steps(7, end); /* 7 frames for Orange and Black cats */
+    animation-iteration-count: infinite;
+}
+
+/* Tuxedo Cat has 1 extra frame (8 frames total) */
+.cat-sprite.tuxedo_cat.working {
+    background-size: 4096px 512px; /* 4096 total width */
+    animation-name: workAnimationTuxedo;
+    animation-duration: 0.8s;
+    animation-timing-function: steps(8, end);
+}
+
+.cat-sprite.breaking {
+    display: block;
+    background-size: 512px 512px; /* Perfectly matches the working frame size now! */
+    background-position: center center; /* No need to bottom align since dimensions are identical */
+    animation: none; /* No animation for resting */
+}
+
+@keyframes workAnimation {
+    from { background-position: 0px 0px; }
+    to { background-position: -3584px 0px; }
+}
+
+@keyframes workAnimationTuxedo {
+    from { background-position: 0px 0px; }
+    to { background-position: -4096px 0px; }
 }
 
 .timer-controls {

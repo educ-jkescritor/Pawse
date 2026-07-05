@@ -8,5 +8,5 @@ contextBridge.exposeInMainWorld('mainAPI', {
     close: () => ipcRenderer.send('close-window'),
     savesession: (data) => ipcRenderer.send('save-session', data),
     setAlwaysOnTop: (isAlwaysOnTop) => ipcRenderer.send('set-always-on-top', isAlwaysOnTop),
-    loadanalytics: () => ipcRenderer.invoke('load-analytics')
+    loadanalytics: (weeksAgo) => ipcRenderer.invoke('load-analytics', weeksAgo)
 });
