@@ -74,7 +74,8 @@ function updateAudioSettings() {
         ambientAudio.muted = true;
         purrAudio.muted = true;
         if (soundIcon) soundIcon.src = "../assets/icons/soundoff-btn.png";
-    } else if (soundEnabled) {
+    } else {
+        soundEnabled = true;
         ambientAudio.muted = false;
         purrAudio.muted = false;
         if (soundIcon) soundIcon.src = "../assets/icons/soundon-btn.png";
@@ -199,7 +200,7 @@ function startTimer() {
     timerId = setInterval(() => {
         remainingTime--;
 
-        if (tickEnabled) {
+        if (tickEnabled && soundEnabled) {
             // Skip the first 0.15 seconds of the MP3 to bypass "dead air" padding
             tickAudio.currentTime = 0.10;
             tickAudio.play().catch(e => console.log("Tick blocked:", e));
