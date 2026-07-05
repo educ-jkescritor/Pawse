@@ -209,7 +209,24 @@ p {
     gap: 16px;
 }
 
+.companion-image {
+    width: 25%;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.companion-image img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    transform: scale(1.8); 
+}
+
 .companion-text {
+    width: 75%;
     display: flex;
     flex-direction: column;
     gap: 8px;
