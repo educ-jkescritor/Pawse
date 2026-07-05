@@ -111,7 +111,40 @@ document.getElementById("timer-display").textContent = formatTime(remainingTime)
 let spriteTimeoutId = null;
 const catSprite = document.getElementById("cat-sprite");
 
+const clickDurations = {
+    'orange_cat': 800,  // 8 frames
+    'black_cat': 1200,  // 12 frames
+    'tuxedo_cat': 1000  // 10 frames
+};
+
+let isPetting = false;
+
+catSprite.addEventListener('click', () => {
+    // Only allow interaction during break times and if not already petting
+    if (workingTime || isPetting) return;
+
+    isPetting = true;
+    const catClass = catConfig.dbId;
+
+    // Shift to the click sprite
+    catSprite.className = `cat-sprite ${catClass} clicking`;
+    catSprite.style.backgroundImage = `url('../assets/sprites/${catClass}_click.png')`;
+
+    // Wait exactly the length of this specific cat's animation
+    const duration = clickDurations[catClass] || 1000;
+    setTimeout(() => {
+        // If session forcefully shifted back to work time, let updateCatState handle it
+        if (workingTime) return;
+
+        // Revert back to static and unlock
+        catSprite.className = `cat-sprite ${catClass} breaking`;
+        catSprite.style.backgroundImage = `url('../assets/sprites/${catClass}_static.png')`;
+        isPetting = false;
+    }, duration);
+});
+
 function updateCatState() {
+    isPetting = false; // Release lock in case of forced state shifts
     const catClass = catConfig.dbId; // e.g. 'orange_cat', 'tuxedo_cat', 'black_cat'
     
     // Clear any existing animation sequence to prevent overlaps

@@ -77,6 +77,38 @@
     background-size: 512px 512px; /* Perfectly matches the working frame size now! */
     background-position: center center; /* No need to bottom align since dimensions are identical */
     animation: none; /* No animation for resting */
+    cursor: pointer; /* Show it can be clicked during break */
+}
+
+/* --- CLICK ANIMATIONS --- */
+.cat-sprite.orange_cat.clicking {
+    display: block;
+    background-size: 4096px 512px; /* 8 frames */
+    animation: orangeClickAnim 0.8s steps(8) infinite;
+}
+@keyframes orangeClickAnim {
+    from { background-position: 0px 0px; }
+    to { background-position: -4096px 0px; }
+}
+
+.cat-sprite.black_cat.clicking {
+    display: block;
+    background-size: 6144px 512px; /* 12 frames */
+    animation: blackClickAnim 1.2s steps(12) infinite;
+}
+@keyframes blackClickAnim {
+    from { background-position: 0px 0px; }
+    to { background-position: -6144px 0px; }
+}
+
+.cat-sprite.tuxedo_cat.clicking {
+    display: block;
+    background-size: 5120px 512px; /* 10 frames */
+    animation: tuxedoClickAnim 1.0s steps(10) infinite;
+}
+@keyframes tuxedoClickAnim {
+    from { background-position: 0px 0px; }
+    to { background-position: -5120px 0px; }
 }
 
 @keyframes workAnimation {
