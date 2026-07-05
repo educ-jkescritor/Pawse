@@ -283,12 +283,28 @@ p {
 }
 
 .graph-bars {
+    position: relative; /* Enable absolute positioning context for empty state overlay */
     flex: 1;
     display: flex;
     flex-direction: row;
     align-items: flex-end; /* Bars grow from the bottom */
     justify-content: space-between;
     padding-top: 16px;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+/* Empty State Message inside Graph */
+.no-data-message {
+    position: absolute;
+    top: 40%; /* Position in the blank area above the labels */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--text-gray);
+    font-size: 10px;
+    text-align: center;
+    pointer-events: none;
+    width: 90%;
 }
 
 .bar-wrapper {

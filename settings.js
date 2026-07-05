@@ -101,6 +101,15 @@ async function loadAnalytics(weeksAgo = 0) {
         
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         
+        // Check if there is any data recorded for this week
+        const hasData = data.weekly_data.some(hours => hours > 0);
+        if (!hasData) {
+            const noDataMsg = document.createElement("div");
+            noDataMsg.className = "no-data-message font-inter-10-medium";
+            noDataMsg.textContent = "No sessions recorded for this week";
+            graphBarsContainer.appendChild(noDataMsg);
+        }
+        
         // Find max hours for scaling, default to at least 1 hour to prevent divide by zero
         const maxHours = Math.max(...data.weekly_data, 1); 
         
@@ -115,11 +124,19 @@ async function loadAnalytics(weeksAgo = 0) {
             // The height of the bar container is essentially 100%, we apply height to bar
             bar.style.height = `${heightPercent}%`;
             
-            // Custom Tooltip element for styled hours display
-            const tooltip = document.createElement("span");
-            tooltip.className = "bar-tooltip font-inter-10-medium";
-            tooltip.textContent = Number.isInteger(hours) ? `${hours}h` : `${hours.toFixed(1)}h`;
-            bar.appendChild(tooltip);
+            // Only add tooltip if there is actual time spent
+            if (hours > 0) {
+                // Custom Tooltip element for styled hours display
+                const tooltip = document.createElement("span");
+                tooltip.className = "bar-tooltip font-inter-10-medium";
+                
+                // Format decimal hours to human readable "Xh Ym"
+                const h = Math.floor(hours);
+                const m = Math.round((hours - h) * 60);
+                tooltip.textContent = `${h}h ${m}m`;
+                
+                bar.appendChild(tooltip);
+            }
             
             const label = document.createElement("span");
             label.className = "bar-label font-inter-10-regular";
