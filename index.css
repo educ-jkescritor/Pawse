@@ -116,6 +116,20 @@ body {
     font-weight: 400;
 }
 
+.font-inter-12-regular-italic {
+    font-family: var(--font-inter);
+    font-size: 12px;
+    font-weight: 400;
+    font-style: italic;
+}
+
+.font-inter-12-bold-italic {
+    font-family: var(--font-inter);
+    font-size: 12px;
+    font-weight: 700;
+    font-style: italic;
+}
+
 .font-inter-10-medium {
     font-family: var(--font-inter);
     font-size: 10px;
