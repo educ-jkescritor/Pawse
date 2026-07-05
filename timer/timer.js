@@ -47,16 +47,51 @@ function formatTime(remainingTime) {
 
 document.getElementById("timer-display").textContent = formatTime(remainingTime);     
 
+let spriteTimeoutId = null;
 const catSprite = document.getElementById("cat-sprite");
 
 function updateCatState() {
     const catClass = catConfig.dbId; // e.g. 'orange_cat', 'tuxedo_cat', 'black_cat'
     
+    // Clear any existing animation sequence to prevent overlaps
+    if (spriteTimeoutId) {
+        clearTimeout(spriteTimeoutId);
+        spriteTimeoutId = null;
+    }
+    
     if (workingTime) {
-        catSprite.className = `cat-sprite ${catClass} working`;
-        catSprite.style.backgroundImage = `url('../assets/sprites/${catConfig.dbId}_work.png')`;
-        catSprite.style.animationPlayState = isRunning ? "running" : "paused";
+        if (!isRunning) {
+            // Paused during work: just show static
+            catSprite.className = `cat-sprite ${catClass} breaking`;
+            catSprite.style.backgroundImage = `url('../assets/sprites/${catConfig.dbId}_static.png')`;
+        } else {
+            // Actively working: Sequence of work -> static -> work
+            let isWorkingAnim = true;
+            
+            // Initial state: Working
+            catSprite.className = `cat-sprite ${catClass} working`;
+            catSprite.style.backgroundImage = `url('../assets/sprites/${catConfig.dbId}_work.png')`;
+            
+            function playSequence() {
+                if (!isRunning || !workingTime) return;
+                
+                isWorkingAnim = !isWorkingAnim;
+                if (isWorkingAnim) {
+                    catSprite.className = `cat-sprite ${catClass} working`;
+                    catSprite.style.backgroundImage = `url('../assets/sprites/${catConfig.dbId}_work.png')`;
+                    spriteTimeoutId = setTimeout(playSequence, 2800); // Type for 2.8 seconds
+                } else {
+                    catSprite.className = `cat-sprite ${catClass} breaking`;
+                    catSprite.style.backgroundImage = `url('../assets/sprites/${catConfig.dbId}_static.png')`;
+                    spriteTimeoutId = setTimeout(playSequence, 2000); // Stop and look for 2 seconds
+                }
+            }
+            
+            // Kick off the sequence
+            spriteTimeoutId = setTimeout(playSequence, 2800);
+        }
     } else {
+        // Break time: always static
         catSprite.className = `cat-sprite ${catClass} breaking`;
         catSprite.style.backgroundImage = `url('../assets/sprites/${catConfig.dbId}_static.png')`;
     }
