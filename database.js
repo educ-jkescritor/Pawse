@@ -131,9 +131,8 @@ function generateAnalytics(weeksAgo = 0) {
                                 analyticData.weekly_data[localDate.getDay()] += row.total_work_seconds;
                             });
                             
-                            for (let i = 0; i < 7; i++) {
-                                analyticData.weekly_data[i] = Number((analyticData.weekly_data[i] / 3600).toFixed(1));
-                            }
+                            // We now send raw seconds instead of destructively rounding to hours
+                            // to ensure even short sessions (like 2 minutes) are accurately graphed.
                         }
 
                         resolve(analyticData);

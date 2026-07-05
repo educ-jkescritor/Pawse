@@ -102,7 +102,7 @@ async function loadAnalytics(weeksAgo = 0) {
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         
         // Check if there is any data recorded for this week
-        const hasData = data.weekly_data.some(hours => hours > 0);
+        const hasData = data.weekly_data.some(seconds => seconds > 0);
         if (!hasData) {
             const noDataMsg = document.createElement("div");
             noDataMsg.className = "no-data-message font-inter-10-medium";
@@ -110,29 +110,40 @@ async function loadAnalytics(weeksAgo = 0) {
             graphBarsContainer.appendChild(noDataMsg);
         }
         
-        // Find max hours for scaling, default to at least 1 hour to prevent divide by zero
-        const maxHours = Math.max(...data.weekly_data, 1); 
+        // Find max seconds for scaling, default to at least 1 second to prevent divide by zero
+        const maxSeconds = Math.max(...data.weekly_data, 1); 
         
-        data.weekly_data.forEach((hours, index) => {
-            const heightPercent = (hours / maxHours) * 100;
+        data.weekly_data.forEach((seconds, index) => {
+            const heightPercent = (seconds / maxSeconds) * 100;
             
             const barWrapper = document.createElement("div");
             barWrapper.className = "bar-wrapper";
             
             const bar = document.createElement("div");
             bar.className = "bar";
-            // The height of the bar container is essentially 100%, we apply height to bar
-            bar.style.height = `${heightPercent}%`;
+            
+            // Normalize animation speed (velocity) regardless of height
+            // 100% height = 1000ms, 50% height = 500ms
+            const durationMs = Math.max((heightPercent / 100) * 1000, 300); // 300ms floor for tiny bounce
+            bar.style.transition = `height ${durationMs}ms cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s ease`;
+            
+            // Start at 0% for animation
+            bar.style.height = `0%`;
+            
+            // Stagger the animation so they rise in a wave from left to right
+            setTimeout(() => {
+                bar.style.height = `${heightPercent}%`;
+            }, 100 + (index * 100));
             
             // Only add tooltip if there is actual time spent
-            if (hours > 0) {
+            if (seconds > 0) {
                 // Custom Tooltip element for styled hours display
                 const tooltip = document.createElement("span");
                 tooltip.className = "bar-tooltip font-inter-10-medium";
                 
-                // Format decimal hours to human readable "Xh Ym"
-                const h = Math.floor(hours);
-                const m = Math.round((hours - h) * 60);
+                // Format raw seconds to human readable "Xh Ym"
+                const h = Math.floor(seconds / 3600);
+                const m = Math.round((seconds % 3600) / 60);
                 tooltip.textContent = `${h}h ${m}m`;
                 
                 bar.appendChild(tooltip);
