@@ -396,7 +396,7 @@ body.cat-only-mode .cat-area {
     border: none;
     margin: 0;
     padding: 0;
-    transform: translateY(-18px); /* Retain visual shift for the cat area */
+    /* Removed translateY(-18px) to perfectly center the cat */
 }
 
 body.timer-only-mode, 
