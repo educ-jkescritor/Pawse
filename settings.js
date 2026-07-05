@@ -144,3 +144,36 @@ volumeSliders.forEach(slider => {
             }
         });
 });
+
+// Workflow Settings Logic
+const strictToggle = document.querySelector('.strict-toggle');
+const breakToggle = document.querySelector('.break-toggle');
+const pomodoroToggle = document.querySelector('.pomodoro-toggle');
+
+if (strictToggle) {
+    strictToggle.checked = localStorage.getItem('strictMode') === 'true';
+    strictToggle.addEventListener('change', (e) => localStorage.setItem('strictMode', e.target.checked));
+}
+
+if (breakToggle) {
+    breakToggle.checked = localStorage.getItem('autoStartBreaks') === 'true';
+    breakToggle.addEventListener('change', (e) => localStorage.setItem('autoStartBreaks', e.target.checked));
+}
+
+if (pomodoroToggle) {
+    pomodoroToggle.checked = localStorage.getItem('autoStartPomodoros') === 'true';
+    pomodoroToggle.addEventListener('change', (e) => localStorage.setItem('autoStartPomodoros', e.target.checked));
+}
+
+// System Settings Logic
+const topToggle = document.querySelector('.top-toggle');
+if (topToggle) {
+    topToggle.checked = localStorage.getItem('alwaysOnTop') === 'true';
+    topToggle.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        localStorage.setItem('alwaysOnTop', isChecked);
+        if (window.mainAPI && window.mainAPI.setAlwaysOnTop) {
+            window.mainAPI.setAlwaysOnTop(isChecked);
+        }
+    });
+}
