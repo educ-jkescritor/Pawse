@@ -1,7 +1,7 @@
 const catConfiguration = {   
     orange: {
-        workTime: 0.5 * 60,
-        shortBreakTime: 0.5 * 60,
+        workTime: 15 * 60,
+        shortBreakTime: 3 * 60,
         longBreakTime: 12 * 60,
         dbId: "orange_cat"
     },
@@ -47,9 +47,25 @@ function formatTime(remainingTime) {
 
 document.getElementById("timer-display").textContent = formatTime(remainingTime);     
 
+const catSprite = document.getElementById("cat-sprite");
+
+function updateCatState() {
+    const catClass = catConfig.dbId; // e.g. 'orange_cat', 'tuxedo_cat', 'black_cat'
+    
+    if (workingTime) {
+        catSprite.className = `cat-sprite ${catClass} working`;
+        catSprite.style.backgroundImage = `url('../assets/sprites/${catConfig.dbId}_work.png')`;
+        catSprite.style.animationPlayState = isRunning ? "running" : "paused";
+    } else {
+        catSprite.className = `cat-sprite ${catClass} breaking`;
+        catSprite.style.backgroundImage = `url('../assets/sprites/${catConfig.dbId}_static.png')`;
+    }
+}
+
 function startTimer() {
     document.getElementById("play-icon").src = "../assets/icons/pause-btn.png";
     isRunning = true;
+    updateCatState();
 
     timerId = setInterval(() => {
         remainingTime--;
@@ -83,6 +99,7 @@ function skipTimer(completedCycle) {
 
     if (workingTime == true) {
         workingTime = false;
+        updateCatState();
         const autoStartBreaks = localStorage.getItem('autoStartBreaks') === 'true';
         if (cycleCount === 3) {
             if (autoStartBreaks) {
@@ -121,6 +138,7 @@ function skipTimer(completedCycle) {
         }
     } else {     
         workingTime = true;
+        updateCatState();
         remainingTime = catConfig.workTime;
         cycleCount++;
         
@@ -174,6 +192,7 @@ function pauseTimer() {
     clearInterval(timerId);
     document.getElementById("play-icon").src = "../assets/icons/play-btn.png";
     isRunning = false;
+    updateCatState();
 }
 
 function soundControl() {
