@@ -1,5 +1,4 @@
 /* --- MAIN CONTENT --- */
-
 .main-content{
     padding: 10px 20px;
 }
@@ -9,6 +8,14 @@
     border: 1px solid var(--stroke-color); /* To be removed */
     text-align: center;
     line-height: 1; /* controls the space consumed by the text */
+}
+
+.session-counter{
+    width: 100%;
+    border: 1px solid var(--stroke-color);
+    display: flex;
+    justify-content: center;
+    gap: 4px;
 }
 
 .fish-icon {
@@ -26,23 +33,6 @@
 .fish-icon.active {
     background-image: url('../assets/icons/completed-fish.png');
 }
-    
-/* .session-counter{
-    width: 100%;
-    padding: 4px;
-    border: 1px solid var(--stroke-color);
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-}
-
-.fish-icon {
-    opacity: 0.3;
-}
-
-.fish-icon.active {
-    opacity: 1;
-} */
 
 .cat-area {
     width: 100%;
