@@ -91,28 +91,82 @@
 
 .timer-controls {
     width: 100%;
-    padding: 4px 0px;
+    padding: 2px 0px;
     display: flex;
     justify-content: center;
-    gap: 24px;
+    align-items: center; /* Center buttons vertically */
+    gap: 16px;
 }
 
+/* Base button styling */
 .timer-controls button {
-    width: 40px;
-    height: 40px;
-    border: none;
-    border-radius: 50%;
-    background: var(--sys-blue-solid);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    outline: none;
+    border-radius: 50%;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
 
-.timer-controls button img {
-    width: 20px;
-    height: 20px;
+/* Secondary Actions: resize, sound, skip */
+.timer-controls button:not(#play-btn) {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--stroke-color);
+    background-color: #FAFAFA;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.timer-controls button:not(#play-btn) img {
+    width: 14px;
+    height: 14px;
     object-fit: contain;
+    opacity: 0.8;
+    transition: opacity 0.15s ease;
+}
+
+/* Secondary buttons hover / active states */
+.timer-controls button:not(#play-btn):hover {
+    background-color: #ECECEC;
+    border-color: rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+.timer-controls button:not(#play-btn):hover img {
+    opacity: 1;
+}
+
+.timer-controls button:not(#play-btn):active {
+    transform: scale(0.95) translateY(0);
+    box-shadow: none;
+}
+
+/* Primary Action: play/pause */
+#play-btn {
+    width: 42px;
+    height: 42px;
+    border: none;
+    background: var(--sys-blue-solid);
+    box-shadow: 0 4px 8px rgba(53, 166, 241, 0.3);
+}
+
+#play-btn img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    filter: brightness(0) invert(1); /* Invert icon pixels to white for contrast on blue background */
+}
+
+/* Primary button hover / active states */
+#play-btn:hover {
+    transform: translateY(-1.5px);
+    box-shadow: 0 5px 11px rgba(53, 166, 241, 0.4);
+}
+
+#play-btn:active {
+    transform: scale(0.95) translateY(0);
+    box-shadow: 0 2px 5px rgba(53, 166, 241, 0.2);
 }
 
 /* --- CUSTOM MODAL STYLES --- */
@@ -216,6 +270,12 @@ body.cat-only-mode .timer-controls {
     transition: opacity 0.3s ease;
 }
 
+/* Align secondary button centers vertically with play button in mini modes (compensates for the 10px height difference) */
+body.timer-only-mode .timer-controls button:not(#play-btn),
+body.cat-only-mode .timer-controls button:not(#play-btn) {
+    margin-bottom: 5px; /* (42px play btn - 32px secondary btn) / 2 */
+}
+
 body.timer-only-mode:hover .timer-controls,
 body.cat-only-mode:hover .timer-controls {
     opacity: 1;
@@ -308,6 +368,9 @@ body.cat-only-mode .restore-btn {
     width: 24px !important;
     height: 24px !important;
     background: transparent !important;
+    border: none !important; /* Remove borders inherited from .timer-controls button */
+    border-radius: 0 !important; /* Remove circle background shape */
+    box-shadow: none !important; /* Remove shadows */
     padding: 0;
     z-index: 1001; /* Ensure it stays above the top drag bar */
 }
@@ -316,10 +379,14 @@ body.timer-only-mode .restore-btn img,
 body.cat-only-mode .restore-btn img {
     width: 18px;
     height: 18px;
-    opacity: 0.8;
+    opacity: 0.7;
+    filter: brightness(0) invert(1); /* Default: white icon to stand out on dark overlay */
+    transition: opacity 0.15s ease, filter 0.15s ease;
 }
 
 body.timer-only-mode .restore-btn:hover img,
 body.cat-only-mode .restore-btn:hover img {
     opacity: 1;
+    /* Hover: Transition to bright system blue (#35A6F1) */
+    filter: invert(57%) sepia(90%) saturate(1469%) hue-rotate(178deg) brightness(98%) contrast(93%);
 }
