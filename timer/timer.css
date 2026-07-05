@@ -133,25 +133,39 @@
     align-items: center;
 }
 
+.custom-dialog {
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background-color: var(--bg-main);
+    border-radius: 8px;
+    text-align: center;
+    color: var(--text-black);
+    width: 80%;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.text-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+#dialog-title,
+#dialog-message {
+    margin: 0;
+}
+
 .resize-options {
     display: flex;
     flex-direction: column;
     gap: 10px;
     margin-top: 15px;
 }
+
 .hidden {
     display: none !important; /* The magic invisibility cloak */
-}
-
-.custom-dialog {
-    background-color: #fff;
-    padding: 24px 32px;
-    border-radius: 12px;
-    text-align: center;
-    color: black;
-    width: 320px; /* Forces a consistent, wide shape */
-    max-width: 80%;
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 /* --- MINI MODE ILLUSIONS --- */
