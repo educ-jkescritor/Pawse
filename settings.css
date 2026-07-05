@@ -159,6 +159,14 @@ p {
     background: linear-gradient(180deg, #FFF 0%, var(--theme-focused-light) 100%);
 }
 
+.favorite-cat-img {
+    height: 48px;
+    width: auto;
+    object-fit: contain;
+    margin-top: auto;
+    align-self: flex-end;
+}
+
 .graph-container {
     width: 100%;
     gap: 8px;
