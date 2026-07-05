@@ -47,14 +47,17 @@
     /* --- CLASSIC TIMER (Green) --- */
     --theme-classic-solid: #CFE58A;
     --theme-classic-light: #ECFEA9;
+    --theme-classic-dark: #60791F;
 
     /* --- SPRINT TIMER (Orange) --- */
     --theme-sprint-solid: #F8C47F;
     --theme-sprint-light: #FEE1A9;
+    --theme-sprint-dark: #B26A06;
 
     /* --- FOCUSED TIMER (Purple) --- */
     --theme-focused-solid: #BDA9FE;
     --theme-focused-light: #E0A9FE;
+    --theme-focused-dark: #7D49C6;
 }
 
 * {
@@ -168,6 +171,33 @@ body {
     padding: 2px 6px;
     border-radius: 8px;
     color: var(--text-black);
+    border: 1px solid transparent; /* Prevents layout jump when border is added
+*/
+
+    /* Smooth transition matching the button background speed */
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s
+ease;
+}
+
+#tuxedo_cat:hover .cat-label-classic,
+#tuxedo_cat.selected .cat-label-classic {
+    background: var(--bg-main);
+    border-color: var(--theme-classic-solid);
+    color: var(--theme-classic-dark);
+}
+
+#orange_cat:hover .cat-label-sprint,
+#orange_cat.selected .cat-label-sprint {
+    background: var(--bg-main);
+    border-color: var(--theme-sprint-solid);
+    color: var(--theme-sprint-dark);
+}
+
+#black_cat:hover .cat-label-focused,
+#black_cat.selected .cat-label-focused {
+    background: var(--bg-main);
+    border-color: var(--theme-focused-solid);
+    color: var(--theme-focused-dark);
 }
 
 .cat-label-classic {
@@ -266,18 +296,18 @@ body {
     border-radius: 8px;
     width: 100%;
     min-height: 80px;
-    padding: 5px 9px; /* Shrunk by 3px on all sides to offset the border width */
+    padding: 5px 9px 5px 9px; /* Shrunk by 3px on all sides to offset the border width */
     border: 3px solid transparent; /* Prevents shifting when selected border is applied */
     display: flex;
     align-items: center;
     cursor: pointer;
     background-origin: border-box;
-    background-size: 100% 200%; 
+    background-size: 1% 200%; 
     /*Makes background gradient double the height */
     background-position: top;   
     /*Show top-half (the gradient) by default */
     transition:
-        background-position 1s cubic-bezier(0.16, 1, 0.3, 1),
+        background-position 2.5s cubic-bezier(0.16, 1, 0.3, 1),
         transform 0.2s ease,
         box-shadow 0.2s ease,
         border-color 0.2s ease;
@@ -338,26 +368,11 @@ body {
     border-color: var(--theme-focused-solid); /* Lock purple border */
 }
 
-/* #tuxedo_cat {
-    background: linear-gradient(180deg, #FFF 0%, var(--theme-classic-light) 100%);
-    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
-}
-
-#orange_cat {
-    background: linear-gradient(180deg, #FFF 0%, var(--theme-sprint-light) 100%);
-    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
-}
-
-#black_cat {
-    background: linear-gradient(180deg, #FFF 0%, var(--theme-focused-light) 100%);
-    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
-} */
-
-.tuxedo_info, .orange_info, .black_info {
+.cat_info {
     display: flex;
     flex-direction: column;
     text-align: left;
-    width: 70%;
+    width: 65%;
 }
 
 .confirmation_button {
@@ -366,15 +381,74 @@ body {
     padding: 8px 24px;
     justify-content: center;
     align-items: center;
-    cursor: pointer;
-    border: none;
-    border-radius: 8px;
-    color: var(--bg-main);
+    border-radius: 16px;
+    
+    /* Default / Disabled State (Outline Blue) */
+    background: transparent;
+    border: 2px solid var(--sys-blue-solid);
+    color: var(--sys-blue-solid);
+    cursor: default;
+    transition: 
+        background-color 0.3s ease, 
+        color 0.3s ease, 
+        border-color 0.3s ease, 
+        transform 0.2s ease, 
+        box-shadow 0.2s ease, 
+        opacity 0.3s ease;
+}
+
+/* Active State (When NOT disabled) */
+.confirmation_button:not(:disabled) {
     background: var(--sys-blue-solid);
+    border-color: var(--sys-blue-solid);
+    color: var(--bg-main);
+    cursor: pointer;
+}
+
+/* Explicitly override browser default disabled text and border coloring */
+.confirmation_button:disabled {
+    color: var(--sys-blue-solid);
+    -webkit-text-fill-color: var(--sys-blue-solid) ;
+    border-color: var(--sys-blue-solid);
+    background: var(--bg-main);;
+    opacity: 1;
+}
+
+/* Hover effects for Active State */
+.confirmation_button:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(53, 166, 241, 0.3);
+}
+
+.confirmation_button:not(:disabled):active {
+    transform: translateY(0);
+    box-shadow: none;
 }
 
 .cat_image {
     display: flex;
-    flex-direction: column;
-    text-align: right;
+    align-items: center;
+    justify-content: center;
+    width: 35%;
+    height: 100%;
+    overflow: hidden; /* Ensures that if the zoomed image overflows, it is cropped rather than spilling outside the button */
 }
+
+.cat_image img {
+    max-width: 100%;
+    max-height: 64px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    
+    /* Visual Zoom: Scaling the element on its own layer.
+       This does NOT affect button height/layout calculations. */
+    transform: scale(1.8); 
+    /* transition: transform 0.3s ease;  */
+    /* Smooth transition for the zoom effect */
+}
+
+/* Optional: Zoom in a bit more on hover/selection for a premium interactive feel */
+/* .cat_buttons button:hover .cat_image img,
+.cat_buttons button.selected .cat_image img {
+    transform: scale(1.4);
+} */

@@ -27,6 +27,11 @@ function selectCompanion(catKey) {
     if (selectedBtn) {
         selectedBtn.classList.add("selected");
     }
+
+    // Enable the confirm button
+    if (confirmButton) {
+        confirmButton.disabled = false;
+    }
 }
 
 // Attach event listeners safely
