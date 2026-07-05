@@ -23,6 +23,12 @@ const urlParams = new URLSearchParams(window.location.search);
 const catType = urlParams.get('cat');
 const catConfig = catConfiguration[catType];
 
+// Lock settings while timer is active
+localStorage.setItem('timerRunning', 'true');
+window.addEventListener('beforeunload', () => {
+    localStorage.setItem('timerRunning', 'false');
+});
+
 let remainingTime = catConfig.workTime;
 let workingTime = true;
 let cycleCount = 0;
