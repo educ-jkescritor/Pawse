@@ -423,12 +423,15 @@ skipButton.addEventListener("click", () => {
 
 function updateSessionCounter() {
     const fishIcons = document.querySelectorAll(".fish-icon");
+    const catPrefix = catConfig.dbId.replace('_cat', ''); // orange, tuxedo, black
 
     fishIcons.forEach((fish, index) => {
         if(index < cycleCount) {
             fish.classList.add("active");
+            fish.style.backgroundImage = `url('../assets/icons/completed-${catPrefix}-fish.png')`;
         } else {
             fish.classList.remove("active");
+            fish.style.backgroundImage = `url('../assets/icons/uncompleted-fish.png')`;
         }
     });
 };
