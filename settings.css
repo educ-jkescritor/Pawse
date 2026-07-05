@@ -138,9 +138,25 @@ p {
     box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
 }
 
-#favorite_cat {
-    background: linear-gradient(180deg, #FFF 0%, var(--sys-focused-grad) 100%);
+#favorite-cat-card {
+    background: linear-gradient(180deg, #FFF 0%, var(--sys-blue-grad) 100%); /* Default blue gradient */
     box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
+    transition: background 0.3s ease;
+}
+
+/* Green gradient for Tux (Classic) */
+#favorite-cat-card.tuxedo_cat {
+    background: linear-gradient(180deg, #FFF 0%, var(--theme-classic-light) 100%);
+}
+
+/* Orange gradient for Ginger (Sprint) */
+#favorite-cat-card.orange_cat {
+    background: linear-gradient(180deg, #FFF 0%, var(--theme-sprint-light) 100%);
+}
+
+/* Purple gradient for Void (Focused) */
+#favorite-cat-card.black_cat {
+    background: linear-gradient(180deg, #FFF 0%, var(--theme-focused-light) 100%);
 }
 
 .graph-container {
@@ -168,6 +184,104 @@ p {
     justify-content: flex-end;
 }
 
+/* Custom Dropdown Container */
+.custom-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+/* Custom Dropdown Trigger Button */
+.dropdown-trigger {
+    width: 120px; /* Fixed width to accommodate 'Three Weeks Ago' and match the menu box */
+    font-family: var(--font-inter);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-gray);
+    background-color: var(--bg-main);
+    border: 1px solid var(--stroke-color);
+    border-radius: 6px;
+    padding: 4px 10px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between; /* Pushes selection text left and chevron right */
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.dropdown-trigger:hover {
+    border-color: var(--sys-blue-solid);
+    color: var(--text-black);
+    background-color: #ECECEC;
+}
+
+.dropdown-trigger .chevron {
+    font-size: 8px;
+    color: var(--text-gray);
+    transition: transform 0.2s ease;
+}
+
+.custom-dropdown.open .dropdown-trigger .chevron {
+    transform: rotate(180deg);
+}
+
+/* Custom Dropdown Menu Panel */
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    width: 120px;
+    max-height: 80px; /* Cap height to prevent overflowing the dashboard page */
+    overflow-y: auto; /* Enable vertical scrolling */
+    background-color: #FFFFFF;
+    border: 1px solid var(--stroke-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* Custom scrollbar to keep layout clean and thin */
+.dropdown-menu::-webkit-scrollbar {
+    width: 4px;
+}
+
+.dropdown-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb {
+    background-color: var(--stroke-color);
+    border-radius: 4px;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-gray);
+}
+
+/* Custom Dropdown Item styling */
+.dropdown-item {
+    font-family: var(--font-inter);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-black);
+    padding: 8px 12px;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(53, 166, 241, 0.08); /* 8% opacity system blue */
+    color: var(--sys-blue-solid);
+}
+
+.dropdown-item.active {
+    background-color: rgba(53, 166, 241, 0.12); /* 12% opacity system blue */
+    color: var(--sys-blue-solid);
+}
+
 .graph-bars {
     flex: 1;
     display: flex;
@@ -187,14 +301,65 @@ p {
 }
 
 .bar {
+    position: relative; /* Position relative for tooltip placement */
     width: 16px;
     background-color: var(--sys-blue-solid);
     border-radius: 4px;
-    transition: height 0.5s ease;
+    transition: height 0.5s ease, background-color 0.2s ease;
 }
 
 .bar:hover {
-    background-color: var(--sys-focused-solid); /* Deep purple highlight */
+    background-color: var(--sys-blue-solid); /* Default hover color */
+}
+
+/* Dynamic Hover colors matched to the user's favorite companion */
+.graph-bars.tuxedo_cat .bar:hover {
+    background-color: var(--theme-classic-solid); /* Balanced Tux Green */
+}
+
+.graph-bars.orange_cat .bar:hover {
+    background-color: var(--theme-sprint-solid); /* Sprint Ginger Orange */
+}
+
+.graph-bars.black_cat .bar:hover {
+    background-color: var(--theme-focused-solid); /* Focused Void Purple */
+}
+
+/* Custom Tooltip Styling */
+.bar-tooltip {
+    position: absolute;
+    bottom: calc(100% + 6px); /* Float 6px above the bar */
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    background-color: var(--text-black);
+    color: #FFFFFF;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 9px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    z-index: 10;
+}
+
+/* Tooltip arrow indicator */
+.bar-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 4px;
+    border-style: solid;
+    border-color: var(--text-black) transparent transparent transparent;
+}
+
+/* Show tooltip on hover */
+.bar:hover .bar-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
 }
 
 .bar-label {
