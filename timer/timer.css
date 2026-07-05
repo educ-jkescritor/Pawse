@@ -29,7 +29,7 @@
 }
 
 .fish-icon.active {
-    background-image: url('../assets/icons/completed-fish.png');
+    /* Background image is now set dynamically in timer.js based on cat type */
 }
 
 /* --- CAT AREA --- */

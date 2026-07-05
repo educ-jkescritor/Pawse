@@ -86,9 +86,19 @@ function updateAudioSettings() {
         if (soundIcon) soundIcon.src = "../assets/icons/soundon-btn.png";
     }
 
-    // Play if allowed
-    if (ambVol > 0 && soundEnabled) ambientAudio.play().catch(e => {});
-    if (purVol > 0 && soundEnabled && workingTime) purrAudio.play().catch(e => {});
+    // Play or Pause based on strict state conditions
+    if (ambVol > 0 && soundEnabled) {
+        ambientAudio.play().catch(e => {});
+    } else {
+        ambientAudio.pause();
+    }
+    
+    // Purr only plays during working time and when timer is running
+    if (purVol > 0 && soundEnabled && workingTime && isRunning) {
+        purrAudio.play().catch(e => {});
+    } else {
+        purrAudio.pause();
+    }
 }
 
 // Listen for settings changes from the Settings window
@@ -201,6 +211,7 @@ function startTimer() {
     document.getElementById("play-icon").src = "../assets/icons/pause-btn.png";
     isRunning = true;
     updateCatState();
+    updateAudioSettings();
 
     timerId = setInterval(() => {
         remainingTime--;
@@ -334,6 +345,7 @@ function pauseTimer() {
     document.getElementById("play-icon").src = "../assets/icons/play-btn.png";
     isRunning = false;
     updateCatState();
+    updateAudioSettings();
 }
 
 function soundControl() {
@@ -411,12 +423,15 @@ skipButton.addEventListener("click", () => {
 
 function updateSessionCounter() {
     const fishIcons = document.querySelectorAll(".fish-icon");
+    const catPrefix = catConfig.dbId.replace('_cat', ''); // orange, tuxedo, black
 
     fishIcons.forEach((fish, index) => {
         if(index < cycleCount) {
             fish.classList.add("active");
+            fish.style.backgroundImage = `url('../assets/icons/completed-${catPrefix}-fish.png')`;
         } else {
             fish.classList.remove("active");
+            fish.style.backgroundImage = `url('../assets/icons/uncompleted-fish.png')`;
         }
     });
 };
@@ -440,8 +455,8 @@ function showModal(title, message, btnText, nextAction) {
 
     modalOverlay.classList.remove("hidden");
     
-    // Start playing the alarm on a loop if the user has it enabled in Settings
-    if (localStorage.getItem('alarmSound') !== 'false') {
+    // Start playing the alarm on a loop if the user has it enabled in Settings AND master sound is ON
+    if (localStorage.getItem('alarmSound') !== 'false' && soundEnabled) {
         alarmAudio.play().catch(e => console.log("Alarm blocked:", e));
     }
 
