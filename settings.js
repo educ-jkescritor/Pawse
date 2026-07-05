@@ -215,7 +215,7 @@ volumeSliders.forEach(slider => {
         }
         
         // Check if master mute triggered (both 0%)
-        if (typeof updateTickLock === 'function') updateTickLock();
+        if (typeof updateAudioLocks === 'function') updateAudioLocks();
     });
 });
 
@@ -272,9 +272,9 @@ if (tickToggle) {
     tickToggle.addEventListener('change', (e) => localStorage.setItem('tickSound', e.target.checked));
 }
 
-function updateTickLock() {
+function updateAudioLocks() {
     const tickElement = document.querySelector('.tick-toggle');
-    if (!tickElement) return;
+    const alarmElement = document.querySelector('.alarm-toggle');
     
     let ambVol = parseInt(localStorage.getItem('ambientVolume'));
     if (isNaN(ambVol)) ambVol = 50;
@@ -284,16 +284,17 @@ function updateTickLock() {
     
     const isMasterMuted = (ambVol === 0 && purVol === 0);
     
-    const parentItem = tickElement.closest('.settings-item');
-    if (parentItem) {
-        if (isMasterMuted) {
-            parentItem.style.opacity = '0.5';
-        } else {
-            parentItem.style.opacity = '1';
-        }
+    if (tickElement) {
+        const parentItem = tickElement.closest('.settings-item');
+        if (parentItem) parentItem.style.opacity = isMasterMuted ? '0.5' : '1';
+    }
+    
+    if (alarmElement) {
+        const parentItem = alarmElement.closest('.settings-item');
+        if (parentItem) parentItem.style.opacity = isMasterMuted ? '0.5' : '1';
     }
 }
-updateTickLock();
+updateAudioLocks();
 
 // Custom Graph Dropdown Logic
 const dropdownTrigger = document.getElementById('dropdown-trigger');
@@ -359,7 +360,7 @@ window.addEventListener('storage', (e) => {
             slider.value = e.newValue;
             updateSliderFill(slider);
         }
-        updateTickLock();
+        updateAudioLocks();
     }
     if (e.key === 'purrVolume') {
         const slider = document.querySelector('.purr-slider');
@@ -367,7 +368,7 @@ window.addEventListener('storage', (e) => {
             slider.value = e.newValue;
             updateSliderFill(slider);
         }
-        updateTickLock();
+        updateAudioLocks();
     }
     if (e.key === 'alarmSound') {
         const toggle = document.querySelector('.alarm-toggle');

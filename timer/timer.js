@@ -440,8 +440,8 @@ function showModal(title, message, btnText, nextAction) {
 
     modalOverlay.classList.remove("hidden");
     
-    // Start playing the alarm on a loop if the user has it enabled in Settings
-    if (localStorage.getItem('alarmSound') !== 'false') {
+    // Start playing the alarm on a loop if the user has it enabled in Settings AND master sound is ON
+    if (localStorage.getItem('alarmSound') !== 'false' && soundEnabled) {
         alarmAudio.play().catch(e => console.log("Alarm blocked:", e));
     }
 
