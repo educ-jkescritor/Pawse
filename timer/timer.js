@@ -65,6 +65,11 @@ function updateAudioSettings() {
 
     // Smart Mute if ambient and purr are zeroed out in settings
     if (ambVol === 0 && purVol === 0) {
+        if (soundEnabled) {
+            // User manually dragged both to 0%. Clear the history so unmuting defaults to 50%
+            localStorage.setItem('prevAmbientVolume', '0');
+            localStorage.setItem('prevPurrVolume', '0');
+        }
         soundEnabled = false;
         ambientAudio.muted = true;
         purrAudio.muted = true;
@@ -305,6 +310,12 @@ let skipButton = document.getElementById("skip-btn");
 soundButton.addEventListener("click", () => {
     const soundIcon = document.getElementById("sound-icon");
     if(soundEnabled) {
+        // Remember volumes before muting
+        let currentAmb = localStorage.getItem('ambientVolume') || '50';
+        let currentPurr = localStorage.getItem('purrVolume') || '50';
+        localStorage.setItem('prevAmbientVolume', currentAmb);
+        localStorage.setItem('prevPurrVolume', currentPurr);
+
         soundEnabled = false;
         soundIcon.src = "../assets/icons/soundoff-btn.png";
         ambientAudio.muted = true;
@@ -319,17 +330,21 @@ soundButton.addEventListener("click", () => {
         ambientAudio.muted = false;
         purrAudio.muted = false;
 
-        // Smart defaults: if they unmute but ambient/purr was zeroed out, restore defaults
-        let ambVol = parseInt(localStorage.getItem('ambientVolume'));
-        let purVol = parseInt(localStorage.getItem('purrVolume'));
+        // Restore previous volumes
+        let prevAmbVol = parseInt(localStorage.getItem('prevAmbientVolume'));
+        let prevPurrVol = parseInt(localStorage.getItem('prevPurrVolume'));
         
-        let isAmbZero = (isNaN(ambVol) || ambVol === 0);
-        let isPurrZero = (isNaN(purVol) || purVol === 0);
+        if (isNaN(prevAmbVol)) prevAmbVol = 0;
+        if (isNaN(prevPurrVol)) prevPurrVol = 0;
 
-        if (isAmbZero && isPurrZero) {
-            localStorage.setItem('ambientVolume', '50');
-            localStorage.setItem('purrVolume', '50');
+        // If they muted while both were 0, unmuting should set to 50% baseline
+        if (prevAmbVol === 0 && prevPurrVol === 0) {
+            prevAmbVol = 50;
+            prevPurrVol = 50;
         }
+
+        localStorage.setItem('ambientVolume', prevAmbVol.toString());
+        localStorage.setItem('purrVolume', prevPurrVol.toString());
 
         updateAudioSettings(); // Re-apply everything
     }
