@@ -85,7 +85,7 @@ function clearMockData() {
     });   
 }
 
-function generateAnalytics() {
+function generateAnalytics(weeksAgo = 0) {
     return new Promise((resolve, reject) => {
         const analyticData = {
             today_work_seconds: 0,
@@ -106,18 +106,22 @@ function generateAnalytics() {
                 db.get(favoriteCatQuery, [], (err, row3) => {
                     if (!err && row3 && row3.cat_type) analyticData.favorite_cat = row3.cat_type;
 
-                    // Determine local start of week (Sunday 00:00:00)
+                    // Determine local start of week (Sunday 00:00:00) based on weeksAgo
                     const now = new Date();
                     const startOfWeek = new Date(now);
-                    startOfWeek.setDate(now.getDate() - now.getDay());
+                    startOfWeek.setDate(now.getDate() - now.getDay() - (weeksAgo * 7));
                     startOfWeek.setHours(0,0,0,0);
                     
-                    // Convert local start of week to UTC string format (YYYY-MM-DD HH:MM:SS) for SQLite
-                    const startOfWeekUTC = startOfWeek.toISOString().replace('T', ' ').substring(0, 19);
+                    const endOfWeek = new Date(startOfWeek);
+                    endOfWeek.setDate(startOfWeek.getDate() + 7);
                     
-                    const weeklyDataQuery = `SELECT date_completed, total_work_seconds FROM session WHERE date_completed >= ?`;
+                    // Convert local boundaries to UTC string format (YYYY-MM-DD HH:MM:SS) for SQLite
+                    const startOfWeekUTC = startOfWeek.toISOString().replace('T', ' ').substring(0, 19);
+                    const endOfWeekUTC = endOfWeek.toISOString().replace('T', ' ').substring(0, 19);
+                    
+                    const weeklyDataQuery = `SELECT date_completed, total_work_seconds FROM session WHERE date_completed >= ? AND date_completed < ?`;
 
-                    db.all(weeklyDataQuery, [startOfWeekUTC], (err, rows) => {
+                    db.all(weeklyDataQuery, [startOfWeekUTC, endOfWeekUTC], (err, rows) => {
                         if (!err && rows) {
                             rows.forEach(row => {
                                 // Parse the UTC date from database to get local day

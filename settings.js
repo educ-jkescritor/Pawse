@@ -36,8 +36,8 @@ let dashboardContent = document.getElementById("dashboard-content");
 let aboutContent = document.getElementById("about-content");
 let settingsContent = document.getElementById("settings-content");
 
-async function loadAnalytics() {
-    const data = await window.mainAPI.loadanalytics();
+async function loadAnalytics(weeksAgo = 0) {
+    const data = await window.mainAPI.loadanalytics(weeksAgo);
 
     const todayWorkSecondsElement = document.getElementById("today_work_seconds");
     const historicalPomodoroElement = document.getElementById("historical_pomodoro");
@@ -163,6 +163,14 @@ if (breakToggle) {
 if (pomodoroToggle) {
     pomodoroToggle.checked = localStorage.getItem('autoStartPomodoros') === 'true';
     pomodoroToggle.addEventListener('change', (e) => localStorage.setItem('autoStartPomodoros', e.target.checked));
+}
+
+// Graph Dropdown Logic
+const weekDropdown = document.getElementById('week-dropdown');
+if (weekDropdown) {
+    weekDropdown.addEventListener('change', (e) => {
+        loadAnalytics(parseInt(e.target.value));
+    });
 }
 
 // System Settings Logic
