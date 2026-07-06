@@ -354,10 +354,12 @@ ease;
     background-image: linear-gradient(180deg, #FFF 0%, var(--theme-classic-light) 50%, var(--theme-classic-light) 100%);
     box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
 }
-#tuxedo_cat:hover,
+#tuxedo_cat:hover {
+    background-position: bottom;
+}
 #tuxedo_cat.selected {
     background-position: bottom;
-    border-color: var(--theme-classic-solid); /* Lock green border */
+    border-color: var(--theme-classic-solid); /* Lock green border only when selected */
 }
 
 /* Ginger (Sprint Orange Theme) */
@@ -365,10 +367,12 @@ ease;
     background-image: linear-gradient(180deg, #FFF 0%, var(--theme-sprint-light) 50%, var(--theme-sprint-light) 100%);
     box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
 }
-#orange_cat:hover,
+#orange_cat:hover {
+    background-position: bottom;
+}
 #orange_cat.selected {
     background-position: bottom;
-    border-color: var(--theme-sprint-solid); /* Lock orange border */
+    border-color: var(--theme-sprint-solid); /* Lock orange border only when selected */
 }
 
 /* Void (Focused Purple Theme) */
@@ -376,10 +380,12 @@ ease;
     background-image: linear-gradient(180deg, #FFF 0%, var(--theme-focused-light) 50%, var(--theme-focused-light) 100%);
     box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
 }
-#black_cat:hover,
+#black_cat:hover {
+    background-position: bottom;
+}
 #black_cat.selected {
     background-position: bottom;
-    border-color: var(--theme-focused-solid); /* Lock purple border */
+    border-color: var(--theme-focused-solid); /* Lock purple border only when selected */
 }
 
 .cat_info {
