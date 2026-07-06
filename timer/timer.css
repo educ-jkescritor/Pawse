@@ -45,7 +45,7 @@
     flex-shrink: 0; /* Prevents flexbox from crushing the exact frame size */
     background-repeat: no-repeat;
     background-position: 0px 0px;
-    transform: scale(0.4) translateY(45px); /* Scale 512px down to ~204px and push down ~18px to create top clearance */
+    transform: scale(0.4) translateY(50px); /* Scale 512px down to ~204px and push down ~20px to create top clearance */
     transform-origin: center;
     image-rendering: pixelated; /* Keeps pixel art crisp */
     display: none; /* hidden by default or blank */
@@ -498,6 +498,7 @@ body.cat-only-mode .restore-btn:hover img {
     border-top-color: #FFFFFF;
     border-width: 6px;
     margin-left: 0;
+    transition: border-top-color 0.25s ease;
 }
 
 .chat-bubble::before {
@@ -506,6 +507,45 @@ body.cat-only-mode .restore-btn:hover img {
     border-width: 8px;
     margin-left: 0;
     z-index: -1;
+    transition: border-top-color 0.25s ease;
+}
+
+/* --- Dynamic Companion Theme Overrides --- */
+
+/* Classic Theme (Tuxedo Cat / Green) */
+.chat-bubble.tuxedo_cat {
+    border-color: var(--theme-classic-solid);
+    background-color: #F7FBEA; /* Light green wash */
+}
+.chat-bubble.tuxedo_cat::after {
+    border-top-color: #F7FBEA;
+}
+.chat-bubble.tuxedo_cat::before {
+    border-top-color: var(--theme-classic-solid);
+}
+
+/* Sprint Theme (Orange Cat / Orange) */
+.chat-bubble.orange_cat {
+    border-color: var(--theme-sprint-solid);
+    background-color: #FFF9F0; /* Light orange wash */
+}
+.chat-bubble.orange_cat::after {
+    border-top-color: #FFF9F0;
+}
+.chat-bubble.orange_cat::before {
+    border-top-color: var(--theme-sprint-solid);
+}
+
+/* Focused Theme (Black Cat / Purple) */
+.chat-bubble.black_cat {
+    border-color: var(--theme-focused-solid);
+    background-color: #F8F6FF; /* Light purple wash */
+}
+.chat-bubble.black_cat::after {
+    border-top-color: #F8F6FF;
+}
+.chat-bubble.black_cat::before {
+    border-top-color: var(--theme-focused-solid);
 }
 
 /* Hide chat bubble in mini layout modes */

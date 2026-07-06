@@ -183,7 +183,8 @@ catSprite.addEventListener('click', () => {
         const randomFact = catFacts[Math.floor(Math.random() * catFacts.length)];
         chatText.textContent = randomFact;
         
-        chatBubble.classList.remove("hidden");
+        // Dynamically assign theme classes (which auto-reveals the bubble by removing the hidden class)
+        chatBubble.className = `chat-bubble ${catClass}`;
         
         // Hide after 3.5 seconds
         bubbleTimeoutId = setTimeout(() => {
