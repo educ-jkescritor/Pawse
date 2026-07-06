@@ -13,6 +13,31 @@ const buttons = {
     black: document.getElementById("black_cat")
 };
 
+// Audio elements for cat clicks
+const catSounds = {
+    tuxedo: new Audio('assets/sounds/tux-meow.mp3'),
+    orange: new Audio('assets/sounds/ginger-meow.mp3'),
+    black: new Audio('assets/sounds/void-meow.mp3')
+};
+
+function playClickSound(catKey) {
+    if (localStorage.getItem('clickSound') === 'false') return;
+
+    // Check master mute logic
+    let ambVol = parseInt(localStorage.getItem('ambientVolume'));
+    if (isNaN(ambVol)) ambVol = 50;
+    let purVol = parseInt(localStorage.getItem('purrVolume'));
+    if (isNaN(purVol)) purVol = 50;
+    
+    if (ambVol === 0 && purVol === 0) return; // Master muted
+    
+    const audio = catSounds[catKey];
+    if (audio) {
+        audio.currentTime = 0;
+        audio.play().catch(e => console.log('Audio play failed:', e));
+    }
+}
+
 // Helper function to handle visual class swaps and value updating
 function selectCompanion(catKey) {
     // If the clicked card is already selected, unlock/deselect it
@@ -29,6 +54,7 @@ function selectCompanion(catKey) {
 
     // Otherwise, select the new card
     selectedCat = catKey;
+    playClickSound(catKey);
 
     // Remove 'selected' class from all buttons
     Object.values(buttons).forEach(btn => {
