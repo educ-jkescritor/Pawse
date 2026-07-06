@@ -28,10 +28,6 @@
     transform: scale(1.5);
 }
 
-.fish-icon.active {
-    /* Background image is now set dynamically in timer.js based on cat type */
-}
-
 /* --- CAT AREA --- */
 
 .cat-area {

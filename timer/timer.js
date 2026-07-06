@@ -51,6 +51,13 @@ const alarmAudio = new Audio('../assets/sounds/alarm.mp3');
 alarmAudio.loop = true;
 alarmAudio.volume = 0.35; // Reduced default volume so it doesn't overpower BGM
 
+// Dynamic Meow Audio Objects per companion
+const meowAudios = {
+    'orange_cat': new Audio('../assets/sounds/ginger-meow.mp3'),
+    'tuxedo_cat': new Audio('../assets/sounds/tux-meow.mp3'),
+    'black_cat': new Audio('../assets/sounds/void-meow.mp3')
+};
+
 function updateAudioSettings() {
     let ambVol = parseInt(localStorage.getItem('ambientVolume'));
     if (isNaN(ambVol)) ambVol = 50;
@@ -77,12 +84,18 @@ function updateAudioSettings() {
         ambientAudio.muted = true;
         purrAudio.muted = true;
         alarmAudio.muted = true;
+        for (let key in meowAudios) {
+            meowAudios[key].muted = true;
+        }
         if (soundIcon) soundIcon.src = "../assets/icons/soundoff-btn.png";
     } else {
         soundEnabled = true;
         ambientAudio.muted = false;
         purrAudio.muted = false;
         alarmAudio.muted = false;
+        for (let key in meowAudios) {
+            meowAudios[key].muted = false;
+        }
         if (soundIcon) soundIcon.src = "../assets/icons/soundon-btn.png";
     }
 
@@ -141,6 +154,13 @@ catSprite.addEventListener('click', () => {
 
     isPetting = true;
     const catClass = catConfig.dbId;
+
+    // Play corresponding companion meow sound if master audio is enabled
+    const meowAudio = meowAudios[catClass];
+    if (meowAudio && soundEnabled) {
+        meowAudio.currentTime = 0; // Rewind to start for spam clicks
+        meowAudio.play().catch(e => console.log("Meow blocked:", e));
+    }
 
     // Shift to the click sprite
     catSprite.className = `cat-sprite ${catClass} clicking`;
@@ -260,9 +280,9 @@ function skipTimer(completedCycle) {
                 startTimer();
             } else {
                 showModal (
-                    "Long Break Time!",
-                    "Time for a long break!",
-                    "Start Break",
+                    "Time for a Catnap!",
+                    "Amazing work! You've earned a long, cozy rest. Step away from the screen and recharge.",
+                    "Start Long Break",
                     function () {
                         remainingTime = catConfig.longBreakTime;
                         document.getElementById("timer-display").textContent = formatTime(remainingTime);
@@ -277,8 +297,8 @@ function skipTimer(completedCycle) {
                 startTimer();
             } else {
                 showModal (
-                    "Short Break Time!",
-                    "Time for a short break!",
+                    "Stretch Your Paws!",
+                    "Great focus! Your companion is ready for a quick stretch and a treat.",
                     "Start Break",
                     function () {
                         remainingTime = catConfig.shortBreakTime;
@@ -310,9 +330,9 @@ function skipTimer(completedCycle) {
             window.mainAPI.savesession(sessionData);
 
             showModal (
-                "Session Complete!",
-                `You have completed ${cycleCount} cycles! Back to the main menu.`,
-                "Back to Main Menu",
+                "Paws-itively Brilliant!",
+                `You successfully completed a full set of ${cycleCount} cycles! Your progress is logged safely. Take a bow!`,
+                "Return to Menu",
                 function () {
                     window.location.replace("../index.html");
                 }
@@ -326,8 +346,8 @@ function skipTimer(completedCycle) {
                 startTimer();
             } else {
                 showModal (
-                    "Back to Work!",
-                    `Back to work! You have completed ${cycleCount} cycle(s)! Keep going!`,
+                    "Ready to Focus?",
+                    `You’ve completed ${cycleCount} cycle(s) so far! Let's keep the momentum going.`,
                     "Start Work",
                     function () {
                         remainingTime = catConfig.workTime;
