@@ -94,14 +94,17 @@ ipcMain.on('resize-window', (event, mode) => {
     senderWindow.setMinimumSize(240, 100);
     senderWindow.setMaximumSize(240, 100);
     senderWindow.setSize(240, 100); 
+    senderWindow.setAlwaysOnTop(true);
   } else if (mode === 'cat-only') {
     senderWindow.setMinimumSize(240, 240);
     senderWindow.setMaximumSize(240, 240);
     senderWindow.setSize(240, 240); 
+    senderWindow.setAlwaysOnTop(true);
   } else {
     senderWindow.setMinimumSize(310, 430);
     senderWindow.setMaximumSize(310, 430);
     senderWindow.setSize(310, 430); 
+    senderWindow.setAlwaysOnTop(globalAlwaysOnTop);
   }
 });
 
