@@ -480,6 +480,7 @@ body.cat-only-mode .restore-btn:hover img {
     pointer-events: none;
 }
 
+
 /* Bubble Arrow Indicators (border-mask triangle) */
 .chat-bubble::after, 
 .chat-bubble::before {

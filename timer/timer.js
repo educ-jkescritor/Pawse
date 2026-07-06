@@ -159,12 +159,15 @@ const catFacts = [
 ];
 let bubbleTimeoutId = null;
 let isPetting = false;
+let isShowingFact = false; // Tracks if a click-fact or welcome-fact is active so hover doesn't overwrite it
+
 
 catSprite.addEventListener('click', () => {
     // Only allow interaction during break times and if not already petting
     if (workingTime || isPetting) return;
 
     isPetting = true;
+    isShowingFact = true; // Lock fact display
     const catClass = catConfig.dbId;
 
     // Play corresponding companion meow sound if master audio is enabled
@@ -189,6 +192,7 @@ catSprite.addEventListener('click', () => {
         // Hide after 3.5 seconds
         bubbleTimeoutId = setTimeout(() => {
             chatBubble.classList.add("hidden");
+            isShowingFact = false; // Release fact display lock
         }, 3500);
     }
 
@@ -209,8 +213,27 @@ catSprite.addEventListener('click', () => {
     }, duration);
 });
 
+function triggerWelcomeBubble() {
+    const chatBubble = document.getElementById("chat-bubble");
+    const chatText = document.getElementById("chat-text");
+    if (chatBubble && chatText) {
+        if (bubbleTimeoutId) clearTimeout(bubbleTimeoutId);
+        
+        isShowingFact = true; // Lock fact display so hover doesn't overwrite it
+        chatText.textContent = "Pet me for a fun fact! 🐾";
+        chatBubble.className = `chat-bubble ${catConfig.dbId}`; // Solid theme style
+        
+        // Hide after 4 seconds
+        bubbleTimeoutId = setTimeout(() => {
+            chatBubble.classList.add("hidden");
+            isShowingFact = false; // Release lock
+        }, 4000);
+    }
+}
+
 function updateCatState() {
     isPetting = false; // Release lock in case of forced state shifts
+    isShowingFact = false; // Reset fact display lock
     
     // Hide chat bubble during state transitions (e.g. going back to work)
     const chatBubble = document.getElementById("chat-bubble");
@@ -319,6 +342,7 @@ function skipTimer(completedCycle) {
                 remainingTime = catConfig.longBreakTime;
                 document.getElementById("timer-display").textContent = formatTime(remainingTime);
                 startTimer();
+                triggerWelcomeBubble();
             } else {
                 showModal (
                     "Time for a Catnap!",
@@ -328,6 +352,7 @@ function skipTimer(completedCycle) {
                         remainingTime = catConfig.longBreakTime;
                         document.getElementById("timer-display").textContent = formatTime(remainingTime);
                         startTimer();
+                        triggerWelcomeBubble();
                     }
                 );
             }
@@ -336,6 +361,7 @@ function skipTimer(completedCycle) {
                 remainingTime = catConfig.shortBreakTime;
                 document.getElementById("timer-display").textContent = formatTime(remainingTime);
                 startTimer();
+                triggerWelcomeBubble();
             } else {
                 showModal (
                     "Stretch Your Paws!",
@@ -345,6 +371,7 @@ function skipTimer(completedCycle) {
                         remainingTime = catConfig.shortBreakTime;
                         document.getElementById("timer-display").textContent = formatTime(remainingTime);
                         startTimer();
+                        triggerWelcomeBubble();
                     }
                 );
             }
