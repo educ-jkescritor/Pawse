@@ -141,8 +141,8 @@ async function loadAnalytics(weeksAgo = 0) {
             graphBarsContainer.classList.add("empty-state"); // Disable hover highlights
         }
         
-        // Find max seconds for scaling, default to at least 1 hour (3600 seconds) to prevent tiny test sessions from stretching the chart
-        const maxSeconds = Math.max(...data.weekly_data, 3600); 
+        // Find max seconds for scaling, default to at least 1 second to prevent divide by zero
+        const maxSeconds = Math.max(...data.weekly_data, 1); 
         
         data.weekly_data.forEach((seconds, index) => {
             const heightPercent = (seconds / maxSeconds) * 100;
@@ -177,7 +177,7 @@ async function loadAnalytics(weeksAgo = 0) {
                 const m = Math.round((seconds % 3600) / 60);
                 
                 if (h === 0 && m === 0) {
-                    tooltip.textContent = "< 1m";
+                    tooltip.textContent = "A few seconds";
                 } else {
                     tooltip.textContent = `${h}h ${m}m`;
                 }
