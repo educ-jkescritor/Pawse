@@ -305,11 +305,12 @@ p {
     flex: 1;
     display: flex;
     flex-direction: row;
-    align-items: flex-end; /* Bars grow from the bottom */
+    align-items: stretch; /* Stretch column wrappers to full height so track underlays consume the full canvas height */
     justify-content: space-between;
     padding-top: 16px;
     padding-left: 16px;
     padding-right: 16px;
+    height: 0; /* Fixes browser percentage height calculation bug inside flex items */
 }
 
 /* Empty State Message inside Graph */
@@ -326,29 +327,73 @@ p {
 }
 
 .bar-wrapper {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
     height: 100%;
     justify-content: flex-end;
+    flex: 1;
+    cursor: pointer;
 }
 
+/* Vertical Column Track Underlay (Idea 2) */
+.bar-wrapper::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    bottom: -6px; /* Expand negative 6px below label for balanced padding */
+    width: 48px; /* Slightly wider than the 40px bar */
+    background-color: transparent;
+    border-radius: 8px; /* Rounder corners to match padded layout */
+    z-index: 1;
+    transition: background-color 0.2s ease;
+    pointer-events: none;
+}
+
+.bar-wrapper:hover::before {
+    background-color: rgba(0, 0, 0, 0.03); /* Fades in on hover */
+}
+
+/* --- STATE 1: Regular Bar - Default Blue (Solid Soft Pastel) --- */
 .bar {
-    position: relative; /* Position relative for tooltip placement */
-    width: 40px; /* Increased from 16px to make bars thicker */
-    background-image: linear-gradient(180deg, #FFFFFF 0%, #A8DCFF 50%, #A8DCFF 100%);
-    background-size: 100% 200%;
-    background-position: top;
-    border-radius: 4px;
-    transition: height 1.0s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-position 0.3s ease;
+    position: relative;
+    width: 40px;
+    border-radius: 6px;
+    border: none;
+    background-color: var(--sys-blue-grad); /* Soft pastel blue (#A8DCFF) */
+    z-index: 2;
+    transition: height 1.0s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.25s ease, transform 0.25s ease;
 }
 
-.bar:hover {
-    background-position: bottom;
+/* --- STATE 2: Today's Bar - Default Blue (Solid Mid-Tone) --- */
+.bar-wrapper.today .bar {
+    background-color: #70C6FF; /* Distinct mid-tone blue */
 }
 
-/* Removed dynamic cat colors to enforce uniform #A8DCFF blue gradient */
+/* --- STATE 3: Hovered Bar - Default Blue (Solid Accent + Lift) --- */
+.bar-wrapper:hover .bar {
+    background-color: var(--sys-blue-solid) !important; /* Vibrant system blue (#35A6F1) */
+    transform: translateY(-2px); /* Physical lift on selection */
+}
+
+/* Dynamic Companion Themes (Applied on Hover Only) */
+
+/* --- Classic Theme (Green / Tuxedo) --- */
+.graph-bars.tuxedo_cat .bar-wrapper:hover .bar {
+    background-color: var(--theme-classic-solid) !important; /* Brand Classic Green (#CFE58A) */
+}
+
+/* --- Sprint Theme (Orange / Ginger) --- */
+.graph-bars.orange_cat .bar-wrapper:hover .bar {
+    background-color: var(--theme-sprint-solid) !important; /* Brand Sprint Orange (#F8C47F) */
+}
+
+/* --- Focused Theme (Purple / Void) --- */
+.graph-bars.black_cat .bar-wrapper:hover .bar {
+    background-color: var(--theme-focused-solid) !important; /* Brand Focused Purple (#BDA9FE) */
+}
 
 /* Custom Tooltip Styling */
 .bar-tooltip {
@@ -381,14 +426,28 @@ p {
     border-color: var(--text-black) transparent transparent transparent;
 }
 
-/* Show tooltip on hover */
-.bar:hover .bar-tooltip {
+/* Show tooltip when the entire column is hovered */
+.bar-wrapper:hover .bar-tooltip {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
 }
 
 .bar-label {
     color: var(--text-gray);
+    z-index: 2;
+    transition: color 0.2s ease, font-weight 0.2s ease;
+}
+
+/* Highlight today's label by default */
+.bar-wrapper.today .bar-label {
+    color: var(--text-black);
+    font-weight: bold;
+}
+
+/* Highlight hovered day label */
+.bar-wrapper:hover .bar-label {
+    color: var(--text-black);
+    font-weight: bold;
 }
 
 /* ABOUT */
