@@ -462,6 +462,23 @@ p {
     gap: 8px;
 }
 
+.about-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 2px;
+}
+
+.version-badge {
+    background-color: var(--stroke-color);
+    color: var(--text-black);
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
 .companions-section {
     display: flex;
     flex-direction: column;
