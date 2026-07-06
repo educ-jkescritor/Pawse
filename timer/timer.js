@@ -146,6 +146,18 @@ const clickDurations = {
     'tuxedo_cat': 1000  // 10 frames
 };
 
+// Chat bubble facts list
+const catFacts = [
+    "Cats spend 70% of their lives sleeping.",
+    "A cat's purr can help heal bones and muscles.",
+    "Cats have 32 muscles in each ear to control them.",
+    "A cat's nose print is unique, like a fingerprint!",
+    "Cats can make over 100 vocal sounds.",
+    "A cat can jump up to six times its height!",
+    "Cats have a third eyelid called the 'haw'!",
+    "Cats are crepuscular, meaning they are most active at dawn and dusk."
+];
+let bubbleTimeoutId = null;
 let isPetting = false;
 
 catSprite.addEventListener('click', () => {
@@ -160,6 +172,23 @@ catSprite.addEventListener('click', () => {
     if (meowAudio && soundEnabled) {
         meowAudio.currentTime = 0; // Rewind to start for spam clicks
         meowAudio.play().catch(e => console.log("Meow blocked:", e));
+    }
+
+    // Display a random cat fact in the chat bubble
+    const chatBubble = document.getElementById("chat-bubble");
+    const chatText = document.getElementById("chat-text");
+    if (chatBubble && chatText) {
+        if (bubbleTimeoutId) clearTimeout(bubbleTimeoutId);
+        
+        const randomFact = catFacts[Math.floor(Math.random() * catFacts.length)];
+        chatText.textContent = randomFact;
+        
+        chatBubble.classList.remove("hidden");
+        
+        // Hide after 3.5 seconds
+        bubbleTimeoutId = setTimeout(() => {
+            chatBubble.classList.add("hidden");
+        }, 3500);
     }
 
     // Shift to the click sprite
@@ -181,6 +210,17 @@ catSprite.addEventListener('click', () => {
 
 function updateCatState() {
     isPetting = false; // Release lock in case of forced state shifts
+    
+    // Hide chat bubble during state transitions (e.g. going back to work)
+    const chatBubble = document.getElementById("chat-bubble");
+    if (chatBubble) {
+        chatBubble.classList.add("hidden");
+    }
+    if (bubbleTimeoutId) {
+        clearTimeout(bubbleTimeoutId);
+        bubbleTimeoutId = null;
+    }
+    
     const catClass = catConfig.dbId; // e.g. 'orange_cat', 'tuxedo_cat', 'black_cat'
     
     // Clear any existing animation sequence to prevent overlaps
