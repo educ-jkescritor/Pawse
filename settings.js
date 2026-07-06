@@ -300,6 +300,12 @@ if (pomodoroToggle) {
 
 // Audio Settings Logic
 // Audio Settings Logic
+const clickToggle = document.querySelector('.click-toggle');
+if (clickToggle) {
+    clickToggle.checked = localStorage.getItem('clickSound') !== 'false';
+    clickToggle.addEventListener('change', (e) => localStorage.setItem('clickSound', e.target.checked));
+}
+
 const alarmToggle = document.querySelector('.alarm-toggle');
 if (alarmToggle) {
     alarmToggle.checked = localStorage.getItem('alarmSound') !== 'false';
@@ -313,6 +319,7 @@ if (tickToggle) {
 }
 
 function updateAudioLocks() {
+    const clickElement = document.querySelector('.click-toggle');
     const tickElement = document.querySelector('.tick-toggle');
     const alarmElement = document.querySelector('.alarm-toggle');
     
@@ -323,6 +330,11 @@ function updateAudioLocks() {
     if (isNaN(purVol)) purVol = 50;
     
     const isMasterMuted = (ambVol === 0 && purVol === 0);
+    
+    if (clickElement) {
+        const parentItem = clickElement.closest('.settings-item');
+        if (parentItem) parentItem.style.opacity = isMasterMuted ? '0.5' : '1';
+    }
     
     if (tickElement) {
         const parentItem = tickElement.closest('.settings-item');
@@ -411,6 +423,10 @@ window.addEventListener('storage', (e) => {
             updateSliderFill(slider);
         }
         updateAudioLocks();
+    }
+    if (e.key === 'clickSound') {
+        const toggle = document.querySelector('.click-toggle');
+        if (toggle) toggle.checked = (e.newValue !== 'false');
     }
     if (e.key === 'alarmSound') {
         const toggle = document.querySelector('.alarm-toggle');

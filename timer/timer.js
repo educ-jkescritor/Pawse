@@ -170,9 +170,9 @@ catSprite.addEventListener('click', () => {
     isShowingFact = true; // Lock fact display
     const catClass = catConfig.dbId;
 
-    // Play corresponding companion meow sound if master audio is enabled
+    // Play corresponding companion meow sound if master audio is enabled AND click sound toggle is on
     const meowAudio = meowAudios[catClass];
-    if (meowAudio && soundEnabled) {
+    if (meowAudio && soundEnabled && localStorage.getItem('clickSound') !== 'false') {
         meowAudio.currentTime = 0; // Rewind to start for spam clicks
         meowAudio.play().catch(e => console.log("Meow blocked:", e));
     }
@@ -490,6 +490,7 @@ soundButton.addEventListener("click", () => {
 });
 
 playButton.addEventListener("click", () => {
+    if (strictMode) return;
     if(isRunning) {
         pauseTimer();
     } else {
@@ -502,6 +503,10 @@ if (strictMode) {
     skipButton.disabled = true;
     skipButton.style.opacity = "0.5";
     skipButton.style.cursor = "not-allowed";
+
+    playButton.disabled = true;
+    playButton.style.opacity = "0.5";
+    playButton.style.cursor = "not-allowed";
 }
 
 skipButton.addEventListener("click", () => {
