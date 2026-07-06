@@ -53,8 +53,34 @@ let dashboardContent = document.getElementById("dashboard-content");
 let aboutContent = document.getElementById("about-content");
 let settingsContent = document.getElementById("settings-content");
 
+function getWeekDateRangeString(weeksAgo) {
+    const today = new Date();
+    const currentDay = today.getDay();
+    
+    // Start of target week (Sunday)
+    const sunday = new Date(today);
+    sunday.setDate(today.getDate() - currentDay - (weeksAgo * 7));
+    
+    // End of target week (Saturday)
+    const saturday = new Date(sunday);
+    saturday.setDate(sunday.getDate() + 6);
+    
+    // 'long' month formatting (e.g. "June 5")
+    const options = { month: 'long', day: 'numeric' };
+    const startStr = sunday.toLocaleDateString('en-US', options);
+    const endStr = saturday.toLocaleDateString('en-US', options);
+    
+    return `${startStr} - ${endStr}`;
+}
+
 async function loadAnalytics(weeksAgo = 0) {
     const data = await window.mainAPI.loadanalytics(weeksAgo);
+
+    // Update dynamic subtitle date range
+    const chartSubtitle = document.getElementById("chart-header-subtitle");
+    if (chartSubtitle) {
+        chartSubtitle.textContent = getWeekDateRangeString(weeksAgo);
+    }
 
     const todayWorkSecondsElement = document.getElementById("today_work_seconds");
     const historicalPomodoroElement = document.getElementById("historical_pomodoro");
@@ -98,7 +124,7 @@ async function loadAnalytics(weeksAgo = 0) {
         graphBarsContainer.innerHTML = ''; // Clear existing
         
         // Dynamic hover support: style bars according to user's favorite companion
-        graphBarsContainer.classList.remove('orange_cat', 'tuxedo_cat', 'black_cat');
+        graphBarsContainer.classList.remove('orange_cat', 'tuxedo_cat', 'black_cat', 'empty-state');
         if (data.favorite_cat) {
             graphBarsContainer.classList.add(data.favorite_cat);
         }
@@ -112,6 +138,7 @@ async function loadAnalytics(weeksAgo = 0) {
             noDataMsg.className = "no-data-message font-inter-10-medium";
             noDataMsg.textContent = "No sessions recorded for this week";
             graphBarsContainer.appendChild(noDataMsg);
+            graphBarsContainer.classList.add("empty-state"); // Disable hover highlights
         }
         
         // Find max seconds for scaling, default to at least 1 second to prevent divide by zero
@@ -129,7 +156,7 @@ async function loadAnalytics(weeksAgo = 0) {
             // Normalize animation speed (velocity) regardless of height
             // 100% height = 1000ms, 50% height = 500ms
             const durationMs = Math.max((heightPercent / 100) * 1000, 300); // 300ms floor for tiny bounce
-            bar.style.transition = `height ${durationMs}ms cubic-bezier(0.175, 0.885, 0.32, 1.275), background-position 0.3s ease`;
+            bar.style.transition = `height ${durationMs}ms cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.25s ease, transform 0.25s ease`;
             
             // Start at 0% for animation
             bar.style.height = `0%`;
@@ -148,7 +175,12 @@ async function loadAnalytics(weeksAgo = 0) {
                 // Format raw seconds to human readable "Xh Ym"
                 const h = Math.floor(seconds / 3600);
                 const m = Math.round((seconds % 3600) / 60);
-                tooltip.textContent = `${h}h ${m}m`;
+                
+                if (h === 0 && m === 0) {
+                    tooltip.textContent = "A few seconds";
+                } else {
+                    tooltip.textContent = `${h}h ${m}m`;
+                }
                 
                 bar.appendChild(tooltip);
             }
@@ -157,9 +189,8 @@ async function loadAnalytics(weeksAgo = 0) {
             
             // Highlight today's date if viewing the current week
             if (weeksAgo === 0 && index === new Date().getDay()) {
+                barWrapper.classList.add("today");
                 label.className = "bar-label font-inter-10-medium";
-                label.style.color = "var(--text-black)";
-                label.style.fontWeight = "bold";
             } else {
                 label.className = "bar-label font-inter-10-regular";
             }
@@ -326,11 +357,7 @@ if (dropdownTrigger && dropdownMenu) {
             const val = item.getAttribute('data-value');
             selectedWeekLabel.textContent = item.textContent;
             
-            // Dynamically update the chart header title
-            const chartHeader = document.getElementById('chart-header-title');
-            if (chartHeader) {
-                chartHeader.textContent = item.textContent;
-            }
+            // Keep main chart title static as "Weekly Flow"
             
             // Toggle active classes
             dropdownItems.forEach(i => i.classList.remove('active'));

@@ -56,17 +56,17 @@
 
                     <div class="analytics-container">
                         <div class="analytics-card">
-                            <span class="font-inter-10-regular">TOTAL FOCUS TIME<br></span>
+                            <span class="font-inter-10-medium">TOTAL FOCUS TIME<br></span>
                             <span class="font-inter-16-medium">TODAY<br></span>
                             <span class="card-data font-pixel-36-medium" id="today_work_seconds">0</span>
                         </div>
                         <div class="analytics-card">
-                            <span class="font-inter-10-regular">COMPLETED<br></span>
+                            <span class="font-inter-10-medium">COMPLETED<br></span>
                             <span class="font-inter-16-medium">POMODOROS<br></span>
                             <span class="card-data font-pixel-36-medium" id="historical_pomodoro">0</span>
                         </div>
                         <div class="analytics-card" id="favorite-cat-card">
-                            <span class="font-inter-10-regular">FAVORITE<br></span>
+                            <span class="font-inter-10-medium">FAVORITE<br></span>
                             <span class="font-inter-16-medium">COMPANION<br></span>
                             <span class="card-data font-pixel-36-medium" id="favorite_cat">None</span>
                         </div>
@@ -75,7 +75,10 @@
                     <div class="graph-container">
                         <div class="graph">
                             <div class="week-selection">
-                                <p class="font-inter-12-medium" style="margin: 0; color: var(--text-black);" id="chart-header-title">This Week</p>
+                                <div class="chart-header-text" style="display: flex; flex-direction: column;">
+                                    <p class="font-inter-12-medium" style="margin: 0; color: var(--text-black);" id="chart-header-title">Weekly Flow</p>
+                                    <p class="font-inter-10-regular text-gray" style="margin: 2px 0 0 0;" id="chart-header-subtitle">Calculating...</p>
+                                </div>
                                 <div class="custom-dropdown" id="week-dropdown-container">
                                     <button class="dropdown-trigger font-inter-10-medium" id="dropdown-trigger">
                                         <span id="selected-week-label">This Week</span>
@@ -155,11 +158,45 @@
                     </div>
                     
                     <div class="about-footer">
-                        <div class="footer-credit">
-                            <p class="font-inter-12-medium">Designed & Developed with meowskrrt </p>
+                        <div class="team-section">
+                            <p class="font-inter-16-medium section-title">Meet the Team</p>
+                            
+                            <div class="team-grid">
+                                <!-- Member 1 -->
+                                <div class="team-member-card">
+                                    <div class="member-info">
+                                        <p class="font-inter-12-medium member-name">Jasmin Joyce Obligado</p>
+                                        <p class="font-inter-10-regular text-gray member-role"> Team Lead / Co-Founder / Frontend Developer / UI/UX Designer / Technical Writer</p>
+                                    </div>
+                                    <div class="member-socials">
+                                        <a href="https://www.linkedin.com/in/jasmin-joyce-obligado/" target="_blank" rel="noopener noreferrer" class="social-link font-inter-10-medium">LinkedIn</a>
+                                        <a href="https://github.com/jjobligado" target="_blank" rel="noopener noreferrer" class="social-link font-inter-10-medium">GitHub</a>
+                                    </div>
+                                </div>
+                                
+                                <!-- Member 2 -->
+                                <div class="team-member-card">
+                                    <div class="member-info">
+                                        <p class="font-inter-12-medium member-name">Jude Keith Escritor</p>
+                                        <p class="font-inter-10-regular text-gray member-role">Co-Founder / Full-stack Developer / Pixel Artist / QA Engineer</p>
+                                    </div>
+                                    <div class="member-socials">
+                                        <a href="https://www.linkedin.com/in/jude-keith-escritor-370a69267/" target="_blank" rel="noopener noreferrer" class="social-link font-inter-10-medium">LinkedIn</a>
+                                        <a href="https://github.com/educ-jkescritor" target="_blank" rel="noopener noreferrer" class="social-link font-inter-10-medium">GitHub</a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="footer-links">
-                            <a href="https://github.com/educ-jkescritor/Pawse.git" class="font-inter-12-regular" target="_blank" rel="noopener noreferrer">Visit on GitHub</a>
+
+                        <div class="footer-divider"></div>
+
+                        <div class="footer-bottom">
+                            <div class="footer-meta">
+                                <a href="https://github.com/educ-jkescritor/Pawse.git" target="_blank" rel="noopener noreferrer" class="meta-link font-inter-10-medium">Visit GitHub Repository</a>
+                                <span class="meta-separator">•</span>
+                                <span class="font-inter-10-regular text-gray">MIT License</span>
+                            </div>
+                            <p class="font-inter-10-regular text-gray copyright">© 2026 meowskrrt. Designed & Developed with 🐾</p>
                         </div>
                     </div>
                 </div>
