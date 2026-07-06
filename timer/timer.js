@@ -27,6 +27,7 @@ const catConfig = catConfiguration[catType];
 localStorage.setItem('timerRunning', 'true');
 window.addEventListener('beforeunload', () => {
     localStorage.setItem('timerRunning', 'false');
+    flushSessionData();
 });
 
 let remainingTime = catConfig.workTime;
@@ -39,6 +40,31 @@ let actualWork = 0;
 let actualBreak = 0;
 let workCount = 0;
 let breakCount = 0;
+
+let currentDay = new Date().getDate();
+
+function flushSessionData(isPomodoroComplete = false) {
+    if (actualWork === 0 && actualBreak === 0 && !isPomodoroComplete) return;
+
+    let sessionData = {
+        cat_type: catConfig.dbId,
+        total_work_seconds: actualWork,
+        total_break_seconds: actualBreak,
+        total_work: workCount,
+        total_break: breakCount,
+        total_pomodoro: isPomodoroComplete ? 1 : 0
+    };
+    
+    if (window.mainAPI && window.mainAPI.savesession) {
+        window.mainAPI.savesession(sessionData);
+    }
+
+    // Reset local accumulators so we never double-count
+    actualWork = 0;
+    actualBreak = 0;
+    workCount = 0;
+    breakCount = 0;
+}
 
 // Initialize Audio Objects
 const ambientAudio = new Audio('../assets/sounds/ambient.mp3');
@@ -298,6 +324,12 @@ function startTimer() {
     updateAudioSettings();
 
     timerId = setInterval(() => {
+        let today = new Date().getDate();
+        if (today !== currentDay) {
+            flushSessionData(); // Safely dump yesterday's stats before ticking for today
+            currentDay = today;
+        }
+
         remainingTime--;
 
         if (tickEnabled && soundEnabled) {
@@ -386,16 +418,7 @@ function skipTimer(completedCycle) {
 
         if (cycleCount === 4) {
 
-            let sessionData = {
-                cat_type: catConfig.dbId,
-                total_work_seconds: actualWork,
-                total_break_seconds: actualBreak,
-                total_work: workCount,
-                total_break: breakCount,
-                total_pomodoro: 1
-            }
-
-            window.mainAPI.savesession(sessionData);
+            flushSessionData(true);
 
             showModal (
                 "Paws-itively Brilliant!",
