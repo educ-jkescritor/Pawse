@@ -741,6 +741,19 @@ p {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    padding: 6px 0px; /* Comfort margins between settings items */
+}
+
+.settings-label-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: left;
+    max-width: 70%; /* Prevent label overlap with slider/toggle switches */
+}
+
+.settings-label-container p {
+    margin: 0;
 }
 
 .toggle-switch {
@@ -794,6 +807,36 @@ p {
 
 .settings-item.disabled * {
     pointer-events: none;
+}
+
+/* --- SEGMENTED THEME SELECTOR GROUP --- */
+.theme-selector-group {
+    display: flex;
+    border: 1px solid var(--stroke-color);
+    border-radius: 6px;
+    overflow: hidden;
+    background-color: var(--topbar-fill);
+}
+
+.theme-btn {
+    border: none;
+    background: transparent;
+    padding: 6px 12px;
+    font-family: var(--font-inter);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-gray);
+    cursor: default;
+}
+
+.theme-btn:not(:last-child) {
+    border-right: 1px solid var(--stroke-color);
+}
+
+.theme-btn.active {
+    background-color: #FFFFFF;
+    color: var(--text-black);
+    font-weight: bold;
 }
 
 .slider-container {

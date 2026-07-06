@@ -217,23 +217,32 @@
 
                     <!-- Workflow Settings -->
                     <div class="settings-group">                
-                        <p class="font-inter-12-medium">WORKFLOW</p>
+                        <p class="font-inter-16-medium">WORKFLOW</p>
                         <div class="settings-item strict-mode">
-                            <p class="font-inter-12-regular">Strict Mode</p>
+                            <div class="settings-label-container">
+                                <p class="font-inter-12-medium">Strict Mode</p>
+                                <p class="font-inter-10-regular text-gray">Prevents skipping active sessions to enforce focus.</p>
+                            </div>
                             <label class="toggle-switch">
                                 <input type="checkbox" class="strict-toggle">
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="settings-item auto-start-breaks">
-                            <p class="font-inter-12-regular">Auto-Start Break</p>
+                            <div class="settings-label-container">
+                                <p class="font-inter-12-medium">Auto-Start Break</p>
+                                <p class="font-inter-10-regular text-gray">Automatically starts your break when the work timer ends.</p>
+                            </div>
                             <label class="toggle-switch">
                                 <input type="checkbox" class="break-toggle">
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="settings-item auto-start-pomodoros">
-                            <p class="font-inter-12-regular">Auto-Start Work</p>
+                            <div class="settings-label-container">
+                                <p class="font-inter-12-medium">Auto-Start Work</p>
+                                <p class="font-inter-10-regular text-gray">Automatically starts the next work session when your break ends.</p>
+                            </div>
                             <label class="toggle-switch">
                                 <input type="checkbox" class="pomodoro-toggle">
                                 <span class="slider"></span>
@@ -243,30 +252,42 @@
 
                     <!-- Audio Settings -->
                     <div class="settings-group">
-                        <p class="font-inter-12-medium">AUDIO</p>
+                        <p class="font-inter-16-medium">AUDIO</p>
                         <div class="settings-item ambient-volume">
-                            <p class="font-inter-12-regular">Master Ambient Volume</p>
+                            <div class="settings-label-container">
+                                <p class="font-inter-12-medium">Master Ambient Volume</p>
+                                <p class="font-inter-10-regular text-gray">Controls background nature and white noise sound levels.</p>
+                            </div>
                             <div class="slider-container">
                                 <span class="font-inter-10-regular slider-value">50%</span>
                                 <input type="range" min="0" max="100" value="50" class="volume-slider ambient-slider">
                             </div>
                         </div>
                         <div class="settings-item long-break-interval">
-                            <p class="font-inter-12-regular">Companion Purr Volume</p>
+                            <div class="settings-label-container">
+                                <p class="font-inter-12-medium">Companion Purr Volume</p>
+                                <p class="font-inter-10-regular text-gray">Adjusts the volume of the soothing background cat purring.</p>
+                            </div>
                             <div class="slider-container">
                                 <span class="font-inter-10-regular slider-value">50%</span>
                                 <input type="range" min="0" max="100" value="50" class="volume-slider purr-slider">
                             </div>
                         </div>
                         <div class="settings-item long-break-interval">
-                            <p class="font-inter-12-regular">Alarm Sound</p>
+                            <div class="settings-label-container">
+                                <p class="font-inter-12-medium">Alarm Sound</p>
+                                <p class="font-inter-10-regular text-gray">Plays a cat meow alarm when focus cycles complete.</p>
+                            </div>
                             <label class="toggle-switch">
                                 <input type="checkbox" class="alarm-toggle">
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="settings-item long-break-interval">
-                            <p class="font-inter-12-regular">Tick Sound</p>
+                            <div class="settings-label-container">
+                                <p class="font-inter-12-medium">Tick Sound</p>
+                                <p class="font-inter-10-regular text-gray">Plays a subtle clock ticking sound during active focus work.</p>
+                            </div>
                             <label class="toggle-switch">
                                 <input type="checkbox" class="tick-toggle">
                                 <span class="slider"></span>
@@ -276,27 +297,36 @@
 
                     <!-- System Settings -->
                     <div class="settings-group">
-                        <p class="font-inter-12-medium">SYSTEM</p>
+                        <p class="font-inter-16-medium">SYSTEM</p>
                         <div class="settings-item always-on-top">
-                            <p class="font-inter-12-regular">Always on Top</p>
+                            <div class="settings-label-container">
+                                <p class="font-inter-12-medium">Always on Top</p>
+                                <p class="font-inter-10-regular text-gray">Keeps the timer window floating over other apps while you work.</p>
+                            </div>
                             <label class="toggle-switch">
                                 <input type="checkbox" class="top-toggle">
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="settings-item launch-on-startup disabled">
-                            <p class="font-inter-12-regular text-gray">Launch on Startup</p>
+                            <div class="settings-label-container">
+                                <p class="font-inter-12-medium text-gray">Launch on Startup</p>
+                                <p class="font-inter-10-regular text-gray">Automatically launches Pawse when your system starts up.</p>
+                            </div>
                             <label class="toggle-switch">
                                 <input type="checkbox" class="startup-toggle" disabled>
                                 <span class="slider"></span>
                             </label>
                         </div>
                         <div class="settings-item visual-theme disabled">
-                            <p class="font-inter-12-regular text-gray">Select your visual theme</p>
-                            <label class="toggle-switch">
-                                <input type="checkbox" class="theme-toggle" disabled>
-                                <span class="slider"></span>
-                            </label>
+                            <div class="settings-label-container">
+                                <p class="font-inter-12-medium text-gray">Select your visual theme</p>
+                                <p class="font-inter-10-regular text-gray">Choose between light mode and dark mode.</p>
+                            </div>
+                            <div class="theme-selector-group">
+                                <button class="theme-btn active" disabled>Light</button>
+                                <button class="theme-btn" disabled>Dark</button>
+                            </div>
                         </div>
                     </div>
                 </div>
