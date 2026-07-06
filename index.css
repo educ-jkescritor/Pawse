@@ -257,6 +257,13 @@ ease;
     justify-content: center;
 }
 
+#menu-btn img {
+    width: 24px; /* Constrain the massive Aseprite logo */
+    height: 24px;
+    object-fit: contain;
+    image-rendering: pixelated; /* Keeps the pixel art sharp when scaled down */
+}
+
 .main-window-controls {
     display: flex;
     gap: 8px;
