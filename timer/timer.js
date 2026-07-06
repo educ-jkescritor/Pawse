@@ -260,9 +260,9 @@ function skipTimer(completedCycle) {
                 startTimer();
             } else {
                 showModal (
-                    "Long Break Time!",
-                    "Time for a long break!",
-                    "Start Break",
+                    "Time for a Catnap!",
+                    "Amazing work! You've earned a long, cozy rest. Step away from the screen and recharge.",
+                    "Start Long Break",
                     function () {
                         remainingTime = catConfig.longBreakTime;
                         document.getElementById("timer-display").textContent = formatTime(remainingTime);
@@ -277,8 +277,8 @@ function skipTimer(completedCycle) {
                 startTimer();
             } else {
                 showModal (
-                    "Short Break Time!",
-                    "Time for a short break!",
+                    "Stretch Your Paws!",
+                    "Great focus! Your companion is ready for a quick stretch and a treat.",
                     "Start Break",
                     function () {
                         remainingTime = catConfig.shortBreakTime;
@@ -310,9 +310,9 @@ function skipTimer(completedCycle) {
             window.mainAPI.savesession(sessionData);
 
             showModal (
-                "Session Complete!",
-                `You have completed ${cycleCount} cycles! Back to the main menu.`,
-                "Back to Main Menu",
+                "Paws-itively Brilliant!",
+                `You successfully completed a full set of ${cycleCount} cycles! Your progress is logged safely. Take a bow!`,
+                "Return to Menu",
                 function () {
                     window.location.replace("../index.html");
                 }
@@ -326,8 +326,8 @@ function skipTimer(completedCycle) {
                 startTimer();
             } else {
                 showModal (
-                    "Back to Work!",
-                    `Back to work! You have completed ${cycleCount} cycle(s)! Keep going!`,
+                    "Ready to Focus?",
+                    `You’ve completed ${cycleCount} cycle(s) so far! Let's keep the momentum going.`,
                     "Start Work",
                     function () {
                         remainingTime = catConfig.workTime;
