@@ -313,6 +313,11 @@ p {
     height: 0; /* Fixes browser percentage height calculation bug inside flex items */
 }
 
+/* Disable hovers when graph is empty */
+.graph-bars.empty-state .bar-wrapper {
+    pointer-events: none;
+}
+
 /* Empty State Message inside Graph */
 .no-data-message {
     position: absolute;

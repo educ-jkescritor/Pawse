@@ -124,7 +124,7 @@ async function loadAnalytics(weeksAgo = 0) {
         graphBarsContainer.innerHTML = ''; // Clear existing
         
         // Dynamic hover support: style bars according to user's favorite companion
-        graphBarsContainer.classList.remove('orange_cat', 'tuxedo_cat', 'black_cat');
+        graphBarsContainer.classList.remove('orange_cat', 'tuxedo_cat', 'black_cat', 'empty-state');
         if (data.favorite_cat) {
             graphBarsContainer.classList.add(data.favorite_cat);
         }
@@ -138,6 +138,7 @@ async function loadAnalytics(weeksAgo = 0) {
             noDataMsg.className = "no-data-message font-inter-10-medium";
             noDataMsg.textContent = "No sessions recorded for this week";
             graphBarsContainer.appendChild(noDataMsg);
+            graphBarsContainer.classList.add("empty-state"); // Disable hover highlights
         }
         
         // Find max seconds for scaling, default to at least 1 second to prevent divide by zero
