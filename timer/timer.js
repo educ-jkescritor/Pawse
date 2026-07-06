@@ -146,13 +146,28 @@ const clickDurations = {
     'tuxedo_cat': 1000  // 10 frames
 };
 
+// Chat bubble facts list
+const catFacts = [
+    "Cats spend 70% of their lives sleeping.",
+    "A cat's purr can help heal bones and muscles.",
+    "Cats have 32 muscles in each ear to control them.",
+    "A cat's nose print is unique, like a fingerprint!",
+    "Cats can make over 100 vocal sounds.",
+    "A cat can jump up to six times its height!",
+    "Cats have a third eyelid called the 'haw'!",
+    "Cats are crepuscular, meaning they are most active at dawn and dusk."
+];
+let bubbleTimeoutId = null;
 let isPetting = false;
+let isShowingFact = false; // Tracks if a click-fact or welcome-fact is active so hover doesn't overwrite it
+
 
 catSprite.addEventListener('click', () => {
     // Only allow interaction during break times and if not already petting
     if (workingTime || isPetting) return;
 
     isPetting = true;
+    isShowingFact = true; // Lock fact display
     const catClass = catConfig.dbId;
 
     // Play corresponding companion meow sound if master audio is enabled
@@ -160,6 +175,25 @@ catSprite.addEventListener('click', () => {
     if (meowAudio && soundEnabled) {
         meowAudio.currentTime = 0; // Rewind to start for spam clicks
         meowAudio.play().catch(e => console.log("Meow blocked:", e));
+    }
+
+    // Display a random cat fact in the chat bubble
+    const chatBubble = document.getElementById("chat-bubble");
+    const chatText = document.getElementById("chat-text");
+    if (chatBubble && chatText) {
+        if (bubbleTimeoutId) clearTimeout(bubbleTimeoutId);
+        
+        const randomFact = catFacts[Math.floor(Math.random() * catFacts.length)];
+        chatText.textContent = randomFact;
+        
+        // Dynamically assign theme classes (which auto-reveals the bubble by removing the hidden class)
+        chatBubble.className = `chat-bubble ${catClass}`;
+        
+        // Hide after 3.5 seconds
+        bubbleTimeoutId = setTimeout(() => {
+            chatBubble.classList.add("hidden");
+            isShowingFact = false; // Release fact display lock
+        }, 3500);
     }
 
     // Shift to the click sprite
@@ -179,8 +213,38 @@ catSprite.addEventListener('click', () => {
     }, duration);
 });
 
+function triggerWelcomeBubble() {
+    const chatBubble = document.getElementById("chat-bubble");
+    const chatText = document.getElementById("chat-text");
+    if (chatBubble && chatText) {
+        if (bubbleTimeoutId) clearTimeout(bubbleTimeoutId);
+        
+        isShowingFact = true; // Lock fact display so hover doesn't overwrite it
+        chatText.textContent = "Pet me for a fun fact! 🐾";
+        chatBubble.className = `chat-bubble ${catConfig.dbId}`; // Solid theme style
+        
+        // Hide after 4 seconds
+        bubbleTimeoutId = setTimeout(() => {
+            chatBubble.classList.add("hidden");
+            isShowingFact = false; // Release lock
+        }, 4000);
+    }
+}
+
 function updateCatState() {
     isPetting = false; // Release lock in case of forced state shifts
+    isShowingFact = false; // Reset fact display lock
+    
+    // Hide chat bubble during state transitions (e.g. going back to work)
+    const chatBubble = document.getElementById("chat-bubble");
+    if (chatBubble) {
+        chatBubble.classList.add("hidden");
+    }
+    if (bubbleTimeoutId) {
+        clearTimeout(bubbleTimeoutId);
+        bubbleTimeoutId = null;
+    }
+    
     const catClass = catConfig.dbId; // e.g. 'orange_cat', 'tuxedo_cat', 'black_cat'
     
     // Clear any existing animation sequence to prevent overlaps
@@ -278,6 +342,7 @@ function skipTimer(completedCycle) {
                 remainingTime = catConfig.longBreakTime;
                 document.getElementById("timer-display").textContent = formatTime(remainingTime);
                 startTimer();
+                triggerWelcomeBubble();
             } else {
                 showModal (
                     "Time for a Catnap!",
@@ -287,6 +352,7 @@ function skipTimer(completedCycle) {
                         remainingTime = catConfig.longBreakTime;
                         document.getElementById("timer-display").textContent = formatTime(remainingTime);
                         startTimer();
+                        triggerWelcomeBubble();
                     }
                 );
             }
@@ -295,6 +361,7 @@ function skipTimer(completedCycle) {
                 remainingTime = catConfig.shortBreakTime;
                 document.getElementById("timer-display").textContent = formatTime(remainingTime);
                 startTimer();
+                triggerWelcomeBubble();
             } else {
                 showModal (
                     "Stretch Your Paws!",
@@ -304,6 +371,7 @@ function skipTimer(completedCycle) {
                         remainingTime = catConfig.shortBreakTime;
                         document.getElementById("timer-display").textContent = formatTime(remainingTime);
                         startTimer();
+                        triggerWelcomeBubble();
                     }
                 );
             }
