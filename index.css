@@ -257,6 +257,30 @@ ease;
     justify-content: center;
 }
 
+.title-roller {
+    height: 16px;
+    overflow: hidden;
+    position: relative;
+    pointer-events: none;
+}
+
+.roller-content {
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.roller-text {
+    height: 16px;
+    line-height: 16px;
+    display: flex;
+    align-items: center;
+}
+
+#menu-btn:hover + .title-roller .roller-content {
+    transform: translateY(-16px);
+}
+
 #menu-btn img {
     width: 24px; /* Constrain the massive Aseprite logo */
     height: 24px;
