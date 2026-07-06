@@ -51,6 +51,13 @@ const alarmAudio = new Audio('../assets/sounds/alarm.mp3');
 alarmAudio.loop = true;
 alarmAudio.volume = 0.35; // Reduced default volume so it doesn't overpower BGM
 
+// Dynamic Meow Audio Objects per companion
+const meowAudios = {
+    'orange_cat': new Audio('../assets/sounds/ginger-meow.mp3'),
+    'tuxedo_cat': new Audio('../assets/sounds/tux-meow.mp3'),
+    'black_cat': new Audio('../assets/sounds/void-meow.mp3')
+};
+
 function updateAudioSettings() {
     let ambVol = parseInt(localStorage.getItem('ambientVolume'));
     if (isNaN(ambVol)) ambVol = 50;
@@ -77,12 +84,18 @@ function updateAudioSettings() {
         ambientAudio.muted = true;
         purrAudio.muted = true;
         alarmAudio.muted = true;
+        for (let key in meowAudios) {
+            meowAudios[key].muted = true;
+        }
         if (soundIcon) soundIcon.src = "../assets/icons/soundoff-btn.png";
     } else {
         soundEnabled = true;
         ambientAudio.muted = false;
         purrAudio.muted = false;
         alarmAudio.muted = false;
+        for (let key in meowAudios) {
+            meowAudios[key].muted = false;
+        }
         if (soundIcon) soundIcon.src = "../assets/icons/soundon-btn.png";
     }
 
@@ -141,6 +154,13 @@ catSprite.addEventListener('click', () => {
 
     isPetting = true;
     const catClass = catConfig.dbId;
+
+    // Play corresponding companion meow sound if master audio is enabled
+    const meowAudio = meowAudios[catClass];
+    if (meowAudio && soundEnabled) {
+        meowAudio.currentTime = 0; // Rewind to start for spam clicks
+        meowAudio.play().catch(e => console.log("Meow blocked:", e));
+    }
 
     // Shift to the click sprite
     catSprite.className = `cat-sprite ${catClass} clicking`;
