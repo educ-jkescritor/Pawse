@@ -602,17 +602,30 @@ p {
 
 .member-socials {
     display: flex;
-    gap: 8px;
+    gap: 8px; /* Compact spacing for icons */
+    align-items: center;
+    margin-top: 4px; /* Tiny top offset to distance from description text */
 }
 
-.social-link {
+.social-icon-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     text-decoration: none;
-    color: var(--sys-blue-solid);
-    transition: color 0.15s ease;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    opacity: 0.7; /* Muted idle state */
 }
 
-.social-link:hover {
-    color: var(--theme-focused-dark);
+.social-icon-link img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+}
+
+/* Hover: Slight zoom and full opacity */
+.social-icon-link:hover {
+    transform: scale(1.1);
+    opacity: 1.0;
 }
 
 .footer-divider {
