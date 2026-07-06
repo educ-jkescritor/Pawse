@@ -43,8 +43,17 @@ let breakCount = 0;
 
 let currentDay = new Date().getDate();
 
-function flushSessionData(isPomodoroComplete = false) {
+function flushSessionData(isPomodoroComplete = false, forceYesterday = false) {
     if (actualWork === 0 && actualBreak === 0 && !isPomodoroComplete) return;
+
+    let dateCompleted = null;
+    if (forceYesterday) {
+        let d = new Date();
+        d.setDate(d.getDate() - 1);
+        d.setHours(23, 59, 59, 0);
+        let pad = (n) => (n < 10 ? '0' + n : n);
+        dateCompleted = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
 
     let sessionData = {
         cat_type: catConfig.dbId,
@@ -52,7 +61,8 @@ function flushSessionData(isPomodoroComplete = false) {
         total_break_seconds: actualBreak,
         total_work: workCount,
         total_break: breakCount,
-        total_pomodoro: isPomodoroComplete ? 1 : 0
+        total_pomodoro: isPomodoroComplete ? 1 : 0,
+        date_completed: dateCompleted
     };
     
     if (window.mainAPI && window.mainAPI.savesession) {
@@ -326,7 +336,7 @@ function startTimer() {
     timerId = setInterval(() => {
         let today = new Date().getDate();
         if (today !== currentDay) {
-            flushSessionData(); // Safely dump yesterday's stats before ticking for today
+            flushSessionData(false, true); // forceYesterday = true
             currentDay = today;
         }
 
