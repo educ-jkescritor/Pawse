@@ -53,8 +53,33 @@ let dashboardContent = document.getElementById("dashboard-content");
 let aboutContent = document.getElementById("about-content");
 let settingsContent = document.getElementById("settings-content");
 
+function getWeekDateRangeString(weeksAgo) {
+    const today = new Date();
+    const currentDay = today.getDay();
+    
+    // Start of target week (Sunday)
+    const sunday = new Date(today);
+    sunday.setDate(today.getDate() - currentDay - (weeksAgo * 7));
+    
+    // End of target week (Saturday)
+    const saturday = new Date(sunday);
+    saturday.setDate(sunday.getDate() + 6);
+    
+    const options = { month: 'short', day: 'numeric' };
+    const startStr = sunday.toLocaleDateString('en-US', options);
+    const endStr = saturday.toLocaleDateString('en-US', options);
+    
+    return `${startStr} - ${endStr}`;
+}
+
 async function loadAnalytics(weeksAgo = 0) {
     const data = await window.mainAPI.loadanalytics(weeksAgo);
+
+    // Update dynamic subtitle date range
+    const chartSubtitle = document.getElementById("chart-header-subtitle");
+    if (chartSubtitle) {
+        chartSubtitle.textContent = getWeekDateRangeString(weeksAgo);
+    }
 
     const todayWorkSecondsElement = document.getElementById("today_work_seconds");
     const historicalPomodoroElement = document.getElementById("historical_pomodoro");
@@ -326,11 +351,7 @@ if (dropdownTrigger && dropdownMenu) {
             const val = item.getAttribute('data-value');
             selectedWeekLabel.textContent = item.textContent;
             
-            // Dynamically update the chart header title
-            const chartHeader = document.getElementById('chart-header-title');
-            if (chartHeader) {
-                chartHeader.textContent = item.textContent;
-            }
+            // Keep the main chart header title static as "Weekly Activity"
             
             // Toggle active classes
             dropdownItems.forEach(i => i.classList.remove('active'));
