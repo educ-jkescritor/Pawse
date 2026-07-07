@@ -689,3 +689,19 @@ if (restoreBtn) {
         window.mainAPI.resize('default');
     });
 }
+
+// --- EXIT MODAL HANDLERS ---
+let exitCancelBtn = document.getElementById('exit-cancel-btn');
+if (exitCancelBtn) {
+    exitCancelBtn.onclick = function() {
+        document.getElementById('exit-modal-overlay').classList.add('hidden');
+    }
+}
+
+let exitConfirmBtn = document.getElementById('exit-confirm-btn');
+if (exitConfirmBtn) {
+    exitConfirmBtn.onclick = function() {
+        localStorage.removeItem('pawseDurableState');
+        window.mainAPI.close();
+    }
+}
