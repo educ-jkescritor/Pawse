@@ -622,8 +622,8 @@ function showModal(title, message, btnText, nextAction) {
     const isMiniMode = document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode");
 
     if (isMiniMode) {
-        // If the session completes, we must restore the window size before returning to the main menu
-        if (title === "Session Complete!") {
+        // If the session completes or a full Pomodoro cycle finishes, restore the window size
+        if (title === "Session Complete!" || title === "Paws-itively Brilliant!") {
             document.body.classList.remove("timer-only-mode", "cat-only-mode");
             window.mainAPI.resize('default');
         }
@@ -702,6 +702,6 @@ let exitConfirmBtn = document.getElementById('exit-confirm-btn');
 if (exitConfirmBtn) {
     exitConfirmBtn.onclick = function() {
         localStorage.removeItem('pawseDurableState');
-        window.mainAPI.close();
+        window.location.replace("../index.html");
     }
 }

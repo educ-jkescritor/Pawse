@@ -230,6 +230,7 @@
     gap: 8px;
 }
 
+.text-container p,
 #dialog-title,
 #dialog-message,
 #select-mode {
