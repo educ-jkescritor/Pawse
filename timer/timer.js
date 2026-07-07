@@ -41,18 +41,17 @@ let actualBreak = 0;
 let workCount = 0;
 let breakCount = 0;
 
-let currentDay = new Date().getDate();
+let sessionDate = new Date();
 
 function flushSessionData(isPomodoroComplete = false, forceYesterday = false) {
     if (actualWork === 0 && actualBreak === 0 && !isPomodoroComplete) return;
 
     let dateCompleted = null;
     if (forceYesterday) {
-        let d = new Date();
-        d.setDate(d.getDate() - 1);
+        let d = sessionDate; 
         d.setHours(23, 59, 59, 0);
-        let pad = (n) => (n < 10 ? '0' + n : n);
-        dateCompleted = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        // Export exactly as UTC to match SQLite CURRENT_TIMESTAMP behavior
+        dateCompleted = d.toISOString().replace('T', ' ').substring(0, 19);
     }
 
     let sessionData = {
@@ -335,9 +334,9 @@ function startTimer() {
 
     timerId = setInterval(() => {
         let today = new Date().getDate();
-        if (today !== currentDay) {
+        if (today !== sessionDate.getDate()) {
             flushSessionData(false, true); // forceYesterday = true
-            currentDay = today;
+            sessionDate = new Date();
         }
 
         remainingTime--;
