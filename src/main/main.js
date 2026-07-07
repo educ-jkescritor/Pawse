@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, shell } = require("electron");
 const path = require("path");
 const { db, generateAnalytics } = require("./database.js");
 
@@ -27,7 +27,7 @@ function createWindow() {
     }
   });
 
-  win.loadFile("index.html");
+  win.loadFile(path.join(__dirname, "../renderer/index.html"));
 
   win.once('ready-to-show', () => {
     win.setSize(310, 430);
@@ -62,7 +62,7 @@ function settingsWindow() {
     }
   });
 
-  set.loadFile("settings.html");
+  set.loadFile(path.join(__dirname, "../renderer/settings.html"));
 
   set.once('ready-to-show', () => {
     set.setSize(720, 430);
@@ -78,8 +78,11 @@ app.whenReady().then(() => {
 
   // SECURITY: Lock down navigation and new windows
   app.on('web-contents-created', (event, contents) => {
-    // Disable window.open
-    contents.setWindowOpenHandler(() => {
+    // Intercept safe external links and pipe them to the OS default browser
+    contents.setWindowOpenHandler(({ url }) => {
+      if (url.startsWith('https://github.com/') || url.startsWith('https://www.linkedin.com/')) {
+        shell.openExternal(url);
+      }
       return { action: 'deny' };
     });
 

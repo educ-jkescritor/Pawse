@@ -1,14 +1,14 @@
 {
   "name": "pawse",
   "version": "1.0.0",
-  "description": "",
-  "main": "main.js",
+  "description": "A secure, resilient, and adorable Pomodoro timer built with Electron.",
+  "main": "src/main/main.js",
   "scripts": {
     "start": "electron ."
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["pomodoro", "electron", "productivity", "cats"],
+  "author": "Jude Keith Escritor & Jasmin Joyce Obligado",
+  "license": "MIT",
   "type": "commonjs",
   "devDependencies": {
     "electron": "^42.4.0"

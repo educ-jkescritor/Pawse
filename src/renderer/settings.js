@@ -98,9 +98,9 @@ async function loadAnalytics(weeksAgo = 0) {
 
     // Map cat_type to corresponding face image
     const catFaceImages = {
-        'orange_cat': './assets/photos/orange-cat-face.png',
-        'tuxedo_cat': './assets/photos/tuxedo-cat-face.png',
-        'black_cat': './assets/photos/black-cat-face.png'
+        'orange_cat': './../assets/photos/orange-cat-face.png',
+        'tuxedo_cat': './../assets/photos/tuxedo-cat-face.png',
+        'black_cat': './../assets/photos/black-cat-face.png'
     };
     
     if (data.favorite_cat && catFaceImages[data.favorite_cat]) {
