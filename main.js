@@ -20,7 +20,9 @@ function createWindow() {
     frame: false,
     transparent: false,
     webPreferences: {
+      nodeIntegration: false,
       contextIsolation: true,
+      sandbox: true,
       preload: path.join(__dirname, "preload.js")
     }
   });
@@ -53,7 +55,9 @@ function settingsWindow() {
     frame: false,
     transparent: false,
     webPreferences: {
+      nodeIntegration: false,
       contextIsolation: true,
+      sandbox: true,
       preload: path.join(__dirname, "preload.js")
     }
   });
@@ -69,7 +73,22 @@ function settingsWindow() {
   });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+
+  // SECURITY: Lock down navigation and new windows
+  app.on('web-contents-created', (event, contents) => {
+    // Disable window.open
+    contents.setWindowOpenHandler(() => {
+      return { action: 'deny' };
+    });
+
+    // Disable navigation to external URLs
+    contents.on('will-navigate', (event, navigationUrl) => {
+      event.preventDefault();
+    });
+  });
+});
 
 ipcMain.on('minimize-window', (event) => {
   const senderWindow = BrowserWindow.fromWebContents(event.sender);
