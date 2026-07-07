@@ -133,7 +133,7 @@ ipcMain.on('save-session', (event, data) => {
     total_pomodoro,
     date_completed
   ) VALUES (
-    ?, ?, ?, ?, ?, ?, COALESCE(?, datetime('now', 'localtime'))
+    ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP)
   )`;
 
   db.run(insertQuery, [data.cat_type, data.total_work_seconds, data.total_break_seconds, data.total_work, data.total_break, data.total_pomodoro, data.date_completed || null], (err) => {
