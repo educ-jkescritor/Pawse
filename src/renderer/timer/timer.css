@@ -198,7 +198,7 @@
 }
 
 /* --- CUSTOM MODAL STYLES --- */
-#modal-overlay, #resize-modal-overlay {
+#modal-overlay, #resize-modal-overlay, #exit-modal-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -212,7 +212,7 @@
 }
 
 .custom-dialog {
-    padding: 32px 24px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -227,9 +227,10 @@
 .text-container {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
 }
 
+.text-container p,
 #dialog-title,
 #dialog-message,
 #select-mode {

@@ -29,7 +29,7 @@
                 <img src="../../assets/icons/decrease-btn.png" alt="decrease">
             </button>
             <button id="close-btn">
-                <img src="../../assets/icons/close-btn.png" alt="close">
+                <img src="../../assets/icons/back-btn.png" alt="back">
             </button>
         </div>
     </header>
@@ -76,6 +76,19 @@
                 <p id="dialog-message" class="font-inter-12-regular">Dialog Message</p>
             </div>
             <button id="dialog-btn" class="confirmation_button font-inter-12-medium">Button</button>
+        </div>
+    </div>
+
+    <div id="exit-modal-overlay" class="hidden">
+        <div class="custom-dialog">
+            <div class="text-container">
+                <p class="font-inter-20-semibold">Are you sure?</p>
+                <p class="font-inter-12-regular">Exiting now will abandon this Pomodoro session. Your progress won't be saved.</p>
+            </div>
+            <div style="display: flex; flex-direction: row; gap: 8px; width: 100%;">
+                <button id="exit-cancel-btn" class="confirmation_button font-inter-12-medium" style="background: transparent; color: var(--sys-blue-solid);">Cancel</button>
+                <button id="exit-confirm-btn" class="confirmation_button font-inter-12-medium">Exit</button>
+            </div>
         </div>
     </div>
 

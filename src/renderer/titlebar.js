@@ -8,7 +8,14 @@ if (settingsButton !== null) {
 let closeButton = document.getElementById("close-btn");
 if (closeButton !== null) {
     closeButton.onclick = function closeWindow() {
-        // Clear durable state if the user intentionally closes the app
+        let exitModal = document.getElementById("exit-modal-overlay");
+        if (exitModal !== null) {
+            // We are on the timer screen, show the confirmation modal instead of closing immediately
+            exitModal.classList.remove("hidden");
+            return;
+        }
+        
+        // Otherwise (Main Menu, Settings), close immediately
         localStorage.removeItem('pawseDurableState');
         window.mainAPI.close();
     };

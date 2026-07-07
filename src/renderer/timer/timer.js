@@ -129,17 +129,19 @@ ambientAudio.loop = true;
 const purrAudio = new Audio('../../assets/sounds/purr.mp3');
 purrAudio.loop = true;
 const tickAudio = new Audio('../../assets/sounds/tick.mp3');
+tickAudio.volume = 0.2; // Lowered default volume to prevent ear strain
 let tickEnabled = false;
 const alarmAudio = new Audio('../../assets/sounds/alarm.mp3');
 alarmAudio.loop = true;
-alarmAudio.volume = 0.35; // Reduced default volume so it doesn't overpower BGM
+alarmAudio.volume = 0.2; // Lowered default volume to prevent ear strain
 
-// Dynamic Meow Audio Objects per companion
+// Meow sounds (often acts as button click feedback)
 const meowAudios = {
     'orange_cat': new Audio('../../assets/sounds/ginger-meow.mp3'),
     'tuxedo_cat': new Audio('../../assets/sounds/tux-meow.mp3'),
     'black_cat': new Audio('../../assets/sounds/void-meow.mp3')
 };
+Object.values(meowAudios).forEach(audio => audio.volume = 0.3); // Lowered click/meow volume
 
 function updateAudioSettings() {
     let ambVol = parseInt(localStorage.getItem('ambientVolume'));
@@ -622,8 +624,8 @@ function showModal(title, message, btnText, nextAction) {
     const isMiniMode = document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode");
 
     if (isMiniMode) {
-        // If the session completes, we must restore the window size before returning to the main menu
-        if (title === "Session Complete!") {
+        // If the session completes or a full Pomodoro cycle finishes, restore the window size
+        if (title === "Session Complete!" || title === "Paws-itively Brilliant!") {
             document.body.classList.remove("timer-only-mode", "cat-only-mode");
             window.mainAPI.resize('default');
         }
@@ -688,4 +690,20 @@ if (restoreBtn) {
         document.body.classList.remove("timer-only-mode", "cat-only-mode");
         window.mainAPI.resize('default');
     });
+}
+
+// --- EXIT MODAL HANDLERS ---
+let exitCancelBtn = document.getElementById('exit-cancel-btn');
+if (exitCancelBtn) {
+    exitCancelBtn.onclick = function() {
+        document.getElementById('exit-modal-overlay').classList.add('hidden');
+    }
+}
+
+let exitConfirmBtn = document.getElementById('exit-confirm-btn');
+if (exitConfirmBtn) {
+    exitConfirmBtn.onclick = function() {
+        localStorage.removeItem('pawseDurableState');
+        window.location.replace("../index.html");
+    }
 }
