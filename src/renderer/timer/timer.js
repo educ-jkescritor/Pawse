@@ -43,6 +43,54 @@ let breakCount = 0;
 
 let sessionDate = new Date();
 
+// --- DURABLE EXECUTION ENGINE (Local Persistence) ---
+const savedStateStr = localStorage.getItem('pawseDurableState');
+if (savedStateStr) {
+    try {
+        const savedState = JSON.parse(savedStateStr);
+        // Only restore if the saved state belongs to the exact same cat companion
+        if (savedState.catType === catType) {
+            const elapsedSeconds = Math.floor((Date.now() - savedState.timestamp) / 1000);
+            
+            remainingTime = savedState.remainingTime;
+            // If it was actively running when closed, subtract the elapsed offline time
+            if (savedState.isRunning) {
+                remainingTime -= elapsedSeconds;
+                if (remainingTime < 0) remainingTime = 0; // Trigger completion instantly if time passed
+            }
+            
+            workingTime = savedState.workingTime;
+            cycleCount = savedState.cycleCount;
+            actualWork = savedState.actualWork || 0;
+            actualBreak = savedState.actualBreak || 0;
+            workCount = savedState.workCount || 0;
+            breakCount = savedState.breakCount || 0;
+            
+            // If it was manually paused before crashing, start up paused
+            isRunning = savedState.isRunning;
+        }
+    } catch(e) {
+        // Ignore corruption
+    }
+}
+
+// Continuously save state (Fault Tolerance)
+setInterval(() => {
+    localStorage.setItem('pawseDurableState', JSON.stringify({
+        catType: catType,
+        remainingTime: remainingTime,
+        workingTime: workingTime,
+        cycleCount: cycleCount,
+        isRunning: isRunning,
+        actualWork: actualWork,
+        actualBreak: actualBreak,
+        workCount: workCount,
+        breakCount: breakCount,
+        timestamp: Date.now()
+    }));
+}, 1000);
+// ---------------------------------------------------
+
 function flushSessionData(isPomodoroComplete = false, forceYesterday = false) {
     if (actualWork === 0 && actualBreak === 0 && !isPomodoroComplete) return;
 
@@ -76,21 +124,21 @@ function flushSessionData(isPomodoroComplete = false, forceYesterday = false) {
 }
 
 // Initialize Audio Objects
-const ambientAudio = new Audio('../assets/sounds/ambient.mp3');
+const ambientAudio = new Audio('../../assets/sounds/ambient.mp3');
 ambientAudio.loop = true;
-const purrAudio = new Audio('../assets/sounds/purr.mp3');
+const purrAudio = new Audio('../../assets/sounds/purr.mp3');
 purrAudio.loop = true;
-const tickAudio = new Audio('../assets/sounds/tick.mp3');
+const tickAudio = new Audio('../../assets/sounds/tick.mp3');
 let tickEnabled = false;
-const alarmAudio = new Audio('../assets/sounds/alarm.mp3');
+const alarmAudio = new Audio('../../assets/sounds/alarm.mp3');
 alarmAudio.loop = true;
 alarmAudio.volume = 0.35; // Reduced default volume so it doesn't overpower BGM
 
 // Dynamic Meow Audio Objects per companion
 const meowAudios = {
-    'orange_cat': new Audio('../assets/sounds/ginger-meow.mp3'),
-    'tuxedo_cat': new Audio('../assets/sounds/tux-meow.mp3'),
-    'black_cat': new Audio('../assets/sounds/void-meow.mp3')
+    'orange_cat': new Audio('../../assets/sounds/ginger-meow.mp3'),
+    'tuxedo_cat': new Audio('../../assets/sounds/tux-meow.mp3'),
+    'black_cat': new Audio('../../assets/sounds/void-meow.mp3')
 };
 
 function updateAudioSettings() {
@@ -122,7 +170,7 @@ function updateAudioSettings() {
         for (let key in meowAudios) {
             meowAudios[key].muted = true;
         }
-        if (soundIcon) soundIcon.src = "../assets/icons/soundoff-btn.png";
+        if (soundIcon) soundIcon.src = "../../assets/icons/soundoff-btn.png";
     } else {
         soundEnabled = true;
         ambientAudio.muted = false;
@@ -131,7 +179,7 @@ function updateAudioSettings() {
         for (let key in meowAudios) {
             meowAudios[key].muted = false;
         }
-        if (soundIcon) soundIcon.src = "../assets/icons/soundon-btn.png";
+        if (soundIcon) soundIcon.src = "../../assets/icons/soundon-btn.png";
     }
 
     // Play or Pause based on strict state conditions
@@ -209,7 +257,7 @@ catSprite.addEventListener('click', () => {
     const meowAudio = meowAudios[catClass];
     if (meowAudio && soundEnabled && localStorage.getItem('clickSound') !== 'false') {
         meowAudio.currentTime = 0; // Rewind to start for spam clicks
-        meowAudio.play().catch(e => console.log("Meow blocked:", e));
+        meowAudio.play().catch(e => {});
     }
 
     // Display a random cat fact in the chat bubble
@@ -233,7 +281,7 @@ catSprite.addEventListener('click', () => {
 
     // Shift to the click sprite
     catSprite.className = `cat-sprite ${catClass} clicking`;
-    catSprite.style.backgroundImage = `url('../assets/sprites/${catClass}_click.png')`;
+    catSprite.style.backgroundImage = `url('../../assets/sprites/${catClass}_click.png')`;
 
     // Wait exactly the length of this specific cat's animation
     const duration = clickDurations[catClass] || 1000;
@@ -243,7 +291,7 @@ catSprite.addEventListener('click', () => {
 
         // Revert back to static and unlock
         catSprite.className = `cat-sprite ${catClass} breaking`;
-        catSprite.style.backgroundImage = `url('../assets/sprites/${catClass}_static.png')`;
+        catSprite.style.backgroundImage = `url('../../assets/sprites/${catClass}_static.png')`;
         isPetting = false;
     }, duration);
 });
@@ -292,14 +340,14 @@ function updateCatState() {
         if (!isRunning) {
             // Paused during work: just show static
             catSprite.className = `cat-sprite ${catClass} breaking`;
-            catSprite.style.backgroundImage = `url('../assets/sprites/${catConfig.dbId}_static.png')`;
+            catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
         } else {
             // Actively working: Sequence of work -> static -> work
             let isWorkingAnim = true;
             
             // Initial state: Working
             catSprite.className = `cat-sprite ${catClass} working`;
-            catSprite.style.backgroundImage = `url('../assets/sprites/${catConfig.dbId}_work.png')`;
+            catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
             
             function playSequence() {
                 if (!isRunning || !workingTime) return;
@@ -307,11 +355,11 @@ function updateCatState() {
                 isWorkingAnim = !isWorkingAnim;
                 if (isWorkingAnim) {
                     catSprite.className = `cat-sprite ${catClass} working`;
-                    catSprite.style.backgroundImage = `url('../assets/sprites/${catConfig.dbId}_work.png')`;
+                    catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
                     spriteTimeoutId = setTimeout(playSequence, 2800); // Type for 2.8 seconds
                 } else {
                     catSprite.className = `cat-sprite ${catClass} breaking`;
-                    catSprite.style.backgroundImage = `url('../assets/sprites/${catConfig.dbId}_static.png')`;
+                    catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
                     spriteTimeoutId = setTimeout(playSequence, 2000); // Stop and look for 2 seconds
                 }
             }
@@ -322,12 +370,12 @@ function updateCatState() {
     } else {
         // Break time: always static
         catSprite.className = `cat-sprite ${catClass} breaking`;
-        catSprite.style.backgroundImage = `url('../assets/sprites/${catConfig.dbId}_static.png')`;
+        catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
     }
 }
 
 function startTimer() {
-    document.getElementById("play-icon").src = "../assets/icons/pause-btn.png";
+    document.getElementById("play-icon").src = "../../assets/icons/pause-btn.png";
     isRunning = true;
     updateCatState();
     updateAudioSettings();
@@ -344,7 +392,7 @@ function startTimer() {
         if (tickEnabled && soundEnabled) {
             // Skip the first 0.15 seconds of the MP3 to bypass "dead air" padding
             tickAudio.currentTime = 0.10;
-            tickAudio.play().catch(e => console.log("Tick blocked:", e));
+            tickAudio.play().catch(e => {});
         }
 
         if(workingTime == true) {
@@ -462,7 +510,7 @@ function skipTimer(completedCycle) {
 
 function pauseTimer() {
     clearInterval(timerId);
-    document.getElementById("play-icon").src = "../assets/icons/play-btn.png";
+    document.getElementById("play-icon").src = "../../assets/icons/play-btn.png";
     isRunning = false;
     updateCatState();
     updateAudioSettings();
@@ -472,7 +520,15 @@ function soundControl() {
     clearInterval(timerId);
 }
 
-startTimer();
+if (isRunning) {
+    startTimer();
+} else {
+    // Visually initialize UI to the paused state
+    document.getElementById("timer-display").textContent = formatTime(remainingTime);
+    document.getElementById("play-icon").src = "../../assets/icons/play-btn.png";
+    updateCatState();
+    updateAudioSettings();
+}
 
 let soundButton = document.getElementById("sound-btn");
 let playButton = document.getElementById("play-btn");
@@ -488,7 +544,7 @@ soundButton.addEventListener("click", () => {
         localStorage.setItem('prevPurrVolume', currentPurr);
 
         soundEnabled = false;
-        soundIcon.src = "../assets/icons/soundoff-btn.png";
+        soundIcon.src = "../../assets/icons/soundoff-btn.png";
         ambientAudio.muted = true;
         purrAudio.muted = true;
 
@@ -497,7 +553,7 @@ soundButton.addEventListener("click", () => {
         localStorage.setItem('purrVolume', '0');
     }else{
         soundEnabled = true;
-        soundIcon.src = "../assets/icons/soundon-btn.png";
+        soundIcon.src = "../../assets/icons/soundon-btn.png";
         ambientAudio.muted = false;
         purrAudio.muted = false;
 
@@ -553,10 +609,10 @@ function updateSessionCounter() {
     fishIcons.forEach((fish, index) => {
         if(index < cycleCount) {
             fish.classList.add("active");
-            fish.style.backgroundImage = `url('../assets/icons/completed-${catPrefix}-fish.png')`;
+            fish.style.backgroundImage = `url('../../assets/icons/completed-${catPrefix}-fish.png')`;
         } else {
             fish.classList.remove("active");
-            fish.style.backgroundImage = `url('../assets/icons/uncompleted-fish.png')`;
+            fish.style.backgroundImage = `url('../../assets/icons/uncompleted-fish.png')`;
         }
     });
 };
@@ -582,7 +638,7 @@ function showModal(title, message, btnText, nextAction) {
     
     // Start playing the alarm on a loop if the user has it enabled in Settings AND master sound is ON
     if (localStorage.getItem('alarmSound') !== 'false' && soundEnabled) {
-        alarmAudio.play().catch(e => console.log("Alarm blocked:", e));
+        alarmAudio.play().catch(e => {});
     }
 
     dialogBtn.onclick = function() {

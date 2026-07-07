@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, shell } = require("electron");
 const path = require("path");
 const { db, generateAnalytics } = require("./database.js");
 
@@ -20,12 +20,14 @@ function createWindow() {
     frame: false,
     transparent: false,
     webPreferences: {
+      nodeIntegration: false,
       contextIsolation: true,
+      sandbox: true,
       preload: path.join(__dirname, "preload.js")
     }
   });
 
-  win.loadFile("index.html");
+  win.loadFile(path.join(__dirname, "../renderer/index.html"));
 
   win.once('ready-to-show', () => {
     win.setSize(310, 430);
@@ -53,12 +55,14 @@ function settingsWindow() {
     frame: false,
     transparent: false,
     webPreferences: {
+      nodeIntegration: false,
       contextIsolation: true,
+      sandbox: true,
       preload: path.join(__dirname, "preload.js")
     }
   });
 
-  set.loadFile("settings.html");
+  set.loadFile(path.join(__dirname, "../renderer/settings.html"));
 
   set.once('ready-to-show', () => {
     set.setSize(720, 430);
@@ -69,7 +73,25 @@ function settingsWindow() {
   });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+
+  // SECURITY: Lock down navigation and new windows
+  app.on('web-contents-created', (event, contents) => {
+    // Intercept safe external links and pipe them to the OS default browser
+    contents.setWindowOpenHandler(({ url }) => {
+      if (url.startsWith('https://github.com/') || url.startsWith('https://www.linkedin.com/')) {
+        shell.openExternal(url);
+      }
+      return { action: 'deny' };
+    });
+
+    // Disable navigation to external URLs
+    contents.on('will-navigate', (event, navigationUrl) => {
+      event.preventDefault();
+    });
+  });
+});
 
 ipcMain.on('minimize-window', (event) => {
   const senderWindow = BrowserWindow.fromWebContents(event.sender);
