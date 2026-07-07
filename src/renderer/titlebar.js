@@ -8,6 +8,8 @@ if (settingsButton !== null) {
 let closeButton = document.getElementById("close-btn");
 if (closeButton !== null) {
     closeButton.onclick = function closeWindow() {
+        // Clear durable state if the user intentionally closes the app
+        localStorage.removeItem('pawseDurableState');
         window.mainAPI.close();
     };
 }

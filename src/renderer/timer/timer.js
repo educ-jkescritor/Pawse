@@ -482,6 +482,7 @@ function skipTimer(completedCycle) {
                 `You successfully completed a full set of ${cycleCount} cycles! Your progress is logged safely. Take a bow!`,
                 "Return to Menu",
                 function () {
+                    localStorage.removeItem('pawseDurableState');
                     window.location.replace("../index.html");
                 }
             )
