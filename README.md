@@ -1,60 +1,99 @@
 # PAWSE 🐾
 *A Secure, Resilient, and Companion-Driven Pomodoro Timer built with Electron.*
 
-![Pawse Application](https://img.shields.io/badge/Electron-42.4.0-blue?logo=electron) ![SQLite](https://img.shields.io/badge/Database-SQLite3-blue?logo=sqlite) ![Security](https://img.shields.io/badge/Security-Hardened-green?logo=shield)
+![Pawse Application](https://img.shields.io/badge/Electron-42.4.0-blue?logo=electron) ![Node.js](https://img.shields.io/badge/Node.js-Backend-green?logo=nodedotjs) ![SQLite](https://img.shields.io/badge/Database-SQLite3-blue?logo=sqlite) ![Security](https://img.shields.io/badge/Security-Hardened-green?logo=shield)
 
-## 📖 Project Explanation
-PAWSE is a desktop Pomodoro application engineered to gamify focus and productivity through virtual cat companions. Users select a companion (Orange, Tuxedo, or Black Cat), each offering different Pomodoro time configurations based on the user's workload. As users complete work cycles, they collect "fish" (sessions), interact with their companion during breaks, and build localized analytics to track productivity.
-
-Unlike standard timers, PAWSE was built with **fault tolerance (Local Durable Execution)** and **military-grade Electron security** in mind, proving that even lightweight productivity apps deserve enterprise-level engineering.
+## 📖 Project Overview
+PAWSE is a desktop Pomodoro application engineered to gamify focus and productivity through virtual cat companions. Unlike standard timers, PAWSE was built with **fault tolerance (Local Durable Execution)** and **military-grade Electron security** in mind, proving that even lightweight productivity apps deserve enterprise-level engineering.
 
 ---
 
-## 🏗 Architecture Overview
-PAWSE adheres to a strict, industry-standard **Model-View-Controller (MVC)** directory structure, separating the Node.js backend from the Chromium frontend.
+## 🌟 Key Features
 
-```text
-pawse/
-├── pawse.db                # Auto-generated SQLite Database (Root level for safety)
-├── package.json            # Application metadata and dependencies
-└── src/
-    ├── main/               # Backend (Node.js)
-    │   ├── main.js         # Window management, security locks, and lifecycle
-    │   ├── database.js     # SQLite integration and parameterized queries
-    │   └── preload.js      # Secure IPC Bridge (Context Isolation)
-    ├── renderer/           # Frontend (Chromium)
-    │   ├── index.*         # Main Menu UI & Logic
-    │   ├── settings.*      # Configuration UI & Logic
-    │   └── timer/          # Timer State Machine UI & Logic
-    └── assets/             # Localized media, fonts, and CSS tokens
+### Personality-Based Pomodoro Companions
+Choose from three unique cat companions, each inspired by a familiar cat personality and paired with a tailored productivity style: 
+*   👔 **Tux (Tuxedo Cat):** 20-minute work, 5-minute short break, 20-minute long break — a balanced companion for steady productivity.
+*   🍊 **Ginger (Orange Cat):** 15-minute work, 3-minute short break, 12-minute long break — energetic and playful, ideal for users who prefer frequent breaks.
+*   🌌 **Void (Black Cat):** 50-minute work, 10-minute short break, 40-minute long break — calm and mysterious, designed for deep focus sessions.
+
+### Adaptive Focus Modes
+PAWSE offers two minimalist viewing modes to accommodate different work styles:
+*   ⏳ **Timer Mode:** Displays only the countdown timer for users who prefer a clean, distraction-free workspace.
+*   🐱 **Cat Mode:** Hides the countdown entirely, showing only the animated cat. Users can identify whether they're working or on break through the cat's behavior, helping reduce time anxiety caused by constantly watching the clock.
+
+### Calming Sound Experience 
+Instead of harsh buzzer alarms, PAWSE creates a relaxing atmosphere using continuous ambient purring during work sessions. When it's time for a break, the purring fades and is replaced by a gentle meow, providing a softer and less disruptive transition between sessions. 
+
+### Interactive Break-Time Companion 
+Cat interactions become available *only* during break sessions, encouraging users to actually step away from work. Clicking or petting the selected cat triggers a unique animation, an adorable meow, and a randomly generated cat fact displayed in a speech bubble, making breaks more rewarding and enjoyable. 
+
+### Local Durable Execution (Fault Tolerance)
+Built to survive. The application leverages a continuous `localStorage` state-sync engine. If the app is accidentally closed, crashes, or the computer sleeps, PAWSE calculates the offline elapsed time mathematically and resumes the session exactly where it left off. No cloud orchestration required.
+
+---
+
+## 🛠 Technology Stack
+
+| Layer | Technology |
+| :--- | :--- |
+| **Frontend** | HTML5, CSS3, JavaScript |
+| **Framework** | Electron |
+| **Backend/Runtime** | Node.js |
+| **Database** | SQLite3 |
+| **Package Manager** | npm |
+| **Version Control** | Git, GitHub |
+
+---
+
+## 🏗 Technical Architecture
+
+PAWSE adheres to a strict **Model-View-Controller (MVC)** directory structure, separating the Node.js backend from the Chromium frontend. 
+
+### System Architecture Diagram
+```mermaid
+graph TD
+    A[Electron Main Process] -->|Spawns| B(Renderer Process UI)
+    A -->|IPC Bridge| C[(SQLite Database)]
+    
+    B --> D[Pomodoro Timer Engine]
+    D --> E[Cat Profile Manager]
+    D --> F[Interaction Manager]
+    D --> G[Audio Manager]
+    
+    E -->|Loads Config| D
+    F -->|Listens to| B
+    G -->|Plays| B
 ```
 
-### Core Mechanisms
-*   **State Machine:** The timer logic operates as a local state machine that controls UI elements, audio manipulation (ambient BGM, dynamic meows), and window resizing without page reloads.
-*   **Local Durable Execution:** The timer continuously syncs its state to `localStorage`. If the app crashes or the system sleeps, PAWSE mathematically calculates the offline elapsed time on boot, deducts it from the remaining time, and seamlessly resumes the session. It fakes "Temporal-style" execution locally without needing a cloud server.
+### System Components
+*   **Electron Main Process:** Creates and manages the application window, handles lifecycle events, and enforces strict security protocols (Sandboxing, CSP, Navigation Locks).
+*   **Renderer Process (Frontend):** Displays the UI (HTML/CSS/JS). Renders the selected cat, timer, animations, and listens for user interactions (Play/Pause, Skip, Resize, Cat Selection).
+*   **Pomodoro Timer Engine:** Maintains the session state (work, short break, long break) and determines the active timer duration based on the selected cat profile.
+*   **Cat Profile Manager:** Stores each cat's configuration, personality data, animation mappings, and interaction behaviors.
+*   **Interaction Manager:** Enables interactions only during break sessions (petting/click events). Randomly selects and displays cat facts and triggers specific animations.
+*   **Audio Manager:** Plays ambient purring during focus sessions, fading into a gentle meow during transitions.
+
+### Application Flow
+1.  The user launches PAWSE. Electron loads the renderer process and initializes the user interface.
+2.  The user selects a cat companion. The **Cat Profile Manager** loads the corresponding Pomodoro intervals.
+3.  Pressing Play starts the **Pomodoro Timer Engine**, which continuously updates the countdown.
+4.  When a timer reaches zero, the state changes: the **Audio Manager** switches sounds, the UI updates the cat animation, and the **Interaction Manager** enables/disables petting.
+5.  User interactions (Sound On/Off, Skip, Resize, Pet Cat) dynamically generate events that update the global application state.
 
 ---
 
 ## 🛡️ Security Report (DevSecOps)
-Electron applications are notoriously vulnerable if not configured correctly. PAWSE has been aggressively hardened to score a **0-vulnerability rating** on static security scans (e.g., Aikido Security).
+PAWSE has been aggressively hardened to score a **0-vulnerability rating** on static security scans (e.g., Aikido Security):
 
-The following layers of Defense-in-Depth have been implemented:
-
-1.  **OS-Level Sandboxing (`sandbox: true`)**
-    *   The renderer (frontend) is physically trapped inside an OS-level Chromium sandbox. Even if a zero-day RCE exploit compromised the UI, the attacker cannot escape to access the host operating system.
-2.  **Strict Context Isolation & Disabled Node Integration**
-    *   `nodeIntegration: false` and `contextIsolation: true` are explicitly enforced. The frontend has zero access to Node.js APIs or the file system. All communication happens strictly through heavily filtered IPC channels defined in `preload.js`.
-3.  **Content Security Policy (CSP)**
-    *   Every HTML window enforces a strict meta-tag CSP (`default-src 'self'`). No external scripts, remote stylesheets, or remote images can be executed or loaded.
-4.  **Navigation Locks (`will-navigate` & `setWindowOpenHandler`)**
-    *   The backend physically rejects any attempts by the renderer to open malicious popups or navigate to external URLs. Authorized developer links (GitHub/LinkedIn) are intercepted and securely piped to the OS's default web browser using `shell.openExternal`.
-5.  **Database Injection Immunity**
-    *   The `pawse.db` SQLite engine utilizes strict Parameterized Queries for all data insertions, making SQL Injection mathematically impossible.
+1.  **OS-Level Sandboxing (`sandbox: true`):** The renderer is physically trapped inside an OS-level Chromium sandbox, preventing host system access.
+2.  **Strict Context Isolation & Disabled Node Integration:** The frontend operates entirely independently of the backend.
+3.  **Content Security Policy (CSP):** Every HTML window enforces a strict meta-tag CSP (`default-src 'self'`).
+4.  **Navigation Locks (`will-navigate`):** Authorized developer links (GitHub/LinkedIn) are securely piped to the OS's default web browser using `shell.openExternal`. All internal malicious navigation is blocked.
+5.  **Database Injection Immunity:** The `pawse.db` SQLite engine utilizes strict Parameterized Queries.
 
 ---
 
-## ⚙️ Setup Instructions
-Follow these steps to successfully run PAWSE on your local machine.
+## 🚀 Setup Instructions
 
 ### Prerequisites
 *   [Node.js](https://nodejs.org/) (v16.0 or higher recommended)
@@ -68,7 +107,6 @@ cd Pawse
 ```
 
 **2. Install dependencies**
-This will download Electron and SQLite3.
 ```bash
 npm install
 ```
@@ -77,9 +115,6 @@ npm install
 ```bash
 npm start
 ```
-
-### Resetting the Application Data
-To completely reset your Pomodoro analytics, simply delete the `pawse.db` file from the root directory. The application will safely auto-generate a fresh database the next time it boots.
 
 ---
 
