@@ -34,14 +34,35 @@ PAWSE adheres to a strict **Model-View-Controller (MVC)** directory structure, s
 ### System Architecture Diagram
 ```mermaid
 graph TD
-    A[main.js / Electron] -->|Loads| B(Renderer UI HTML/CSS/JS)
-    A -->|Manages| C[(pawse.db SQLite3)]
+    subgraph "Backend (Node.js)"
+        A[main.js<br>Electron Process]
+        C[(pawse.db<br>SQLite Database)]
+        A -->|Reads/Writes| C
+    end
+
+    subgraph "Secure IPC Bridge"
+        D[preload.js<br>ContextBridge]
+    end
+
+    subgraph "Frontend (Chromium)"
+        B[Renderer UI<br>HTML / CSS]
+        E[timer.js<br>State Machine]
+        F[settings.js<br>Config Manager]
+        B --- E
+        B --- F
+    end
+
+    A -->|Loads UI & Security Locks| B
+    B -->|Dispatches 'mainAPI' calls| D
+    D -->|Sanitized Events| A
     
-    B -->|IPC MainAPI| D[preload.js Context Bridge]
-    D -->|Sanitized Calls| A
+    classDef backend fill:#f9f0ff,stroke:#b19cd9,stroke-width:2px,color:#000;
+    classDef frontend fill:#e6f3ff,stroke:#82b1ff,stroke-width:2px,color:#000;
+    classDef bridge fill:#fff3e0,stroke:#ffb74d,stroke-width:2px,color:#000;
     
-    B --> E[timer.js State Machine]
-    B --> F[settings.js Config State]
+    class A,C backend;
+    class B,E,F frontend;
+    class D bridge;
 ```
 
 ### System Components in Source Code
