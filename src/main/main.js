@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, shell } = require("electron");
 const path = require("path");
+const iconPath = path.join(__dirname, "../assets/logos/logo.png");
 const { db, generateAnalytics } = require("./database.js");
 
 let set = null;
@@ -7,6 +8,7 @@ let globalAlwaysOnTop = false;
 
 function createWindow() {
   const win = new BrowserWindow({
+    icon: iconPath,
     width: 310, // initially 292 from initial build
     height: 430, // initially 430 from initial build
     alwaysOnTop: globalAlwaysOnTop,
@@ -42,6 +44,7 @@ function createWindow() {
 
 function settingsWindow() {
   set = new BrowserWindow({
+    icon: iconPath,
     width: 720, // initially 292 from initial build
     height: 430, // initially 430 from initial build
     alwaysOnTop: globalAlwaysOnTop,
