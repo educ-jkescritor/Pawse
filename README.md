@@ -8,88 +8,70 @@ PAWSE is a desktop Pomodoro application engineered to gamify focus and productiv
 
 ---
 
-## 🌟 Key Features
+## 🌟 Key Features (Codebase Implementation)
 
-### Personality-Based Pomodoro Companions
-Choose from three unique cat companions, each inspired by a familiar cat personality and paired with a tailored productivity style: 
-*   👔 **Tux (Tuxedo Cat):** 20-minute work, 5-minute short break, 20-minute long break — a balanced companion for steady productivity.
-*   🍊 **Ginger (Orange Cat):** 15-minute work, 3-minute short break, 12-minute long break — energetic and playful, ideal for users who prefer frequent breaks.
-*   🌌 **Void (Black Cat):** 50-minute work, 10-minute short break, 40-minute long break — calm and mysterious, designed for deep focus sessions.
+### 1. Personality-Based Pomodoro Companions
+The Pomodoro intervals are dynamically controlled via the `catConfiguration` object initialized in `src/renderer/timer/timer.js`. Users can choose between:
+*   👔 **Tux (Tuxedo Cat):** 20-min work, 5-min short break, 20-min long break (`dbId: "tuxedo_cat"`).
+*   🍊 **Ginger (Orange Cat):** 15-min work, 3-min short break, 12-min long break (`dbId: "orange_cat"`).
+*   🌌 **Void (Black Cat):** 50-min work, 10-min short break, 40-min long break (`dbId: "black_cat"`).
 
-### Adaptive Focus Modes
-PAWSE offers two minimalist viewing modes to accommodate different work styles:
-*   ⏳ **Timer Mode:** Displays only the countdown timer for users who prefer a clean, distraction-free workspace.
-*   🐱 **Cat Mode:** Hides the countdown entirely, showing only the animated cat. Users can identify whether they're working or on break through the cat's behavior, helping reduce time anxiety caused by constantly watching the clock.
+### 2. Adaptive Focus Modes
+Implemented using IPC calls to the main process. When a user toggles a view mode, the frontend triggers `window.mainAPI.resize('timer-only')` which is intercepted by `ipcMain.on('resize-window')` inside `src/main/main.js` to physically alter the OS-level window dimensions on the fly.
 
-### Calming Sound Experience 
-Instead of harsh buzzer alarms, PAWSE creates a relaxing atmosphere using continuous ambient purring during work sessions. When it's time for a break, the purring fades and is replaced by a gentle meow, providing a softer and less disruptive transition between sessions. 
+### 3. Interactive Break-Time Companion & Audio Logic
+Audio state is governed by an automated volume engine that monitors `localStorage` states across windows. Ambient purring (`ambientAudio`) loops strictly while the `workingTime` boolean is true. Break transitions seamlessly swap audio channels and unlock the `isPetting` click-listener to reveal random cat facts.
 
-### Interactive Break-Time Companion 
-Cat interactions become available *only* during break sessions, encouraging users to actually step away from work. Clicking or petting the selected cat triggers a unique animation, an adorable meow, and a randomly generated cat fact displayed in a speech bubble, making breaks more rewarding and enjoyable. 
-
-### Local Durable Execution (Fault Tolerance)
-Built to survive. The application leverages a continuous `localStorage` state-sync engine. If the app is accidentally closed, crashes, or the computer sleeps, PAWSE calculates the offline elapsed time mathematically and resumes the session exactly where it left off. No cloud orchestration required.
-
----
-
-## 🛠 Technology Stack
-
-| Layer | Technology |
-| :--- | :--- |
-| **Frontend** | HTML5, CSS3, JavaScript |
-| **Framework** | Electron |
-| **Backend/Runtime** | Node.js |
-| **Database** | SQLite3 |
-| **Package Manager** | npm |
-| **Version Control** | Git, GitHub |
+### 4. Local Durable Execution (Fault Tolerance)
+PAWSE survives accidental crashes via continuous local state-syncing. As seen in `timer.js`, a `setInterval` writes the exact remaining time, cycle count, and a UNIX `timestamp` to `localStorage` every second. Upon boot, if a `pawseDurableState` payload is detected, the frontend mathematically deducts the offline elapsed seconds and injects the corrected time back into the active UI state, flawlessly resuming operations.
 
 ---
 
 ## 🏗 Technical Architecture
 
-PAWSE adheres to a strict **Model-View-Controller (MVC)** directory structure, separating the Node.js backend from the Chromium frontend. 
+PAWSE adheres to a strict **Model-View-Controller (MVC)** directory structure, separating the Node.js backend (`src/main/`) from the Chromium frontend (`src/renderer/`). 
 
 ### System Architecture Diagram
 ```mermaid
 graph TD
-    A[Electron Main Process] -->|Spawns| B(Renderer Process UI)
-    A -->|IPC Bridge| C[(SQLite Database)]
+    A[main.js / Electron] -->|Loads| B(Renderer UI HTML/CSS/JS)
+    A -->|Manages| C[(pawse.db SQLite3)]
     
-    B --> D[Pomodoro Timer Engine]
-    D --> E[Cat Profile Manager]
-    D --> F[Interaction Manager]
-    D --> G[Audio Manager]
+    B -->|IPC MainAPI| D[preload.js Context Bridge]
+    D -->|Sanitized Calls| A
     
-    E -->|Loads Config| D
-    F -->|Listens to| B
-    G -->|Plays| B
+    B --> E[timer.js State Machine]
+    B --> F[settings.js Config State]
 ```
 
-### System Components
-*   **Electron Main Process:** Creates and manages the application window, handles lifecycle events, and enforces strict security protocols (Sandboxing, CSP, Navigation Locks).
-*   **Renderer Process (Frontend):** Displays the UI (HTML/CSS/JS). Renders the selected cat, timer, animations, and listens for user interactions (Play/Pause, Skip, Resize, Cat Selection).
-*   **Pomodoro Timer Engine:** Maintains the session state (work, short break, long break) and determines the active timer duration based on the selected cat profile.
-*   **Cat Profile Manager:** Stores each cat's configuration, personality data, animation mappings, and interaction behaviors.
-*   **Interaction Manager:** Enables interactions only during break sessions (petting/click events). Randomly selects and displays cat facts and triggers specific animations.
-*   **Audio Manager:** Plays ambient purring during focus sessions, fading into a gentle meow during transitions.
-
-### Application Flow
-1.  The user launches PAWSE. Electron loads the renderer process and initializes the user interface.
-2.  The user selects a cat companion. The **Cat Profile Manager** loads the corresponding Pomodoro intervals.
-3.  Pressing Play starts the **Pomodoro Timer Engine**, which continuously updates the countdown.
-4.  When a timer reaches zero, the state changes: the **Audio Manager** switches sounds, the UI updates the cat animation, and the **Interaction Manager** enables/disables petting.
-5.  User interactions (Sound On/Off, Skip, Resize, Pet Cat) dynamically generate events that update the global application state.
+### System Components in Source Code
+*   **Electron Main Process (`src/main/main.js`):** Instantiates the `BrowserWindow`, completely locking down native OS integration, removing window frames, and handling lifecycle hooks.
+*   **Renderer Process (`src/renderer/`):** Houses the `index.html`, `settings.html`, and `timer/timer.html` views. Styles are universally governed by a centralized `index.css` root design token system.
+*   **Preload Bridge (`src/main/preload.js`):** Acts as the strict IPC gateway. Instead of blindly exposing `ipcRenderer`, it exclusively exposes a highly limited `mainAPI` object for specific tasks (like `savesession` or `minimize`).
+*   **Database Engine (`src/main/database.js`):** Handles the raw SQLite3 connection logic. Intercepts session completion events to execute parameterized `INSERT` statements tracking deep analytics per companion.
 
 ---
 
 ## 🛡️ Security Report (DevSecOps)
-PAWSE has been aggressively hardened to score a **0-vulnerability rating** on static security scans (e.g., Aikido Security):
+Electron applications are notoriously vulnerable if not configured correctly. PAWSE has been aggressively hardened at the architecture level:
 
-1.  **OS-Level Sandboxing (`sandbox: true`):** The renderer is physically trapped inside an OS-level Chromium sandbox, preventing host system access.
-2.  **Strict Context Isolation & Disabled Node Integration:** The frontend operates entirely independently of the backend.
-3.  **Content Security Policy (CSP):** Every HTML window enforces a strict meta-tag CSP (`default-src 'self'`).
-4.  **Navigation Locks (`will-navigate`):** Authorized developer links (GitHub/LinkedIn) are securely piped to the OS's default web browser using `shell.openExternal`. All internal malicious navigation is blocked.
-5.  **Database Injection Immunity:** The `pawse.db` SQLite engine utilizes strict Parameterized Queries.
+1.  **OS-Level Sandboxing (`sandbox: true`):** explicitly defined in the `webPreferences` of `main.js`. The renderer is physically trapped inside an OS-level Chromium sandbox.
+2.  **Context Isolation (`contextIsolation: true`):** The frontend has absolute zero access to the backend Node.js APIs or the local file system.
+3.  **Content Security Policy (CSP):** Every HTML file enforces `<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; ...">`. Inline scripts and remote execution are mathematically blocked.
+4.  **Navigation Locks (`will-navigate`):** Found in `main.js`, `app.on('web-contents-created')` aggressively monitors new URL requests. External developer links are securely intercepted and piped to the OS's default browser via `require('electron').shell.openExternal(url)`. All other popups are strictly denied (`return { action: 'deny' }`).
+5.  **SQL Injection Immunity:** The `database.js` SQLite wrapper exclusively uses Parameterized Queries (e.g. `VALUES (?, ?, ?)`), entirely mitigating injection vulnerabilities.
+
+---
+
+## 🛠 Technology Stack
+
+| Layer | Technology | Codebase Role |
+| :--- | :--- | :--- |
+| **Frontend UI** | HTML5, CSS3, JS | Controls DOM manipulation, CSS variable themes, and `localStorage` states. |
+| **Framework** | Electron | Orchestrates window lifecycles and OS-level operations. |
+| **Backend** | Node.js | Provides file system access and IPC handlers (`ipcMain`). |
+| **Database** | SQLite3 | Local storage engine auto-generated as `pawse.db`. |
+| **IPC Bridge** | `contextBridge` | The sole communication tunnel in `preload.js`. |
 
 ---
 
