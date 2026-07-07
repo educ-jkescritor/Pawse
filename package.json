@@ -6,7 +6,12 @@
   "scripts": {
     "start": "electron ."
   },
-  "keywords": ["pomodoro", "electron", "productivity", "cats"],
+  "keywords": [
+    "pomodoro",
+    "electron",
+    "productivity",
+    "cats"
+  ],
   "author": "Jude Keith Escritor & Jasmin Joyce Obligado",
   "license": "MIT",
   "type": "commonjs",
@@ -15,5 +20,8 @@
   },
   "dependencies": {
     "sqlite3": "^6.0.1"
+  },
+  "overrides": {
+    "tar@<=7.5.17": "7.5.17"
   }
 }
