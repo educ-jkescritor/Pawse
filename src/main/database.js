@@ -1,5 +1,6 @@
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
+const supabase = require("./supabase");
 
 const dbPath = path.join(__dirname, "../../pawse.db");
 
@@ -7,7 +8,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.log("Error opening database:", err.message);
     } else {
-        console.log("Connected to the SQLite database.");
+        console.log("Connected to the offline database (SQLite).");
         
         const createTableQuery = `CREATE TABLE IF NOT EXISTS session (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -17,7 +18,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
             total_work INTEGER,
             total_break INTEGER,
             total_pomodoro INTEGER,
-            date_completed DATETIME DEFAULT CURRENT_TIMESTAMP
+            date_completed DATETIME DEFAULT CURRENT_TIMESTAMP,
+            is_synced BOOLEAN DEFAULT 0
         )`;
         
         db.run(createTableQuery, (err) => {
@@ -29,6 +31,42 @@ const db = new sqlite3.Database(dbPath, (err) => {
         });
     }
 });
+
+async function synchDatabase(){
+    db.all("SELECT * FROM session WHERE is_synced = 0", async (err, rows) => {
+        if (err || rows.length === 0) return;
+
+        console.log(`Found ${rows.length} unsynced rows. Syncing to cloud.`);
+
+        for (const row of rows) {
+            try{
+                const { error } = await supabase
+                .from('session')
+                .insert([{
+                    cat_type: row.cat_type,
+                    total_work_seconds: row.total_work_seconds,
+                    total_break_seconds: row.total_break_seconds,
+                    total_work: row.total_work,
+                    total_break: row.total_break,
+                    total_pomodoro: row.total_pomodoro,
+                    date_completed: row.date_completed
+                }]);
+                
+                if (!error) {
+                    db.run("UPDATE session SET is_synced = 1 WHERE id = ?", [row.id]);
+                    console.log(`Row ${row.id} synced successfully.`);
+                } else {
+                    console.log(`Error syncing row ${row.id}:`, error.message);
+                }
+            } catch (networkError) {
+                console.log(`Error syncing row ${row.id}:`, networkError.message);
+                break;
+            }
+        }
+    });
+}
+
+// ------------------------------------------------------
 
 function createMockData() {
     const insertMockDataQuery = `INSERT INTO session (
@@ -84,6 +122,8 @@ function clearMockData() {
         }
     });   
 }
+
+// ------------------------------------------------------
 
 function generateAnalytics(weeksAgo = 0) {
     return new Promise((resolve, reject) => {
@@ -154,5 +194,5 @@ function generateAnalytics(weeksAgo = 0) {
     });
 }
 
-module.exports = { db, createMockData, clearMockData, generateAnalytics };
+module.exports = { db, createMockData, clearMockData, generateAnalytics, synchDatabase };
 

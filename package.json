@@ -19,6 +19,7 @@
     "electron": "^42.4.0"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.0",
     "sqlite3": "^6.0.1"
   },
   "overrides": {

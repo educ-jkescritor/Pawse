@@ -156,16 +156,29 @@ ipcMain.on('save-session', (event, data) => {
     total_work, 
     total_break,
     total_pomodoro,
-    date_completed
+    date_completed,
+    is_synced
   ) VALUES (
-    ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP)
+    ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), 0
   )`;
 
-  db.run(insertQuery, [data.cat_type, data.total_work_seconds, data.total_break_seconds, data.total_work, data.total_break, data.total_pomodoro, data.date_completed || null], (err) => {
+  db.run(insertQuery, [
+    data.cat_type, 
+    data.total_work_seconds, 
+    data.total_break_seconds, 
+    data.total_work, 
+    data.total_break, 
+    data.total_pomodoro, 
+    data.date_completed || null
+  ], (err) => {
     if (err) {
       console.log("Error inserting session data:", err.message);
     } else {
       console.log("Session data inserted successfully.");
+
+      const { synchDatabase } = require("./database.js");
+      synchDatabase();
+      console.log("Session data synced successfully.");
     }
   });
 });
