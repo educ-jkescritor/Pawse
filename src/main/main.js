@@ -8,6 +8,7 @@ let globalAlwaysOnTop = false;
 
 function createWindow() {
   const win = new BrowserWindow({
+    show: false,
     icon: iconPath,
     width: 310, // initially 292 from initial build
     height: 430, // initially 430 from initial build
@@ -33,6 +34,7 @@ function createWindow() {
 
   win.once('ready-to-show', () => {
     win.setSize(310, 430);
+    win.show();
   });
 
   win.on('closed', () => {
@@ -150,6 +152,7 @@ ipcMain.on('settings-window', (event) => {
 ipcMain.on('save-session', (event, data) => {
   
   const insertQuery = `INSERT INTO session (
+    email,
     cat_type, 
     total_work_seconds, 
     total_break_seconds, 
@@ -159,10 +162,11 @@ ipcMain.on('save-session', (event, data) => {
     date_completed,
     is_synced
   ) VALUES (
-    ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), 0
+    ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), 0
   )`;
 
   db.run(insertQuery, [
+    data.email,
     data.cat_type, 
     data.total_work_seconds, 
     data.total_break_seconds, 
@@ -208,6 +212,13 @@ ipcMain.handle('load-analytics', async (event, weeksAgo) => {
   } catch (error) {
     console.error("Error generating analytics:", error);
     throw error;
+  }
+});
+
+ipcMain.on('login-success', (event) => {
+  const senderWindow = BrowserWindow.fromWebContents(event.sender);
+  if (senderWindow) {
+    senderWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
   }
 });
 

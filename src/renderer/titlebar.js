@@ -21,6 +21,26 @@ if (closeButton !== null) {
     };
 }
 
+let backButton = document.getElementById("back-btn");
+if (backButton !== null) {
+    backButton.onclick = () => {
+        sessionStorage.removeItem('currentUser');
+        
+        document.querySelector('.main-content').style.display = 'none';
+        document.querySelector('.login-container').style.display = 'block';
+        
+        document.getElementById('back-btn').style.display = 'none';
+        document.getElementById('close-btn').style.display = 'block';
+    };
+}
+   
+let homeButton = document.getElementById("home-btn");
+if (homeButton !== null) {
+    homeButton.onclick = () => {
+        document.getElementById("exit-modal-overlay").classList.remove("hidden");
+    };
+}
+
 let minimizeButton = document.getElementById("minimize-btn");
 if (minimizeButton !== null) {
     minimizeButton.onclick = function minimizeWindow() {

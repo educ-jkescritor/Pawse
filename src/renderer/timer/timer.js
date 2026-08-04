@@ -77,6 +77,7 @@ if (savedStateStr) {
 // Continuously save state (Fault Tolerance)
 setInterval(() => {
     localStorage.setItem('pawseDurableState', JSON.stringify({
+        email: localStorage.getItem('userEmail'),
         catType: catType,
         remainingTime: remainingTime,
         workingTime: workingTime,
@@ -103,6 +104,7 @@ function flushSessionData(isPomodoroComplete = false, forceYesterday = false) {
     }
 
     let sessionData = {
+        email: sessionStorage.getItem('currentUser'),
         cat_type: catConfig.dbId,
         total_work_seconds: actualWork,
         total_break_seconds: actualBreak,

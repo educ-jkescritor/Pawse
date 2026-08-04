@@ -543,3 +543,11 @@ ease;
 #companion-title-text {
     transition: color 0.3s ease;
 }
+
+.login-container {
+    display: block;
+}
+
+.main-content {
+    display: none;
+}

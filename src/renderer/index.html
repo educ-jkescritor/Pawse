@@ -24,12 +24,32 @@
         <div class="main-window-controls">
             <button id="minimize-btn">
                 <img src="../assets/icons/minimize-btn.png" alt="minimize">
+            <button id="back-btn" style="display: none;">
+                <img src="../assets/icons/back-btn.png" alt="back">
             </button>
-            <button id="close-btn">
+            </button>
+                <button id="close-btn">
                 <img src="../assets/icons/close-btn.png" alt="close">
             </button>
         </div>
     </header>
+
+    <div class="login-container">
+        <h1 id="auth-title">LOGIN</h1>
+        
+        <form id="login-form">
+            <input type="email" placeholder="Email" id="email" required>
+            <input type="password" placeholder="Password" id="password" required>
+            <!-- Notice we gave this button an ID so we can change its text later -->
+            <button type="submit" id="auth-btn">Login</button>
+        </form>
+    
+        <!-- The new toggle and guest buttons -->
+        <div style="margin-top: 20px;">
+            <p><a href="#" id="toggle-auth-link">Don't have an account? Sign up</a></p>
+            <button id="guest-btn">Continue as Guest (Offline Mode)</button>
+        </div>
+    </div>
 
     <div class="main-content">
         <div class="main-text">

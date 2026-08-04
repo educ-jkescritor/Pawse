@@ -12,6 +12,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
         
         const createTableQuery = `CREATE TABLE IF NOT EXISTS session (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT,
             cat_type TEXT,
             total_work_seconds INTEGER,
             total_break_seconds INTEGER,
@@ -29,6 +30,18 @@ const db = new sqlite3.Database(dbPath, (err) => {
                 console.log("Session database is ready.");
             }
         });
+        
+        db.run(createTableQuery, (err) => {
+            if (err) {
+                console.log("Error creating session table:", err.message);
+                console.log("Session database is ready.");
+                // ADD THIS MIGRATION BLOCK:
+            } else {
+                db.run("ALTER TABLE session ADD COLUMN email TEXT", (alterErr) => {
+                    // Silently fails if column already exists
+                });
+            }
+        });
     }
 });
 
@@ -43,6 +56,7 @@ async function synchDatabase(){
                 const { error } = await supabase
                 .from('session')
                 .insert([{
+                    email: row.email,
                     cat_type: row.cat_type,
                     total_work_seconds: row.total_work_seconds,
                     total_break_seconds: row.total_break_seconds,
@@ -69,7 +83,8 @@ async function synchDatabase(){
 // ------------------------------------------------------
 
 function createMockData() {
-    const insertMockDataQuery = `INSERT INTO session (
+    const insertMockDataQuery = `INSERT INTO session (  
+        email,
         cat_type, 
         total_work_seconds, 
         total_break_seconds, 
@@ -77,6 +92,7 @@ function createMockData() {
         total_break,
         total_pomodoro 
     ) VALUES (
+        'user@example.com',
         'orange_cat', 
         4500, 
         900, 

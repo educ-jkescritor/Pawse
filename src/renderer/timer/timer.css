@@ -1,5 +1,6 @@
 /* --- MAIN CONTENT --- */
 .main-content{
+    display: block !important;
     padding: 10px 20px;
 }
 

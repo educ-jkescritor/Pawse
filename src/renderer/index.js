@@ -4,6 +4,17 @@ if (localStorage.getItem('alwaysOnTop') === 'true') {
     }
 }
 
+const savedUser = sessionStorage.getItem('currentUser');
+
+if (savedUser) {
+    // If they already logged in or clicked guest previously, skip the login screen!
+    document.querySelector('.login-container').style.display = 'none';
+    document.querySelector('.main-content').style.display = 'block';
+
+    document.getElementById('back-btn').style.display = 'block';
+    document.getElementById('close-btn').style.display = 'none'; 
+}
+
 let selectedCat = null;
 
 // Store buttons in a dictionary
@@ -73,3 +84,43 @@ confirmButton.onclick = function () {
         window.location.assign(`timer/timer.html?cat=${selectedCat}`);
     }
 }
+
+document.getElementById('login-form').addEventListener('submit', (e) => {
+    e.preventDefault(); // Stop the page from refreshing
+
+    // 1. Hide the Login Screen
+    document.querySelector('.login-container').style.display = 'none';
+    
+    // 2. Reveal your main app!
+    document.querySelector('.main-content').style.display = 'block'; 
+});
+
+let isSignUpMode = false;
+
+document.getElementById('toggle-auth-link').addEventListener('click', (e) => {
+    e.preventDefault();   
+    isSignUpMode = !isSignUpMode;
+    
+    if (isSignUpMode) {
+        document.getElementById('auth-title').innerText = "SIGN UP";
+        document.getElementById('auth-btn').innerText = "Create Account";
+        document.getElementById('toggle-auth-link').innerText = "Already have an account? Login";
+    } else {
+        document.getElementById('auth-title').innerText = "LOGIN";
+        document.getElementById('auth-btn').innerText = "Login";
+        document.getElementById('toggle-auth-link').innerText = "Don't have an account? Sign up";
+    }
+});
+    
+// 2. The Guest Button Logic
+document.getElementById('guest-btn').addEventListener('click', () => {
+    // We will use this variable later to stop the app from syncing to Supabase!
+    sessionStorage.setItem('currentUser', 'guest');
+
+    // Hide Login, Show Timer
+    document.querySelector('.login-container').style.display = 'none';
+    document.querySelector('.main-content').style.display = 'block';
+
+    document.getElementById('back-btn').style.display = 'block';
+    document.getElementById('close-btn').style.display = 'none'; 
+});
