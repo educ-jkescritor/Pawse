@@ -24,11 +24,11 @@
         <div class="main-window-controls">
             <button id="minimize-btn">
                 <img src="../assets/icons/minimize-btn.png" alt="minimize">
+            </button>
             <button id="back-btn" style="display: none;">
                 <img src="../assets/icons/back-btn.png" alt="back">
             </button>
-            </button>
-                <button id="close-btn">
+            <button id="close-btn">
                 <img src="../assets/icons/close-btn.png" alt="close">
             </button>
         </div>
@@ -40,8 +40,8 @@
         <form id="login-form">
             <input type="email" placeholder="Email" id="email" required>
             <input type="password" placeholder="Password" id="password" required>
-            <!-- Notice we gave this button an ID so we can change its text later -->
             <button type="submit" id="auth-btn">Login</button>
+            <p id="error-message" style="color: red;"></p>
         </form>
     
         <!-- The new toggle and guest buttons -->

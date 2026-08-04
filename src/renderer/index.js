@@ -85,22 +85,11 @@ confirmButton.onclick = function () {
     }
 }
 
-document.getElementById('login-form').addEventListener('submit', (e) => {
-    e.preventDefault(); // Stop the page from refreshing
-
-    // 1. Hide the Login Screen
-    document.querySelector('.login-container').style.display = 'none';
-    
-    // 2. Reveal your main app!
-    document.querySelector('.main-content').style.display = 'block'; 
-});
-
 let isSignUpMode = false;
 
 document.getElementById('toggle-auth-link').addEventListener('click', (e) => {
     e.preventDefault();   
     isSignUpMode = !isSignUpMode;
-    
     if (isSignUpMode) {
         document.getElementById('auth-title').innerText = "SIGN UP";
         document.getElementById('auth-btn').innerText = "Create Account";
@@ -111,16 +100,43 @@ document.getElementById('toggle-auth-link').addEventListener('click', (e) => {
         document.getElementById('toggle-auth-link').innerText = "Don't have an account? Sign up";
     }
 });
-    
-// 2. The Guest Button Logic
-document.getElementById('guest-btn').addEventListener('click', () => {
-    // We will use this variable later to stop the app from syncing to Supabase!
-    sessionStorage.setItem('currentUser', 'guest');
 
-    // Hide Login, Show Timer
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault(); 
+    
+    const emailStr = document.getElementById('email').value;
+    const passStr = document.getElementById('password').value;
+
+    try {
+        if (isSignUpMode) {
+            await window.mainAPI.signup(emailStr, passStr);
+            document.getElementById('toggle-auth-link').click();
+            return;
+        } else {
+            await window.mainAPI.login(emailStr, passStr);
+        }
+        sessionStorage.setItem('currentUser', emailStr);
+
+        document.querySelector('.login-container').style.display = 'none';
+        document.querySelector('.main-content').style.display = 'block'; 
+
+        document.getElementById('back-btn').style.display = 'block';
+        document.getElementById('close-btn').style.display = 'none'; 
+    } catch (error) {
+        if (error.message.includes("already taken")) {
+            document.getElementById('error-message').innerText = "The email is already taken. Please try again.";
+        } else {
+            document.getElementById('error-message').innerText = "Invalid credentials. Please try again.";
+        }
+    }
+});
+
+document.getElementById('guest-btn').addEventListener('click', () => {
+    sessionStorage.setItem('currentUser', 'guest');
+        
     document.querySelector('.login-container').style.display = 'none';
     document.querySelector('.main-content').style.display = 'block';
 
-    document.getElementById('back-btn').style.display = 'block';
-    document.getElementById('close-btn').style.display = 'none'; 
+    document.getElementById('back-btn').style.display = 'block'; // show
+    document.getElementById('close-btn').style.display = 'none'; // do not show
 });

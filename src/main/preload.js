@@ -9,5 +9,7 @@ contextBridge.exposeInMainWorld('mainAPI', {
     savesession: (data) => ipcRenderer.send('save-session', data),
     setAlwaysOnTop: (isAlwaysOnTop) => ipcRenderer.send('set-always-on-top', isAlwaysOnTop),
     loadanalytics: (weeksAgo) => ipcRenderer.invoke('load-analytics', weeksAgo),
+    login: (email, password) => ipcRenderer.invoke('login', { email, password }),
+    signup: (email, password) => ipcRenderer.invoke('signup', { email, password }),
     loginSuccess: () => ipcRenderer.send('login-success'),
 });

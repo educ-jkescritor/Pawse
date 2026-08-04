@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, shell } = require("electron");
 const path = require("path");
 const iconPath = path.join(__dirname, "../assets/logos/logo.png");
 const { db, generateAnalytics } = require("./database.js");
+const supabase = require("./supabase.js");
 
 let set = null;
 let globalAlwaysOnTop = false;
@@ -214,6 +215,37 @@ ipcMain.handle('load-analytics', async (event, weeksAgo) => {
     throw error;
   }
 });
+
+ipcMain.handle('login', async (event, credentials) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: credentials.email,
+    password: credentials.password,
+  });
+  
+  if (error) {
+      throw error; 
+  }
+  console.log("Login successful for user:", credentials.email);
+  return data;
+});
+
+ipcMain.handle('signup', async (event, credentials) => {
+  const { data, error } = await supabase.auth.signUp({
+    email: credentials.email,
+    password: credentials.password,
+  });
+
+  if (error) {
+      throw error; 
+  }
+
+  if(data.user && data.user.identities && data.user.identities.length === 0) {
+    throw new Error("The email is already taken. Please try again.");
+  }
+
+  console.log("Signup successful for user:", credentials.email);
+  return data;
+})
 
 ipcMain.on('login-success', (event) => {
   const senderWindow = BrowserWindow.fromWebContents(event.sender);
