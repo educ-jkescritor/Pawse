@@ -12,4 +12,5 @@ contextBridge.exposeInMainWorld('mainAPI', {
     login: (email, password) => ipcRenderer.invoke('login', { email, password }),
     signup: (email, password) => ipcRenderer.invoke('signup', { email, password }),
     loginSuccess: () => ipcRenderer.send('login-success'),
+    appReady: (email) => ipcRenderer.send('app-ready', email),
 });

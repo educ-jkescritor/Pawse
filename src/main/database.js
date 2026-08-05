@@ -8,8 +8,6 @@ const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.log("Error opening database:", err.message);
     } else {
-        console.log("Connected to the offline database (SQLite).");
-        
         const createTableQuery = `CREATE TABLE IF NOT EXISTS session (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT,
@@ -20,14 +18,15 @@ const db = new sqlite3.Database(dbPath, (err) => {
             total_break INTEGER,
             total_pomodoro INTEGER,
             date_completed DATETIME DEFAULT CURRENT_TIMESTAMP,
-            is_synced BOOLEAN DEFAULT 0
+            is_synced BOOLEAN DEFAULT 0,
+            uuid TEXT
         )`;
         
         db.run(createTableQuery, (err) => {
             if (err) {
                 console.log("Error creating session table:", err.message);
             } else {
-                console.log("Session database is ready.");
+                console.log("Database session created and ready.");
             }
         });
         
@@ -37,47 +36,141 @@ const db = new sqlite3.Database(dbPath, (err) => {
                 console.log("Session database is ready.");
                 // ADD THIS MIGRATION BLOCK:
             } else {
-                db.run("ALTER TABLE session ADD COLUMN email TEXT", (alterErr) => {
-                    // Silently fails if column already exists
+                db.run("ALTER TABLE session RENAME COLUMN sync_id TO uuid", () => {
+                    db.run("ALTER TABLE session ADD COLUMN uuid TEXT", () => {
+                        const crypto = require('crypto');
+                        db.all("SELECT id FROM session WHERE uuid IS NULL", (err, rows) => {
+                            if (!err && rows && rows.length > 0) {
+                                console.log(`Found ${rows.length} rows without uuid. Generating uuid for them.`);
+
+                                rows.forEach(row => {
+                                    const uuid = crypto.randomUUID();
+                                    db.run("UPDATE session SET uuid = ?, is_synced = 0 WHERE id = ?", [uuid, row.id]);
+                                });
+                            }
+                        });
+                    });
                 });
             }
         });
     }
 });
 
-async function synchDatabase(){
-    db.all("SELECT * FROM session WHERE is_synced = 0", async (err, rows) => {
-        if (err || rows.length === 0) return;
+let isSyncing = false;
 
-        console.log(`Found ${rows.length} unsynced rows. Syncing to cloud.`);
+async function synchDatabase(){
+    if (isSyncing) return;
+    isSyncing = true;
+    db.all("SELECT * FROM session WHERE is_synced = 0", async (err, rows) => {
+        if (err || rows.length === 0) {
+            isSyncing = false;
+            return;
+        }
+
+        console.log(`Found ${rows.length} unsynced rows. Pushing to cloud.`);
 
         for (const row of rows) {
             try{
-                const { error } = await supabase
+                const { data, error } = await supabase
                 .from('session')
-                .insert([{
-                    email: row.email,
-                    cat_type: row.cat_type,
-                    total_work_seconds: row.total_work_seconds,
-                    total_break_seconds: row.total_break_seconds,
-                    total_work: row.total_work,
-                    total_break: row.total_break,
-                    total_pomodoro: row.total_pomodoro,
-                    date_completed: row.date_completed
-                }]);
-                
-                if (!error) {
+                .select('id')
+                .eq('uuid', row.uuid);
+            
+                if (error)  {
+                    throw error;
+                }
+
+                if (data && data.length > 0) {
                     db.run("UPDATE session SET is_synced = 1 WHERE id = ?", [row.id]);
-                    console.log(`Row ${row.id} synced successfully.`);
+                    console.log(`Row ${row.id} pushed successfully.`);
                 } else {
-                    console.log(`Error syncing row ${row.id}:`, error.message);
+                    const { error } = await supabase
+                    .from('session')
+                    .insert([{
+                        email: row.email,
+                        cat_type: row.cat_type,
+                        total_work_seconds: row.total_work_seconds,
+                        total_break_seconds: row.total_break_seconds,
+                        total_work: row.total_work,
+                        total_break: row.total_break,
+                        total_pomodoro: row.total_pomodoro,
+                        date_completed: row.date_completed,
+                        uuid: row.uuid
+                    }]);
+                    
+                    if (error) throw error;
+
+                    db.run("UPDATE session SET is_synced = 1 WHERE id = ?", [row.id]);
+                    console.log(`Row ${row.id} pushed successfully.`);
                 }
             } catch (networkError) {
                 console.log(`Error syncing row ${row.id}:`, networkError.message);
-                break;
+                continue;
             }
         }
+        isSyncing = false;
     });
+}
+
+async function pullDatabase(email) {
+    try {
+        if (!email || email === '' || email == 'guest') return;
+
+        console.log("Pulling data from cloud for user:", email);
+
+        const { data, error } = await supabase
+        .from('session')
+        .select('*')
+        .eq('email', email);
+
+        for (const row of data || []) {
+            db.get("SELECT * FROM session WHERE uuid = ?", [row.uuid], (err, row) => {
+                if (err) return;
+
+                if (!row) {
+                    const insertQuery = `INSERT INTO session (
+                        email,
+                        cat_type, 
+                        total_work_seconds, 
+                        total_break_seconds, 
+                        total_work, 
+                        total_break,
+                        total_pomodoro,
+                        uuid,
+                        date_completed,
+                        is_synced
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), 1)`;
+                    
+                    db.run(insertQuery, [
+                        row.email,
+                        row.cat_type,
+                        row.total_work_seconds,
+                        row.total_break_seconds,
+                        row.total_work,
+                        row.total_break,
+                        row.total_pomodoro,
+                        row.uuid,
+                        row.date_completed || null
+                    ], (err) => {
+                        if (!err) {
+                            console.log(`Row with uuid ${row.uuid} pulled successfully from cloud.`);
+                        }
+                    });
+                }
+            });
+        }
+
+        if (data && data.length === 0) {
+            console.log("No data found in cloud for user:", email);
+            return;
+        }
+
+        if (error) {
+            throw error;
+        }
+    } catch (err) {
+        console.log("Error pulling data from cloud:", err.message);
+    }
 }
 
 // ------------------------------------------------------
@@ -210,5 +303,5 @@ function generateAnalytics(weeksAgo = 0) {
     });
 }
 
-module.exports = { db, createMockData, clearMockData, generateAnalytics, synchDatabase };
+module.exports = { db, createMockData, clearMockData, generateAnalytics, synchDatabase, pullDatabase};
 

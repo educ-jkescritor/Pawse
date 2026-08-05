@@ -104,7 +104,7 @@ function flushSessionData(isPomodoroComplete = false, forceYesterday = false) {
     }
 
     let sessionData = {
-        email: sessionStorage.getItem('currentUser'),
+        email: localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser') || 'guest',
         cat_type: catConfig.dbId,
         total_work_seconds: actualWork,
         total_break_seconds: actualBreak,
@@ -665,8 +665,6 @@ if (resizeModal !== null) {
         }
     });   
 }
-
-
 
 let timerOnlyButton = document.getElementById("timer-only");
 let catOnlyButton = document.getElementById("cat-only");

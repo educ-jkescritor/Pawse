@@ -4,12 +4,14 @@ if (localStorage.getItem('alwaysOnTop') === 'true') {
     }
 }
 
-const savedUser = sessionStorage.getItem('currentUser');
+const savedUser = localStorage.getItem('currentUser');
 
 if (savedUser) {
     // If they already logged in or clicked guest previously, skip the login screen!
     document.querySelector('.login-container').style.display = 'none';
     document.querySelector('.main-content').style.display = 'block';
+    
+    window.mainAPI.appReady(savedUser);
 
     document.getElementById('back-btn').style.display = 'block';
     document.getElementById('close-btn').style.display = 'none'; 
@@ -115,10 +117,12 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
         } else {
             await window.mainAPI.login(emailStr, passStr);
         }
-        sessionStorage.setItem('currentUser', emailStr);
+        localStorage.setItem('currentUser', emailStr);
 
         document.querySelector('.login-container').style.display = 'none';
         document.querySelector('.main-content').style.display = 'block'; 
+
+        window.mainAPI.appReady(emailStr);
 
         document.getElementById('back-btn').style.display = 'block';
         document.getElementById('close-btn').style.display = 'none'; 
@@ -132,10 +136,13 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
 });
 
 document.getElementById('guest-btn').addEventListener('click', () => {
+    localStorage.removeItem('currentUser');
     sessionStorage.setItem('currentUser', 'guest');
         
     document.querySelector('.login-container').style.display = 'none';
     document.querySelector('.main-content').style.display = 'block';
+
+    window.mainAPI.appReady('guest');
 
     document.getElementById('back-btn').style.display = 'block'; // show
     document.getElementById('close-btn').style.display = 'none'; // do not show

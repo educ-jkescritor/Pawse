@@ -151,6 +151,8 @@ ipcMain.on('settings-window', (event) => {
 });
 
 ipcMain.on('save-session', (event, data) => {
+  const crypto = require('crypto');
+  const uuid = crypto.randomUUID();
   
   const insertQuery = `INSERT INTO session (
     email,
@@ -160,10 +162,11 @@ ipcMain.on('save-session', (event, data) => {
     total_work, 
     total_break,
     total_pomodoro,
+    uuid,
     date_completed,
     is_synced
   ) VALUES (
-    ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), 0
+    ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), 0
   )`;
 
   db.run(insertQuery, [
@@ -174,16 +177,29 @@ ipcMain.on('save-session', (event, data) => {
     data.total_work, 
     data.total_break, 
     data.total_pomodoro, 
+    uuid,
     data.date_completed || null
   ], (err) => {
     if (err) {
-      console.log("Error inserting session data:", err.message);
+      console.log("Session data synced unsuccessfully for:", data.email, "Error:", err.message);
     } else {
-      console.log("Session data inserted successfully.");
+      const { net } = require('electron');
 
-      const { synchDatabase } = require("./database.js");
-      synchDatabase();
-      console.log("Session data synced successfully.");
+      if(!data.email || data.email === '' || data.email == 'guest') {
+        console.log("Guest account detected. Local sync only.");
+        return;
+      }
+
+      if(!net.isOnline()) {
+        console.log("No internet connection. Local sync only.");
+        return;
+      }
+
+      if(net.isOnline()) {
+        const { synchDatabase } = require("./database.js");
+        synchDatabase();
+        console.log("Session data synced successfully for: ", data.email);
+      }
     }
   });
 });
@@ -222,10 +238,12 @@ ipcMain.handle('login', async (event, credentials) => {
     password: credentials.password,
   });
   
+  console.log("Login successful for user:", credentials.email);
+  
   if (error) {
       throw error; 
   }
-  console.log("Login successful for user:", credentials.email);
+
   return data;
 });
 
@@ -235,15 +253,16 @@ ipcMain.handle('signup', async (event, credentials) => {
     password: credentials.password,
   });
 
+  if(data.user && data.user.identities && data.user.identities.length === 0) {
+    throw new Error("The email is already taken. Please try again.");
+  }
+  
+  console.log("Signup successful for user:", credentials.email);
+
   if (error) {
       throw error; 
   }
 
-  if(data.user && data.user.identities && data.user.identities.length === 0) {
-    throw new Error("The email is already taken. Please try again.");
-  }
-
-  console.log("Signup successful for user:", credentials.email);
   return data;
 })
 
@@ -252,6 +271,30 @@ ipcMain.on('login-success', (event) => {
   if (senderWindow) {
     senderWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
   }
+});
+
+ipcMain.on('app-ready', async (event, email) => {
+  if(!email || email === '' || email === 'guest') {
+    console.log("Connected to local SQLite database.");
+    console.log("Guest user detected. Sync is disabled.");
+    return;
+  }
+
+  const { net } = require('electron');
+  if (!net.isOnline()) {
+    console.log("No internet connection. Sync is disabled.");
+    return;
+  }
+
+  console.log("Connected to local SQLite database.");
+  console.log("Connected to internet. Syncing local data to cloud for user:", email);
+  const { db, synchDatabase, pullDatabase } = require("./database.js");
+  db.run("UPDATE session SET email = ? WHERE email = 'guest'", [email], async (err) => {
+    if(!err){
+      await synchDatabase();
+      await pullDatabase(email);
+    }
+  });
 });
 
 app.on("window-all-closed", () => {
