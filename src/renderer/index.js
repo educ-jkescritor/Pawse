@@ -4,7 +4,7 @@ if (localStorage.getItem('alwaysOnTop') === 'true') {
     }
 }
 
-const savedUser = localStorage.getItem('currentUser');
+const savedUser = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
 
 if (savedUser) {
     // If they already logged in or clicked guest previously, skip the login screen!
@@ -147,3 +147,4 @@ document.getElementById('guest-btn').addEventListener('click', () => {
     document.getElementById('back-btn').style.display = 'block'; // show
     document.getElementById('close-btn').style.display = 'none'; // do not show
 });
+

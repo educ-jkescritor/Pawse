@@ -692,17 +692,17 @@ if (restoreBtn) {
     });
 }
 
-// --- EXIT MODAL HANDLERS ---
-let exitCancelBtn = document.getElementById('exit-cancel-btn');
-if (exitCancelBtn) {
-    exitCancelBtn.onclick = function() {
-        document.getElementById('exit-modal-overlay').classList.add('hidden');
+// --- HOME MODAL HANDLERS ---
+let homeCancelBtn = document.getElementById('home-cancel-btn');
+if (homeCancelBtn) {
+    homeCancelBtn.onclick = function() {
+        document.getElementById('home-modal-overlay').classList.add('hidden');
     }
 }
 
-let exitConfirmBtn = document.getElementById('exit-confirm-btn');
-if (exitConfirmBtn) {
-    exitConfirmBtn.onclick = function() {
+let homeConfirmBtn = document.getElementById('home-confirm-btn');
+if (homeConfirmBtn) {
+    homeConfirmBtn.onclick = function() {
         localStorage.removeItem('pawseDurableState');
         window.location.replace("../index.html");
     }

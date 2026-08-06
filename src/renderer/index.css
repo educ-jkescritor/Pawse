@@ -551,3 +551,47 @@ ease;
 .main-content {
     display: none;
 }
+
+/* --- CUSTOM MODAL OVERLAY STYLES --- */
+#modal-overlay, #resize-modal-overlay, #home-modal-overlay, #logout-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Cinematic dimming */
+    z-index: 1000; /* Floats above everything */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.custom-dialog {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background-color: var(--bg-main);
+    border-radius: 8px;
+    text-align: center;
+    color: var(--text-black);
+    width: 80%;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.text-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.text-container p,
+#dialog-title,
+#dialog-message,
+#select-mode {
+    margin: 0;
+}
+
+.hidden {
+    display: none !important; /* The magic invisibility cloak */
+}

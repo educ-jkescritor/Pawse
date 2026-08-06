@@ -99,7 +99,9 @@ async function pushDatabase(){
                         uuid: row.uuid
                     }]);
                     
-                    if (error) throw error;
+                    if (error) {
+                        throw error;
+                    }
 
                     db.run("UPDATE session SET is_synced = 1 WHERE id = ?", [row.id]);
                     console.log(`Row ${row.id} pushed successfully.`);
@@ -116,14 +118,39 @@ async function pushDatabase(){
 
 async function pullDatabase(email) {
     try {
-        if (!email || email === '' || email == 'guest') return;
+        if (!email || email === '' || email == 'guest') {
+            console.log("Guest account detected. Local sync only.");
+            return;
+        }
 
         console.log("Pulling data from cloud for user:", email);
 
-        const { data, error } = await supabase
+        const lastSync = await new Promise((resolve) => {
+            db.get("SELECT MAX(date_completed) as date_completed FROM session WHERE email = ?", [email], (err, row) => {
+                if(err || !row || !row.date_completed) {
+                    resolve(null);
+                } else {
+                    resolve(row.date_completed);
+                }
+            })
+        });
+
+        let query = supabase
         .from('session')
         .select('*')
-        .eq('email', email);
+        .eq('email', email)
+        .gt('date_completed', lastSync);
+
+        const { data, error } = await query
+
+        if (data && data.length === 0) {
+            console.log("Local database is already up-to-date.");
+            return;
+        }
+
+        if (error) {
+            throw error;
+        }
 
         for (const row of data || []) {
             db.get("SELECT * FROM session WHERE uuid = ?", [row.uuid], (err, row) => {
@@ -160,15 +187,6 @@ async function pullDatabase(email) {
                     });
                 }
             });
-        }
-
-        if (data && data.length === 0) {
-            console.log("No data found in cloud for user:", email);
-            return;
-        }
-
-        if (error) {
-            throw error;
         }
     } catch (error) {
         console.log("No internet connection. Please try again later.");

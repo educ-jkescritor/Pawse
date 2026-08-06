@@ -8,36 +8,46 @@ if (settingsButton !== null) {
 let closeButton = document.getElementById("close-btn");
 if (closeButton !== null) {
     closeButton.onclick = function closeWindow() {
-        let exitModal = document.getElementById("exit-modal-overlay");
-        if (exitModal !== null) {
-            // We are on the timer screen, show the confirmation modal instead of closing immediately
-            exitModal.classList.remove("hidden");
-            return;
-        }
-        
-        // Otherwise (Main Menu, Settings), close immediately
         localStorage.removeItem('pawseDurableState');
         window.mainAPI.close();
     };
 }
 
-let backButton = document.getElementById("back-btn");
+const logoutModal = document.getElementById('logout-modal-overlay');
+const logoutCancelBtn = document.getElementById('logout-cancel-btn');
+const logoutConfirmBtn = document.getElementById('logout-confirm-btn');
+const backButton = document.getElementById("back-btn");
+
 if (backButton !== null) {
     backButton.onclick = () => {
+        logoutModal.classList.remove('hidden');
+    };
+}
+
+if( (logoutCancelBtn !== null && logoutConfirmBtn !== null) ) {
+    logoutCancelBtn.addEventListener('click', () => {
+        logoutModal.classList.add('hidden');
+    });
+
+    logoutConfirmBtn.addEventListener('click', () => {
         sessionStorage.removeItem('currentUser');
-        
+
+        logoutModal.classList.add('hidden');
+
         document.querySelector('.main-content').style.display = 'none';
         document.querySelector('.login-container').style.display = 'block';
-        
+
         document.getElementById('back-btn').style.display = 'none';
         document.getElementById('close-btn').style.display = 'block';
-    };
+
+        console.log("Logged out successfully. Redirecting to login screen.");
+    });
 }
    
 let homeButton = document.getElementById("home-btn");
 if (homeButton !== null) {
     homeButton.onclick = () => {
-        document.getElementById("exit-modal-overlay").classList.remove("hidden");
+        document.getElementById("home-modal-overlay").classList.remove("hidden");
     };
 }
 
