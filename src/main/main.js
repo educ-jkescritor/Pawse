@@ -181,24 +181,23 @@ ipcMain.on('save-session', (event, data) => {
     data.date_completed || null
   ], (err) => {
     if (err) {
-      console.log("Session data synced unsuccessfully for:", data.email, "Error:", err.message);
+      console.log("Local session data save failed:", err.message);
     } else {
-      const { net } = require('electron');
+
+      console.log("Local session data saved successfully.");
 
       if(!data.email || data.email === '' || data.email == 'guest') {
         console.log("Guest account detected. Local sync only.");
         return;
       }
 
-      if(!net.isOnline()) {
+      try {
+        const { pushDatabase } = require("./database.js");
+        pushDatabase();
+        console.log("Syncing data for user:", data.email);
+      } catch (error) {
         console.log("No internet connection. Local sync only.");
-        return;
-      }
-
-      if(net.isOnline()) {
-        const { synchDatabase } = require("./database.js");
-        synchDatabase();
-        console.log("Session data synced successfully for: ", data.email);
+        console.log("Error:", error.message);
       }
     }
   });
@@ -274,30 +273,43 @@ ipcMain.on('login-success', (event) => {
 });
 
 ipcMain.on('app-ready', async (event, email) => {
-  if(!email || email === '' || email === 'guest') {
-    console.log("Connected to local SQLite database.");
-    console.log("Guest user detected. Sync is disabled.");
-    return;
-  }
-
-  const { net } = require('electron');
-  if (!net.isOnline()) {
-    console.log("No internet connection. Sync is disabled.");
-    return;
-  }
-
   console.log("Connected to local SQLite database.");
-  console.log("Connected to internet. Syncing local data to cloud for user:", email);
-  const { db, synchDatabase, pullDatabase } = require("./database.js");
-  db.run("UPDATE session SET email = ? WHERE email = 'guest'", [email], async (err) => {
+  
+  if(!email || email === '' || email === 'guest') {
+    console.log("Guest user detected. Local sync only.");
+    return;
+  }
+
+  try {
+    const { db, pushDatabase, pullDatabase } = require("./database.js");
+    db.run("UPDATE session SET email = ? WHERE email = 'guest'", [email], async (err) => {
     if(!err){
-      await synchDatabase();
+      await pushDatabase();
       await pullDatabase(email);
     }
   });
+  } catch (error) {
+    console.log("No internet connection. Local sync only.");
+  }
 });
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
+});
+
+ipcMain.on('manual-sync', async (event, email) => {
+  if (!email || email === '' || email === 'guest') {
+    console.log("Guest user detected. Manual sync disabled.");
+    return;
+  }
+
+  try{
+    const { pushDatabase, pullDatabase } = require("./database.js");
+    await pushDatabase();
+    await pullDatabase(email);
+    console.log("Sync successful for email:", email);
+  } catch (error) {
+    console.log("No internet connection. Please try again later.");
+  }
 });
 

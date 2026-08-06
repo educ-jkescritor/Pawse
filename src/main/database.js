@@ -58,7 +58,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 let isSyncing = false;
 
-async function synchDatabase(){
+// update the parallel programming features later if timer.html is merged with index.html 
+async function pushDatabase(){
     if (isSyncing) return;
     isSyncing = true;
     db.all("SELECT * FROM session WHERE is_synced = 0", async (err, rows) => {
@@ -103,8 +104,9 @@ async function synchDatabase(){
                     db.run("UPDATE session SET is_synced = 1 WHERE id = ?", [row.id]);
                     console.log(`Row ${row.id} pushed successfully.`);
                 }
-            } catch (networkError) {
-                console.log(`Error syncing row ${row.id}:`, networkError.message);
+            } catch (error) {
+                console.log("No internet connection. Please try again later.");
+                console.log("Error:", error.message);
                 continue;
             }
         }
@@ -168,8 +170,9 @@ async function pullDatabase(email) {
         if (error) {
             throw error;
         }
-    } catch (err) {
-        console.log("Error pulling data from cloud:", err.message);
+    } catch (error) {
+        console.log("No internet connection. Please try again later.");
+        console.log("Error:", error.message);
     }
 }
 
@@ -303,5 +306,5 @@ function generateAnalytics(weeksAgo = 0) {
     });
 }
 
-module.exports = { db, createMockData, clearMockData, generateAnalytics, synchDatabase, pullDatabase};
+module.exports = { db, createMockData, clearMockData, generateAnalytics, pushDatabase, pullDatabase};
 

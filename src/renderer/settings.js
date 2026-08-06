@@ -460,3 +460,25 @@ function updateDashboardDateTime() {
 
 updateDashboardDateTime();
 setInterval(updateDashboardDateTime, 1000);
+
+const email = localStorage.getItem('currentUser');
+const syncButton = document.getElementById('sync-btn');
+
+if(!email || email === '' || email === 'guest') {
+    syncButton.disabled = true; 
+    syncButton.style.opacity = '0.5';
+}
+
+syncButton.addEventListener('click', () => {
+    syncButton.disabled = true;
+    syncButton.style.opacity = '0.5';
+    syncButton.textContent = 'Syncing';
+
+    window.mainAPI.manualSync(email);
+
+    setTimeout(() => {
+        syncButton.disabled = false;
+        syncButton.style.opacity = '1';
+        syncButton.textContent = 'Sync';
+    }, 3000);
+});
