@@ -177,32 +177,6 @@ const catConfiguration = {
     }
 }
 
-/*
-const urlParams = new URLSearchParams(window.location.search);
-const catType = urlParams.get('cat');
-const catConfig = catConfiguration[catType];
-
-// Lock settings while timer is active
-localStorage.setItem('timerRunning', 'true');
-window.addEventListener('beforeunload', () => {
-    localStorage.setItem('timerRunning', 'false');
-    flushSessionData();
-});
-
-let remainingTime = catConfig.workTime;
-let workingTime = true;
-let cycleCount = 0;
-let timerId = null;
-let isRunning = true;
-let soundEnabled = true;
-let actualWork = 0; 
-let actualBreak = 0;
-let workCount = 0;
-let breakCount = 0;
-
-let sessionDate = new Date();
-*/
-
 let catType = null;
 let catConfig = null;
 let remainingTime = 0;
@@ -734,18 +708,6 @@ function pauseTimer() {
 function soundControl() {
     clearInterval(timerId);
 }
-
-/*
-if (isRunning) {
-    startTimer();
-} else {
-    // Visually initialize UI to the paused state
-    document.getElementById("timer-display").textContent = formatTime(remainingTime);
-    document.getElementById("play-icon").src = "../assets/icons/play-btn.png";
-    updateCatState();
-    updateAudioSettings();
-}
-*/
 
 let soundButton = document.getElementById("sound-btn");
 let playButton = document.getElementById("play-btn");
