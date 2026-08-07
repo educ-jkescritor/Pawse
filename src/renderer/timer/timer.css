@@ -1,5 +1,5 @@
 /* --- MAIN CONTENT --- */
-.main-content{
+.timer-content{
     display: block !important;
     padding: 10px 20px;
 }
@@ -366,8 +366,8 @@ body.cat-only-mode .timer-controls button {
     -webkit-app-region: no-drag;
 }
 
-body.timer-only-mode .main-content,
-body.cat-only-mode .main-content {
+body.timer-only-mode .timer-content,
+body.cat-only-mode .timer-content {
     padding: 0;
     height: 100vh; /* Ensure the content fills the small window */
     width: 100vw;
