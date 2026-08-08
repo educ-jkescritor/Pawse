@@ -28,6 +28,7 @@ localStorage.setItem('timerRunning', 'true');
 window.addEventListener('beforeunload', () => {
     localStorage.setItem('timerRunning', 'false');
     flushSessionData();
+    localStorage.removeItem('pawseDurableState'); // Clear the durable state on exit to avoid stale data
 });
 
 let remainingTime = catConfig.workTime;
