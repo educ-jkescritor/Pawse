@@ -174,7 +174,7 @@ async function loadAnalytics(weeksAgo = 0) {
                 
                 // Format raw seconds to human readable "Xh Ym"
                 const h = Math.floor(seconds / 3600);
-                const m = Math.round((seconds % 3600) / 60);
+                const m = Math.floor((seconds % 3600) / 60);
                 
                 if (h === 0 && m === 0) {
                     tooltip.textContent = "A few seconds";
