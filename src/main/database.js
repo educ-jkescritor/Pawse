@@ -26,28 +26,21 @@ const db = new sqlite3.Database(dbPath, (err) => {
             if (err) {
                 console.log("Error creating session table:", err.message);
             } else {
-                console.log("Database session created and ready.");
-            }
-        });
-        
-        db.run(createTableQuery, (err) => {
-            if (err) {
-                console.log("Error creating session table:", err.message);
-                console.log("Session database is ready.");
-                // ADD THIS MIGRATION BLOCK:
-            } else {
-                db.run("ALTER TABLE session RENAME COLUMN sync_id TO uuid", () => {
-                    db.run("ALTER TABLE session ADD COLUMN uuid TEXT", () => {
-                        const crypto = require('crypto');
-                        db.all("SELECT id FROM session WHERE uuid IS NULL", (err, rows) => {
-                            if (!err && rows && rows.length > 0) {
-                                console.log(`Found ${rows.length} rows without uuid. Generating uuid for them.`);
-
-                                rows.forEach(row => {
-                                    const uuid = crypto.randomUUID();
-                                    db.run("UPDATE session SET uuid = ?, is_synced = 0 WHERE id = ?", [uuid, row.id]);
+                db.run("ALTER TABLE session ADD COLUMN email TEXT", () => {
+                    db.run("ALTER TABLE session ADD COLUMN is_synced BOOLEAN DEFAULT 0", () => {
+                        db.run("ALTER TABLE session ADD COLUMN uuid TEXT", () => {
+                            db.run("UPDATE session SET email = 'guest' WHERE email IS NULL", () => {
+                                const crypto = require('crypto');
+                                db.all("SELECT id FROM session WHERE uuid IS NULL", (err, rows) => {
+                                    if (!err && rows && rows.length > 0) {
+                                        console.log(`Found ${rows.length} rows without uuid. Generating uuid for them.`);
+                                        rows.forEach(row => {
+                                            const uuid = crypto.randomUUID();
+                                            db.run("UPDATE session SET uuid = ?, is_synced = 0 WHERE id = ?", [uuid, row.id]);
+                                        });
+                                    }
                                 });
-                            }
+                            });
                         });
                     });
                 });

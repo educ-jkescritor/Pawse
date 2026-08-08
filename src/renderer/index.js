@@ -374,7 +374,7 @@ function updateAudioSettings() {
     }
 
     // Play or Pause based on strict state conditions
-    if (ambVol > 0 && soundEnabled) {
+    if (ambVol > 0 && soundEnabled && catType !== null) {
         ambientAudio.play().catch(e => {});
     } else {
         ambientAudio.pause();
@@ -877,6 +877,7 @@ if (homeCancelBtn) {
 let homeConfirmBtn = document.getElementById('home-confirm-btn');
 if (homeConfirmBtn) {
     homeConfirmBtn.onclick = function() {
+        flushSessionData(false);
         localStorage.removeItem('pawseDurableState');
         returnToCatSelection();
     }
