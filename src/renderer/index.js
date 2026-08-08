@@ -381,7 +381,7 @@ function updateAudioSettings() {
     }
     
     // Purr only plays during working time and when timer is running
-    if (purVol > 0 && soundEnabled && workingTime && isRunning) {
+    if (purVol > 0 && soundEnabled && workingTime && isRunning && catType !== null) {
         purrAudio.play().catch(e => {});
     } else {
         purrAudio.pause();
