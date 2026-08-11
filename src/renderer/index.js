@@ -14,7 +14,6 @@ if (savedUser) {
     window.mainAPI.appReady(savedUser);
 
     document.getElementById('back-btn').style.display = 'block';
-    document.getElementById('close-btn').style.display = 'none'; 
 }
 
 let selectedCat = null;
@@ -79,7 +78,6 @@ if (buttons.black) {
     };
 }
 
-// Confirmation handling
 let confirmButton = document.querySelector(".confirmation_button");
 confirmButton.onclick = function () {
     if (selectedCat) {
@@ -133,7 +131,6 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
         window.mainAPI.appReady(emailStr);
 
         document.getElementById('back-btn').style.display = 'block';
-        document.getElementById('close-btn').style.display = 'none'; 
     } catch (error) {
         if (error.message.includes("already taken")) {
             document.getElementById('error-message').innerText = "The email is already taken. Please try again.";
@@ -152,8 +149,7 @@ document.getElementById('guest-btn').addEventListener('click', () => {
 
     window.mainAPI.appReady('guest');
 
-    document.getElementById('back-btn').style.display = 'block'; // show
-    document.getElementById('close-btn').style.display = 'none'; // do not show
+    document.getElementById('back-btn').style.display = 'block';
 });
 
 const catConfiguration = {   
@@ -291,7 +287,7 @@ function flushSessionData(isPomodoroComplete = false, forceYesterday = false) {
     }
 
     let sessionData = {
-        email: localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser') || 'guest',
+        email: localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser'),
         cat_type: catConfig.dbId,
         total_work_seconds: actualWork,
         total_break_seconds: actualBreak,
@@ -338,12 +334,16 @@ function updateAudioSettings() {
     
     let purVol = parseInt(localStorage.getItem('purrVolume'));
     if (isNaN(purVol)) purVol = 50;
-    
+
+    let alarmVol = parseInt(localStorage.getItem('alarmVolume'));
+    if (isNaN(alarmVol)) alarmVol = 50;
+
     let tickStr = localStorage.getItem('tickSound');
     tickEnabled = tickStr === null ? true : (tickStr === 'true');
 
     ambientAudio.volume = ambVol / 100;
     purrAudio.volume = purVol / 100;
+    alarmAudio.volume = alarmVol / 100;
 
     const soundIcon = document.getElementById("sound-icon");
 
@@ -816,7 +816,7 @@ function showModal(title, message, btnText, nextAction) {
     modalOverlay.classList.remove("hidden");
     
     // Start playing the alarm on a loop if the user has it enabled in Settings AND master sound is ON
-    if (localStorage.getItem('alarmSound') !== 'false' && soundEnabled) {
+    if (alarmAudio.volume > 0 && soundEnabled) {
         alarmAudio.play().catch(e => {});
     }
 
@@ -904,7 +904,7 @@ function returnToCatSelection() {
     document.getElementById('home-btn').style.display = 'none';
     document.getElementById('resize-btn').style.display = 'none';
     document.getElementById('back-btn').style.display = 'block';
-    document.getElementById('close-btn').style.display = 'none';
+    document.getElementById('close-btn').style.display = 'block';
     
     document.body.classList.remove("timer-only-mode", "cat-only-mode");
     if (window.mainAPI && window.mainAPI.resize) {

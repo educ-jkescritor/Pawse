@@ -61,9 +61,9 @@
                             <span class="card-data font-pixel-36-medium" id="today_work_seconds">0</span>
                         </div>
                         <div class="analytics-card">
-                            <span class="font-inter-10-medium">COMPLETED<br></span>
-                            <span class="font-inter-16-medium">POMODOROS<br></span>
-                            <span class="card-data font-pixel-36-medium" id="historical_pomodoro">0</span>
+                            <span class="font-inter-10-medium">CURRENT<br></span>
+                            <span class="font-inter-16-medium">DAILY STREAK<br></span>
+                            <span class="card-data font-pixel-36-medium" id="daily_streak">0</span>
                         </div>
                         <div class="analytics-card" id="favorite-cat-card">
                             <span class="font-inter-10-medium">FAVORITE<br></span>
@@ -263,15 +263,15 @@
                                 <input type="range" min="0" max="100" value="50" class="volume-slider ambient-slider">
                             </div>
                         </div>
-                        <div class="settings-item long-break-interval">
+                        <div class="settings-item alarm-volume">
                             <div class="settings-label-container">
                                 <p class="font-inter-12-medium">Alarm Volume</p>
                                 <p class="font-inter-10-regular text-gray">Plays a cat meow alarm when focus cycles complete.</p>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" class="alarm-toggle">
-                                <span class="slider"></span>
-                            </label>
+                            <div class="slider-container">
+                                <span class="font-inter-10-regular slider-value">50%</span>
+                                <input type="range" min="0" max="100" value="50" class="volume-slider alarm-slider">
+                            </div>
                         </div>
                         <div class="settings-item long-break-interval">
                             <div class="settings-label-container">

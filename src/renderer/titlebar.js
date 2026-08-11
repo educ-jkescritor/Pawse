@@ -1,7 +1,12 @@
 let settingsButton = document.getElementById("menu-btn");
 if (settingsButton !== null) {
     settingsButton.onclick = function settingsWindow() {
-        window.mainAPI.settings();
+        const loggedIn = localStorage.getItem("currentUser") || sessionStorage.getItem("currentUser");
+        if (loggedIn) {
+            window.mainAPI.settings();
+        } else {
+            return;
+        }
     };
 }
 
@@ -9,6 +14,10 @@ let closeButton = document.getElementById("close-btn");
 if (closeButton !== null) {
     closeButton.onclick = function closeWindow() {
         localStorage.removeItem('pawseDurableState');
+        if(sessionStorage.getItem('currentUser') === 'guest') {
+            sessionStorage.removeItem('currentUser');
+            localStorage.removeItem('currentUser');
+        }
         window.mainAPI.close();
     };
 }
@@ -31,6 +40,7 @@ if( (logoutCancelBtn !== null && logoutConfirmBtn !== null) ) {
 
     logoutConfirmBtn.addEventListener('click', () => {
         sessionStorage.removeItem('currentUser');
+        localStorage.removeItem('currentUser');
 
         logoutModal.classList.add('hidden');
 

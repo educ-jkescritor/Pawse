@@ -83,7 +83,7 @@ async function loadAnalytics(weeksAgo = 0) {
     }
 
     const todayWorkSecondsElement = document.getElementById("today_work_seconds");
-    const historicalPomodoroElement = document.getElementById("historical_pomodoro");
+    const dailyStreakElement = document.getElementById("daily_streak");
     const favoriteCatElement = document.getElementById("favorite_cat");
 
     // Format seconds into Xh Ym
@@ -94,7 +94,7 @@ async function loadAnalytics(weeksAgo = 0) {
     let timeString = `${hours}h ${minutes}m`;
 
     todayWorkSecondsElement.textContent = timeString;
-    historicalPomodoroElement.textContent = data.historical_pomodoro || 0;
+    dailyStreakElement.textContent = data.daily_streak || 0;
 
     // Map cat_type to corresponding face image
     const catFaceImages = {
@@ -215,16 +215,6 @@ const updateSliderFill = (el) => {
     const textLabel = el.previousElementSibling;
     if (textLabel) textLabel.textContent = `${val}%`;
     el.style.background = `linear-gradient(to right, var(--sys-blue-solid) 0%, var(--sys-blue-solid) ${val}%, var(--stroke-color) ${val}%, var(--stroke-color) 100%)`;
-
-    // UI/UX: Grayish design when sound is at 0%
-    const parentItem = el.closest('.settings-item');
-    if (parentItem) {
-        if (val === '0') {
-            parentItem.style.opacity = '0.5';
-        } else {
-            parentItem.style.opacity = '1';
-        }
-    }
 };
 
 volumeSliders.forEach(slider => {
@@ -234,6 +224,8 @@ volumeSliders.forEach(slider => {
         storageKey = 'ambientVolume';
     } else if (slider.classList.contains('purr-slider')) {
         storageKey = 'purrVolume';
+    } else if (slider.classList.contains('alarm-slider')) {
+        storageKey = 'alarmVolume';
     }
 
     // 2. Load the saved value on window startup (default to 50 if empty)
@@ -299,17 +291,10 @@ if (pomodoroToggle) {
 }
 
 // Audio Settings Logic
-// Audio Settings Logic
 const clickToggle = document.querySelector('.click-toggle');
 if (clickToggle) {
     clickToggle.checked = localStorage.getItem('clickSound') !== 'false';
     clickToggle.addEventListener('change', (e) => localStorage.setItem('clickSound', e.target.checked));
-}
-
-const alarmToggle = document.querySelector('.alarm-toggle');
-if (alarmToggle) {
-    alarmToggle.checked = localStorage.getItem('alarmSound') !== 'false';
-    alarmToggle.addEventListener('change', (e) => localStorage.setItem('alarmSound', e.target.checked));
 }
 
 const tickToggle = document.querySelector('.tick-toggle');
@@ -321,29 +306,28 @@ if (tickToggle) {
 function updateAudioLocks() {
     const clickElement = document.querySelector('.click-toggle');
     const tickElement = document.querySelector('.tick-toggle');
-    const alarmElement = document.querySelector('.alarm-toggle');
     
     let ambVol = parseInt(localStorage.getItem('ambientVolume'));
     if (isNaN(ambVol)) ambVol = 50;
     
-    let purVol = parseInt(localStorage.getItem('purrVolume'));
-    if (isNaN(purVol)) purVol = 50;
-    
-    const isMasterMuted = (ambVol === 0 && purVol === 0);
+    const isMasterMuted = (ambVol === 0);
     
     if (clickElement) {
         const parentItem = clickElement.closest('.settings-item');
-        if (parentItem) parentItem.style.opacity = isMasterMuted ? '0.5' : '1';
+        if (parentItem) {
+            parentItem.style.opacity = isMasterMuted ? '0.5' : '1';
+            parentItem.style.pointerEvents = isMasterMuted ? 'none' : 'auto';
+            clickElement.disabled = isMasterMuted;
+        }
     }
     
     if (tickElement) {
         const parentItem = tickElement.closest('.settings-item');
-        if (parentItem) parentItem.style.opacity = isMasterMuted ? '0.5' : '1';
-    }
-    
-    if (alarmElement) {
-        const parentItem = alarmElement.closest('.settings-item');
-        if (parentItem) parentItem.style.opacity = isMasterMuted ? '0.5' : '1';
+        if (parentItem) {
+            parentItem.style.opacity = isMasterMuted ? '0.5' : '1';
+            parentItem.style.pointerEvents = isMasterMuted ? 'none' : 'auto';
+            tickElement.disabled = isMasterMuted;
+        }
     }
 }
 updateAudioLocks();
@@ -424,12 +408,16 @@ window.addEventListener('storage', (e) => {
         }
         updateAudioLocks();
     }
+    if (e.key === 'alarmVolume') {
+        const slider = document.querySelector('.alarm-slider');
+        if (slider) {
+            slider.value = e.newValue;
+            updateSliderFill(slider);
+        }
+        updateAudioLocks();
+    }
     if (e.key === 'clickSound') {
         const toggle = document.querySelector('.click-toggle');
-        if (toggle) toggle.checked = (e.newValue !== 'false');
-    }
-    if (e.key === 'alarmSound') {
-        const toggle = document.querySelector('.alarm-toggle');
         if (toggle) toggle.checked = (e.newValue !== 'false');
     }
     if (e.key === 'tickSound') {

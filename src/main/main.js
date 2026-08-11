@@ -27,6 +27,7 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
+      backgroundThrottling: false,
       preload: path.join(__dirname, "preload.js")
     }
   });
@@ -64,6 +65,7 @@ function settingsWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
+      backgroundThrottling: false,
       preload: path.join(__dirname, "preload.js")
     }
   });
@@ -151,9 +153,13 @@ ipcMain.on('settings-window', (event) => {
 });
 
 ipcMain.on('save-session', (event, data) => {
+  if (!data.email || data.email === '' || data.email === 'guest') {
+    return;  
+  }
+
   const crypto = require('crypto');
   const uuid = crypto.randomUUID();
-  
+
   const insertQuery = `INSERT INTO session (
     email,
     cat_type, 
@@ -186,18 +192,13 @@ ipcMain.on('save-session', (event, data) => {
 
       console.log("Local session data saved successfully.");
 
-      if(!data.email || data.email === '' || data.email == 'guest') {
-        console.log("Guest account detected. Local sync only.");
-        return;
-      }
-
       try {
         const { pushDatabase } = require("./database.js");
         pushDatabase();
         console.log("Syncing data for user:", data.email);
       } catch (error) {
-        console.log("No internet connection. Local sync only.");
-        console.log("Error:", error.message);
+        console.log("No internet connection. Cloud sync failed.");
+        //console.log("Error:", error.message);
       }
     }
   });
@@ -273,13 +274,13 @@ ipcMain.on('login-success', (event) => {
 });
 
 ipcMain.on('app-ready', async (event, email) => {
-  console.log("Connected to local SQLite database.");
-  
   if(!email || email === '' || email === 'guest') {
-    console.log("Guest user detected. Local sync only.");
+    console.log("Guest account detected. No data will be saved.");
     return;
   }
 
+  console.log("Connected to local SQLite database.");
+  
   try {
     const { db, pushDatabase, pullDatabase } = require("./database.js");
     db.run("UPDATE session SET email = ? WHERE email = 'guest'", [email], async (err) => {
