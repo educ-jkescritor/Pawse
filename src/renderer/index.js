@@ -7,6 +7,7 @@ if (localStorage.getItem('alwaysOnTop') === 'true') {
 const savedUser = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
 
 if (savedUser) {
+    document.body.classList.add('logged-in');
     // If they already logged in or clicked guest previously, skip the login screen!
     document.querySelector('.login-container').style.display = 'none';
     document.querySelector('.main-content').style.display = 'block';
@@ -125,6 +126,8 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
         }
         localStorage.setItem('currentUser', emailStr);
 
+        document.body.classList.add('logged-in');
+
         document.querySelector('.login-container').style.display = 'none';
         document.querySelector('.main-content').style.display = 'block'; 
 
@@ -143,6 +146,8 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
 document.getElementById('guest-btn').addEventListener('click', () => {
     localStorage.removeItem('currentUser');
     sessionStorage.setItem('currentUser', 'guest');
+
+    document.body.classList.add('logged-in');
         
     document.querySelector('.login-container').style.display = 'none';
     document.querySelector('.main-content').style.display = 'block';
@@ -347,12 +352,13 @@ function updateAudioSettings() {
 
     const soundIcon = document.getElementById("sound-icon");
 
-    // Smart Mute if ambient and purr are zeroed out in settings
-    if (ambVol === 0 && purVol === 0) {
+    // Smart Mute if ambient, purr, AND alarm are zeroed out in settings
+    if (ambVol === 0 && purVol === 0 && alarmVol === 0) {
         if (soundEnabled) {
-            // User manually dragged both to 0%. Clear the history so unmuting defaults to 50%
             localStorage.setItem('prevAmbientVolume', '0');
+            // User manually dragged all three to 0%. Clear the history so unmuting defaults to 50%
             localStorage.setItem('prevPurrVolume', '0');
+            localStorage.setItem('prevAlarmVolume', '0');
         }
         soundEnabled = false;
         ambientAudio.muted = true;
@@ -615,7 +621,12 @@ function skipTimer(completedCycle) {
         updateCatState();
         const autoStartBreaks = localStorage.getItem('autoStartBreaks') === 'true';
         if (cycleCount === 3) {
-            if (autoStartBreaks) {
+            if (completedCycle === false) {
+                remainingTime = catConfig.longBreakTime;
+                document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                startTimer();
+                triggerWelcomeBubble();
+            } else if (autoStartBreaks) {
                 remainingTime = catConfig.longBreakTime;
                 document.getElementById("timer-display").textContent = formatTime(remainingTime);
                 startTimer();
@@ -630,11 +641,16 @@ function skipTimer(completedCycle) {
                         document.getElementById("timer-display").textContent = formatTime(remainingTime);
                         startTimer();
                         triggerWelcomeBubble();
-                    }
+                    },
                 );
             }
         } else {
-            if (autoStartBreaks) {
+            if (completedCycle === false) {
+                remainingTime = catConfig.shortBreakTime;
+                document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                startTimer();
+                triggerWelcomeBubble();
+            } else if (autoStartBreaks) {
                 remainingTime = catConfig.shortBreakTime;
                 document.getElementById("timer-display").textContent = formatTime(remainingTime);
                 startTimer();
@@ -649,20 +665,21 @@ function skipTimer(completedCycle) {
                         document.getElementById("timer-display").textContent = formatTime(remainingTime);
                         startTimer();
                         triggerWelcomeBubble();
-                    }
+                    },
+                    "Work Session Complete",
+                    "You earned a break! Click to return to the app."
                 );
             }
         }
     } else {     
         workingTime = true;
         updateCatState();
-        remainingTime = catConfig.workTime;
+        //remainingTime = catConfig.workTime;
         cycleCount++;
         
         updateSessionCounter();
 
         if (cycleCount === 4) {
-
             flushSessionData(true);
 
             showModal (
@@ -677,7 +694,11 @@ function skipTimer(completedCycle) {
             return;
         } else {
             const autoStartPomodoros = localStorage.getItem('autoStartPomodoros') === 'true';
-            if (autoStartPomodoros) {
+            if (completedCycle === false) {
+                remainingTime = catConfig.workTime;
+                document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                startTimer();
+            } else if(autoStartPomodoros) {
                 remainingTime = catConfig.workTime;
                 document.getElementById("timer-display").textContent = formatTime(remainingTime);
                 startTimer();
@@ -690,7 +711,9 @@ function skipTimer(completedCycle) {
                         remainingTime = catConfig.workTime;
                         document.getElementById("timer-display").textContent = formatTime(remainingTime);
                         startTimer();
-                    }
+                    },
+                    "Break Session Complete",
+                    "It's time to work! Click to return to the app."
                 ); 
             }
         }
@@ -719,38 +742,48 @@ soundButton.addEventListener("click", () => {
         // Remember volumes before muting
         let currentAmb = localStorage.getItem('ambientVolume') || '50';
         let currentPurr = localStorage.getItem('purrVolume') || '50';
+        let currentAlarm = localStorage.getItem('alarmVolume') || '50';
+
         localStorage.setItem('prevAmbientVolume', currentAmb);
         localStorage.setItem('prevPurrVolume', currentPurr);
+        localStorage.setItem('prevAlarmVolume', currentAlarm);
 
         soundEnabled = false;
         soundIcon.src = "../assets/icons/soundoff-btn.png";
         ambientAudio.muted = true;
         purrAudio.muted = true;
+        alarmAudio.muted = true;
 
         // Force settings UI to visually drop to 0 / Off for ambient and purr only
         localStorage.setItem('ambientVolume', '0');
         localStorage.setItem('purrVolume', '0');
+        localStorage.setItem('alarmVolume', '0');
     }else{
         soundEnabled = true;
         soundIcon.src = "../assets/icons/soundon-btn.png";
         ambientAudio.muted = false;
         purrAudio.muted = false;
+        alarmAudio.muted = false;
 
         // Restore previous volumes
         let prevAmbVol = parseInt(localStorage.getItem('prevAmbientVolume'));
         let prevPurrVol = parseInt(localStorage.getItem('prevPurrVolume'));
+        let prevAlarmVol = parseInt(localStorage.getItem('prevAlarmVolume'));
         
         if (isNaN(prevAmbVol)) prevAmbVol = 0;
         if (isNaN(prevPurrVol)) prevPurrVol = 0;
+        if (isNaN(prevAlarmVol)) prevAlarmVol = 0;
 
         // If they muted while both were 0, unmuting should set to 50% baseline
-        if (prevAmbVol === 0 && prevPurrVol === 0) {
+        if (prevAmbVol === 0 && prevPurrVol === 0 && prevAlarmVol === 0) {
             prevAmbVol = 50;
             prevPurrVol = 50;
+            prevAlarmVol = 50;
         }
 
         localStorage.setItem('ambientVolume', prevAmbVol.toString());
         localStorage.setItem('purrVolume', prevPurrVol.toString());
+        localStorage.setItem('alarmVolume', prevAlarmVol.toString());
 
         updateAudioSettings(); // Re-apply everything
     }
@@ -796,17 +829,48 @@ function updateSessionCounter() {
     });
 };
 
-function showModal(title, message, btnText, nextAction) {
+function showModal(title, message, btnText, nextAction, notifTitle, notifMessage) {
     const isMiniMode = document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode");
+    let hasActionFired = false;
 
     if (isMiniMode) {
-        // If the session completes or a full Pomodoro cycle finishes, restore the window size
-        if (title === "Session Complete!" || title === "Paws-itively Brilliant!") {
-            document.body.classList.remove("timer-only-mode", "cat-only-mode");
-            window.mainAPI.resize('default');
+        const notification = new Notification((notifTitle || title), {
+            body: notifMessage || message,
+            silent: true,
+            requireInteraction: true
+        });
+
+        notification.onclick = () => {
+            if (window.mainAPI && window.mainAPI.restoreWindow) {
+                window.mainAPI.restoreWindow();
+            }
+            
+            if (!hasActionFired) {
+                hasActionFired = true;
+                alarmAudio.pause();
+                alarmAudio.currentTime = 0;
+                nextAction();
+            }
+        };
+
+        notification.onclose = () => {
+            alarmAudio.pause();
+            alarmAudio.currentTime = 0;
+            if (!hasActionFired) {
+                hasActionFired = true;
+                nextAction();
+            }
+        };
+
+        if (alarmAudio.volume > 0 && soundEnabled) {
+            alarmAudio.play().catch(e => {});
         }
-        nextAction();
-        return;
+            
+        return; 
+    }
+
+    if (window.mainAPI && window.mainAPI.restoreWindow) {
+        window.mainAPI.restoreWindow();
     }
 
     dialogTitle.innerText = title;

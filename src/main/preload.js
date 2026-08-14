@@ -14,4 +14,5 @@ contextBridge.exposeInMainWorld('mainAPI', {
     loginSuccess: () => ipcRenderer.send('login-success'),
     appReady: (email) => ipcRenderer.send('app-ready', email),
     manualSync: (email) => ipcRenderer.send('manual-sync', email),
+    restoreWindow: () => ipcRenderer.send('restore-window'),
 });

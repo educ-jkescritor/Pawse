@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, shell } = require("electron");
 const path = require("path");
-const iconPath = path.join(__dirname, "../assets/logos/logo.png");
+const iconPath = path.join(__dirname, "../assets/logos/pawse.png");
 const { db, generateAnalytics } = require("./database.js");
 const supabase = require("./supabase.js");
 
@@ -80,6 +80,8 @@ function settingsWindow() {
     set = null;
   });
 }
+
+app.setAppUserModelId("com.pawse.app");
 
 app.whenReady().then(() => {
   createWindow();
@@ -314,3 +316,16 @@ ipcMain.on('manual-sync', async (event, email) => {
   }
 });
 
+ipcMain.on('restore-window', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if(win.isMinimized()) {
+    win.restore();
+  }
+  win.setAlwaysOnTop(true);
+  win.show();
+  win.focus();
+
+  setTimeout(() => {
+    win.setAlwaysOnTop(globalAlwaysOnTop);
+  }, 500);
+});

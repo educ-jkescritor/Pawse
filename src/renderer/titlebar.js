@@ -42,6 +42,8 @@ if( (logoutCancelBtn !== null && logoutConfirmBtn !== null) ) {
         sessionStorage.removeItem('currentUser');
         localStorage.removeItem('currentUser');
 
+        document.body.classList.remove('logged-in');
+        
         logoutModal.classList.add('hidden');
 
         document.querySelector('.main-content').style.display = 'none';

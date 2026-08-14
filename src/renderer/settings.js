@@ -228,6 +228,7 @@ volumeSliders.forEach(slider => {
         storageKey = 'alarmVolume';
     }
 
+
     // 2. Load the saved value on window startup (default to 50 if empty)
     if (storageKey) {
         const savedValue = localStorage.getItem(storageKey);
@@ -249,6 +250,28 @@ volumeSliders.forEach(slider => {
         // Check if master mute triggered (both 0%)
         if (typeof updateAudioLocks === 'function') updateAudioLocks();
     });
+});
+
+window.addEventListener('storage', (e) => {
+    if (e.key === 'ambientVolume' || e.key === 'purrVolume' || e.key === 'alarmVolume') {
+        
+        // Find the slider that matches the key that just changed
+        const slider = Array.from(volumeSliders).find(s => {
+            if (e.key === 'ambientVolume' && s.classList.contains('ambient-slider')) return true;
+            if (e.key === 'purrVolume' && s.classList.contains('purr-slider')) return true;
+            if (e.key === 'alarmVolume' && s.classList.contains('alarm-slider')) return true;
+            return false;
+        });
+        
+        // Magically update the slider visually without requiring a click!
+        if (slider) {
+            slider.value = e.newValue;
+            updateSliderFill(slider);
+        }
+        
+        // If master volume drops to 0, gray out the toggles immediately
+        if (typeof updateAudioLocks === 'function') updateAudioLocks();
+    }
 });
 
 // Workflow Settings Logic

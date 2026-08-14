@@ -290,7 +290,7 @@ ease;
     align-items: center;
 }
 
-#menu-btn:hover + .title-roller .roller-content {
+body.logged-in #menu-btn:hover + .title-roller .roller-content {
     transform: translateY(-16px);
 }
 
