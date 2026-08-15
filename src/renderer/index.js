@@ -407,9 +407,12 @@ let dialogMessage = document.getElementById("dialog-message");
 let dialogBtn = document.getElementById("dialog-btn");
 
 function formatTime(remainingTime) {
-    let minutes = Math.floor(remainingTime / 60);
-    let secs = remainingTime % 60;
-    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    const isNegative = remainingTime < 0;
+    const absTime = Math.abs(remainingTime);
+    let minutes = Math.floor(absTime / 60);
+    let secs = absTime % 60;
+    const formattedTime = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return isNegative ? `-${formattedTime}` : formattedTime;
 }
 
 document.getElementById("timer-display").textContent = formatTime(remainingTime);     
@@ -569,6 +572,8 @@ function updateCatState() {
 }
 
 function startTimer() {
+    clearInterval(timerId);
+    
     document.getElementById("play-icon").src = "../assets/icons/pause-btn.png";
     isRunning = true;
     updateCatState();
@@ -589,7 +594,9 @@ function startTimer() {
             tickAudio.play().catch(e => {});
         }
 
-        if(workingTime == true) {
+        if (remainingTime < 0) {
+            actualWork++;
+        } else if (workingTime == true) {
             actualWork++;
         } else {
             actualBreak++;
@@ -606,7 +613,10 @@ function startTimer() {
 }
 
 function skipTimer(completedCycle) {
-    pauseTimer();
+    
+    if (completedCycle === false || workingTime === false){
+        pauseTimer();
+    }
 
     if (completedCycle == true) {
         if (workingTime == true) {
@@ -789,8 +799,31 @@ soundButton.addEventListener("click", () => {
     }
 });
 
+function strictMode() {
+    const isStrict = localStorage.getItem('strictMode') === 'true';
+    if (isStrict) {
+        skipButton.style.opacity = "0.5";
+        skipButton.style.cursor = "not-allowed";
+        playButton.style.opacity = "0.5";
+        playButton.style.cursor = "not-allowed";    
+    } else {
+        skipButton.style.opacity = "1";
+        skipButton.style.cursor = "pointer";
+        playButton.style.opacity = "1";
+        playButton.style.cursor = "pointer";
+    }
+}
+
+strictMode(); 
+
+window.addEventListener('focus', () => {
+    strictMode();
+});
 playButton.addEventListener("click", () => {
-    if (strictMode) return;
+    if (localStorage.getItem('strictMode') === 'true') {
+        return;
+    }
+
     if(isRunning) {
         pauseTimer();
     } else {
@@ -798,19 +831,10 @@ playButton.addEventListener("click", () => {
     }   
 });
 
-const strictMode = localStorage.getItem('strictMode') === 'true';
-if (strictMode) {
-    skipButton.disabled = true;
-    skipButton.style.opacity = "0.5";
-    skipButton.style.cursor = "not-allowed";
-
-    playButton.disabled = true;
-    playButton.style.opacity = "0.5";
-    playButton.style.cursor = "not-allowed";
-}
-
 skipButton.addEventListener("click", () => {
-    if (strictMode) return;
+    if (localStorage.getItem('strictMode') === 'true') {
+        return;
+    }
     skipTimer(false);
 });
 
