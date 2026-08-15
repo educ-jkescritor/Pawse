@@ -819,6 +819,7 @@ strictMode();
 window.addEventListener('focus', () => {
     strictMode();
 });
+
 playButton.addEventListener("click", () => {
     if (localStorage.getItem('strictMode') === 'true') {
         return;

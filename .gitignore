@@ -1,3 +1,4 @@
 node_modules/
 pawse.db
 config.js
+supabase-session.json
