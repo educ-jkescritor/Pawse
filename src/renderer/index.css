@@ -262,11 +262,11 @@ ease;
     transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 
-#menu-btn:hover {
+body:not(.timer-running) #menu-btn:hover {
     background-color: var(--bg-main);
 }
 
-#menu-btn:active {
+body:not(.timer-running) #menu-btn:active {
     transform: scale(0.92);
 }
 
@@ -290,7 +290,7 @@ ease;
     align-items: center;
 }
 
-body.logged-in #menu-btn:hover + .title-roller .roller-content {
+body.logged-in:not(.timer-running) #menu-btn:hover + .title-roller .roller-content {
     transform: translateY(-16px);
 }
 
@@ -1152,4 +1152,8 @@ body.cat-only-mode .restore-btn:hover img {
 body.timer-only-mode .chat-bubble,
 body.cat-only-mode .chat-bubble {
     display: none !important;
+}
+
+body.timer-running #menu-btn {
+    cursor: default;
 }

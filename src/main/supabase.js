@@ -1,10 +1,11 @@
+const { app } = require("electron");
 const { createClient } = require('@supabase/supabase-js');
 const config = require('../../config.js');
 const fs = require('fs');
 const path = require('path');
 
 // We will save the VIP token right next to your pawse.db file!
-const sessionFilePath = path.join(__dirname, "../../supabase-session.json");
+const sessionFilePath = path.join(app.getPath('userData'), "supabase-session.json");
 
 // Teach Supabase how to read and write to a local file instead of localStorage
 const customStorage = {

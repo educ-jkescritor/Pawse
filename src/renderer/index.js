@@ -184,7 +184,7 @@ let remainingTime = 0;
 let workingTime = true;
 let cycleCount = 0;
 let timerId = null;
-let isRunning = true;
+let isRunning = false;
 let soundEnabled = true;
 let actualWork = 0; 
 let actualBreak = 0;
@@ -574,6 +574,8 @@ function updateCatState() {
 function startTimer() {
     clearInterval(timerId);
     
+    document.body.classList.add("timer-running");
+
     document.getElementById("play-icon").src = "../assets/icons/pause-btn.png";
     isRunning = true;
     updateCatState();

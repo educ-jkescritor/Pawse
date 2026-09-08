@@ -1,8 +1,9 @@
+const { app } = require("electron");
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
 const supabase = require("./supabase");
 
-const dbPath = path.join(__dirname, "../../pawse.db");
+const dbPath = path.join(app.getPath('userData'), "pawse.db");
 
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {

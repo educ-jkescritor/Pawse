@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, shell } = require("electron");
 const path = require("path");
-const iconPath = path.join(__dirname, "../assets/logos/pawse.png");
+const iconPath = path.join(__dirname, "../assets/logos/applogo.ico");
 const { db, generateAnalytics } = require("./database.js");
 const supabase = require("./supabase.js");
 

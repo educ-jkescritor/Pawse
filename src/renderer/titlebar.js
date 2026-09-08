@@ -1,6 +1,10 @@
 let settingsButton = document.getElementById("menu-btn");
 if (settingsButton !== null) {
     settingsButton.onclick = function settingsWindow() {
+        const timerContent = document.querySelector('.timer-content');
+        if (timerContent && timerContent.style.display === 'block') {
+            return;
+        }
         const loggedIn = localStorage.getItem("currentUser") || sessionStorage.getItem("currentUser");
         if (loggedIn) {
             window.mainAPI.settings();

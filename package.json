@@ -4,7 +4,8 @@
   "description": "A secure, resilient, and adorable Pomodoro timer built with Electron.",
   "main": "src/main/main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "build": "electron-builder --win"
   },
   "keywords": [
     "pomodoro",
@@ -16,7 +17,8 @@
   "license": "MIT",
   "type": "commonjs",
   "devDependencies": {
-    "electron": "^42.4.0"
+    "electron": "^42.4.0",
+    "electron-builder": "^26.15.3"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.0",
@@ -24,5 +26,19 @@
   },
   "overrides": {
     "tar@<=7.5.17": "7.5.17"
+  },
+  "build": {
+    "appId": "com.pawse.app",
+    "productName": "Pawse",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "src/assets/logos/applogo.ico"
+    },
+    "extraResources": [
+        "pawse.db"
+    ]
   }
 }
