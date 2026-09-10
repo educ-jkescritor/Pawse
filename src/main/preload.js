@@ -15,4 +15,7 @@ contextBridge.exposeInMainWorld('mainAPI', {
     appReady: (email) => ipcRenderer.send('app-ready', email),
     manualSync: (email) => ipcRenderer.send('manual-sync', email),
     restoreWindow: () => ipcRenderer.send('restore-window'),
+    checkForUpdates: () => ipcRenderer.send('check-for-updates'),
+    inputMessage: (callback) => ipcRenderer.on('update-message', (event, message) => callback(message)),
+    getVersion: () => ipcRenderer.invoke('get-version')
 });

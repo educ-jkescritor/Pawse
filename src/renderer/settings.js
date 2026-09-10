@@ -493,3 +493,31 @@ syncButton.addEventListener('click', () => {
         syncButton.textContent = 'Sync';
     }, 3000);
 });
+
+const updateBtn = document.getElementById("update-btn");
+const updateMessage = document.getElementById("update-message");
+
+updateBtn.addEventListener("click", () => {
+    updateBtn.disabled = true;
+    updateBtn.innerText = "...";
+    updateMessage.innerText = "";
+    window.mainAPI.checkForUpdates();
+});
+
+window.mainAPI.inputMessage((message) => {
+    updateMessage.innerText = message;
+    if(message == "Up to date" || message == "Restart App to Install" || message == "Error") {
+        updateBtn.innerText = "Check";
+        if (message !== "Restart App to Install") {
+            updateBtn.disabled = false;
+        }
+    }
+});
+
+window.mainAPI.getVersion().then((appVersion) => {
+    const badge = document.querySelector(".version-badge");
+    if (badge) {
+        badge.innerText = "v" + appVersion;
+    }
+});
+    

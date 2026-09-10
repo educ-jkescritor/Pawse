@@ -1,8 +1,10 @@
-const { app, BrowserWindow, ipcMain, shell } = require("electron");
+const { app, BrowserWindow, ipcMain, shell , nativeImage } = require("electron");
 const path = require("path");
 const iconPath = path.join(__dirname, "../assets/logos/applogo.ico");
+const appIcon = nativeImage.createFromPath(iconPath);
 const { db, generateAnalytics } = require("./database.js");
 const supabase = require("./supabase.js");
+const { autoUpdater } = require("electron-updater");
 
 let set = null;
 let globalAlwaysOnTop = false;
@@ -10,7 +12,7 @@ let globalAlwaysOnTop = false;
 function createWindow() {
   const win = new BrowserWindow({
     show: false,
-    icon: iconPath,
+    icon: appIcon,
     width: 310, // initially 292 from initial build
     height: 430, // initially 430 from initial build
     alwaysOnTop: globalAlwaysOnTop,
@@ -48,7 +50,7 @@ function createWindow() {
 
 function settingsWindow() {
   set = new BrowserWindow({
-    icon: iconPath,
+    icon: appIcon,
     width: 720, // initially 292 from initial build
     height: 430, // initially 430 from initial build
     alwaysOnTop: globalAlwaysOnTop,
@@ -328,4 +330,35 @@ ipcMain.on('restore-window', (event) => {
   setTimeout(() => {
     win.setAlwaysOnTop(globalAlwaysOnTop);
   }, 500);
+});
+
+ipcMain.on('check-for-updates', () => {
+  autoUpdater.checkForUpdates();
+}); 
+
+/*
+autoUpdater.on('checking-for-update', () => {
+  if (set) set.webContents.send('update-message', '...');
+});
+*/
+
+autoUpdater.on('update-available', () => {
+  if (set) set.webContents.send('update-message', 'Downloading');
+});
+
+autoUpdater.on('update-not-available', () => {
+  if (set) set.webContents.send('update-message', 'Up to date');
+});
+
+autoUpdater.on('error', (err) => {
+  console.log("Error:", err.message);
+  if (set) set.webContents.send('update-message', 'Error');
+});
+
+autoUpdater.on('update-downloaded', () => {
+  if (set) set.webContents.send('update-message', 'Restart App to Install');
+});
+
+ipcMain.handle('get-version', () => {
+  return app.getVersion();
 });

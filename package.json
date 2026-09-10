@@ -1,6 +1,6 @@
 {
   "name": "pawse",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A secure, resilient, and adorable Pomodoro timer built with Electron.",
   "main": "src/main/main.js",
   "scripts": {
@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.0",
+    "electron-updater": "^6.8.9",
     "sqlite3": "^6.0.1"
   },
   "overrides": {
@@ -29,6 +30,13 @@
   },
   "build": {
     "appId": "com.pawse.app",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "educ-jkescritor",
+        "repo": "Pawse"
+      }
+    ],
     "productName": "Pawse",
     "directories": {
       "output": "dist"
@@ -38,7 +46,7 @@
       "icon": "src/assets/logos/applogo.ico"
     },
     "extraResources": [
-        "pawse.db"
+      "pawse.db"
     ]
   }
 }
