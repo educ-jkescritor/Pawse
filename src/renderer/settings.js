@@ -481,7 +481,6 @@ if (window.mainAPI && window.mainAPI.getVersion) {
     });
 }
 
-
 if (updateBtn) {
     updateBtn.onclick = function() {
         if (updateBtn.textContent === "Download") {

@@ -1,6 +1,7 @@
 const { app } = require("electron");
 const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
+const crypto = require("crypto");
 const dbPath = path.join(app.getPath("userData"), "pawse.db");
 
 const db = new sqlite3.Database(dbPath, (err) => {
@@ -11,25 +12,48 @@ const db = new sqlite3.Database(dbPath, (err) => {
         
         const createTableQuery = `CREATE TABLE IF NOT EXISTS session (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT DEFAULT 'guest',
             cat_type TEXT,
             total_work_seconds INTEGER,
             total_break_seconds INTEGER,
             total_work INTEGER,
             total_break INTEGER,
             total_pomodoro INTEGER,
-            date_completed DATETIME DEFAULT CURRENT_TIMESTAMP
+            date_completed DATETIME DEFAULT CURRENT_TIMESTAMP,
+            is_synced INTEGER DEFAULT 0,
+            uuid TEXT UNIQUE
         )`;
         
         db.run(createTableQuery, (err) => {
             if (err) {
                 console.log("Error creating session table:", err.message);
             } else {
+                db.run("ALTER TABLE session ADD COLUMN uuid TEXT", () => {
+                    db.run("ALTER TABLE session ADD COLUMN is_synced INTEGER DEFAULT 0", () => {
+                        db.run("ALTER TABLE session ADD COLUMN email TEXT DEFAULT 'guest'", () => {
+                            db.run("UPDATE session SET email = 'guest' WHERE email IS NULL OR email = ''", () => {
+                                // Find any past sessions with NULL UUIDs
+                                db.all("SELECT id FROM session WHERE uuid IS NULL OR uuid = ''", (err, rows) => {
+                                    if (!err && rows && rows.length > 0) {
+                                        // Give each past session its unique UUID and mark as not synced yet
+                                        rows.forEach((row) => {
+                                            const newUuid = crypto.randomUUID();
+                                            db.run("UPDATE session SET uuid = ?, is_synced = 0 WHERE id = ?", [newUuid, row.id]);
+                                        });
+                                        console.log(`Successfully assigned UUIDs to ${rows.length} past sessions.`);
+                                    }
+                                });
+                            });
+                        });
+                    });
+                });
                 console.log("Session database is ready.");
             }
         });
     }
 });
 
+/*
 function createMockData() {
     const insertMockDataQuery = `INSERT INTO session (
         cat_type, 
@@ -84,6 +108,7 @@ function clearMockData() {
         }
     });   
 }
+*/
 
 function generateAnalytics(weeksAgo = 0) {
     return new Promise((resolve, reject) => {

@@ -3,13 +3,16 @@ const path = require("path");
 const iconPath = path.join(__dirname, "../assets/logos/logo.png");
 const { db, generateAnalytics } = require("./database.js");
 const { autoUpdater } = require("electron-updater");
+const { randomUUID } = require("crypto");
 
+let win = null;
 let set = null;
 let globalAlwaysOnTop = false;
 
 function createWindow() {
-  const win = new BrowserWindow({
+  win = new BrowserWindow({
     icon: iconPath,
+    show: false,
     width: 310, // initially 292 from initial build
     height: 430, // initially 430 from initial build
     alwaysOnTop: globalAlwaysOnTop,
@@ -35,18 +38,28 @@ function createWindow() {
 
   win.once('ready-to-show', () => {
     win.setSize(310, 430);
+    win.show();
+    win.setAlwaysOnTop(true);
+    win.focus();
+    setTimeout(() => {
+      if (!win.isDestroyed()) {
+        win.setAlwaysOnTop(globalAlwaysOnTop);
+      }
+    }, 300);
   });
 
   win.on('closed', () => {
     if(set) {
       set.close();
     }
+    win = null;
   });
 }
 
 function settingsWindow() {
   set = new BrowserWindow({
     icon: iconPath,
+    show: false,
     width: 720, // initially 292 from initial build
     height: 430, // initially 430 from initial build
     alwaysOnTop: globalAlwaysOnTop,
@@ -72,6 +85,8 @@ function settingsWindow() {
 
   set.once('ready-to-show', () => {
     set.setSize(720, 430);
+    set.show();
+    set.focus();
   });
 
   set.on('closed', () => {
@@ -144,29 +159,46 @@ ipcMain.on('close-window', (event) => {
 });
 
 ipcMain.on('settings-window', (event) => {
-  if(set){
-    if (set.isMinimized()) set.restore();
-    set.focus();
-  }else{
+  if (set) {
+    if (set.isMinimized()) {
+      set.restore();
+      set.focus();
+    } else {
+      set.close();
+    }
+  } else {
     settingsWindow();
   }
 });
 
 ipcMain.on('save-session', (event, data) => {
-  
+  const uuid = data.uuid || randomUUID();
   const insertQuery = `INSERT INTO session (
     cat_type, 
+    email,
     total_work_seconds, 
     total_break_seconds, 
     total_work, 
-    total_break,
+    total_break, 
     total_pomodoro,
-    date_completed
+    uuid,
+    date_completed,
+    is_synced
   ) VALUES (
-    ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP)
+    ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), 0
   )`;
 
-  db.run(insertQuery, [data.cat_type, data.total_work_seconds, data.total_break_seconds, data.total_work, data.total_break, data.total_pomodoro, data.date_completed || null], (err) => {
+  db.run(insertQuery, [
+    data.cat_type, 
+    data.email || 'guest',
+    data.total_work_seconds, 
+    data.total_break_seconds, 
+    data.total_work, 
+    data.total_break, 
+    data.total_pomodoro,
+    uuid, 
+    data.date_completed || null
+  ], (err) => {
     if (err) {
       console.log("Error inserting session data:", err.message);
     } else {
@@ -204,16 +236,16 @@ ipcMain.handle('load-analytics', async (event, weeksAgo) => {
 });
 
 ipcMain.on('restore-window', (event) => {
-  const win = BrowserWindow.fromWebContents(event.sender);
-  if (win.isMinimized()) {
-    win.restore();
+  const targetWin = BrowserWindow.fromWebContents(event.sender);
+  if (targetWin.isMinimized()) {
+    targetWin.restore();
   }
-  win.setAlwaysOnTop(true);
-  win.show();
-  win.focus();
+  targetWin.setAlwaysOnTop(true);
+  targetWin.show();
+  targetWin.focus();
 
   setTimeout(() => {
-    win.setAlwaysOnTop(globalAlwaysOnTop);
+    targetWin.setAlwaysOnTop(globalAlwaysOnTop);
   }, 500);
 });
 
