@@ -22,6 +22,7 @@ function createWindow() {
     frame: false,
     transparent: false,
     webPreferences: {
+      backgroundThrottling: false,
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
@@ -58,6 +59,7 @@ function settingsWindow() {
     frame: false,
     transparent: false,
     webPreferences: {
+      backgroundThrottling: false,
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
