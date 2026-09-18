@@ -122,5 +122,5 @@ function generateAnalytics(weeksAgo = 0) {
     });
 }
 
-module.exports = { db, createMockData, clearMockData, generateAnalytics };
+module.exports = { db, generateAnalytics };
 
