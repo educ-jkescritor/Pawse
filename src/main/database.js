@@ -53,63 +53,6 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
-/*
-function createMockData() {
-    const insertMockDataQuery = `INSERT INTO session (
-        cat_type, 
-        total_work_seconds, 
-        total_break_seconds, 
-        total_work, 
-        total_break,
-        total_pomodoro 
-    ) VALUES (
-        'orange_cat', 
-        4500, 
-        900, 
-        4, 
-        4,
-        1
-    )`;
-
-    db.run(insertMockDataQuery, (err) => {
-        if (err) {
-            console.log("Error inserting mock data:", err.message);
-        } else {
-            console.log("Mock data inserted successfully.");
-            db.all("SELECT * FROM session", (err, rows) => {
-                if (err) {
-                    console.log("Error fetching session data:", err.message);
-                } else {
-                    console.log("Session data:", rows);
-                }
-            });
-        }
-    });
-}
-
-function clearMockData() {
-    const deleteMockDataQuery = `DELETE FROM session`;
-    
-    const deleteSequenceQuery = `DELETE FROM sqlite_sequence WHERE name='session'`;
-
-    db.run(deleteMockDataQuery, (err) => {
-        if (err) {
-            console.log("Error clearing mock data:", err.message);
-        } else {
-            console.log("Mock data cleared successfully.");
-            
-            db.run(deleteSequenceQuery, (err) => {
-                if (err) {
-                    console.log("Error resetting session ID sequence:", err.message);
-                } else {
-                    console.log("Session ID sequence reset successfully.");
-                }
-            });   
-        }
-    });   
-}
-*/
-
 function generateAnalytics(weeksAgo = 0) {
     return new Promise((resolve, reject) => {
         const analyticData = {
