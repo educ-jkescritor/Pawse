@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, shell } = require("electron");
 const path = require("path");
 const iconPath = path.join(__dirname, "../assets/logos/logo.png");
 const { db, generateAnalytics } = require("./database.js");
+const { autoUpdater } = require("electron-updater");
 
 let set = null;
 let globalAlwaysOnTop = false;
@@ -77,6 +78,8 @@ function settingsWindow() {
     set = null;
   });
 }
+
+app.setAppUserModelId("com.pawse.app");
 
 app.whenReady().then(() => {
   createWindow();
@@ -198,6 +201,93 @@ ipcMain.handle('load-analytics', async (event, weeksAgo) => {
     console.error("Error generating analytics:", error);
     throw error;
   }
+});
+
+ipcMain.on('restore-window', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win.isMinimized()) {
+    win.restore();
+  }
+  win.setAlwaysOnTop(true);
+  win.show();
+  win.focus();
+
+  setTimeout(() => {
+    win.setAlwaysOnTop(globalAlwaysOnTop);
+  }, 500);
+});
+
+autoUpdater.autoDownload = false;
+
+let currentUpdateStatus = {
+  message: 'Check for new versions of Pawse.',
+  buttonText: 'Check',
+  disabled: false
+};
+
+function sendUpdateStatus(message, buttonText, disabled = false) {
+  currentUpdateStatus = { message, buttonText, disabled };
+  if (set) {
+    set.webContents.send('update-message', message);
+  }
+}
+
+ipcMain.handle('get-update-status', () => {
+  return currentUpdateStatus;
+});
+
+ipcMain.on('check-for-updates', () => {
+  if (!app.isPackaged) {
+    sendUpdateStatus('Checking...', 'Check', true);
+    setTimeout(() => {
+      sendUpdateStatus('Update Available', 'Download', false);
+    }, 500);
+    return;
+  }
+  sendUpdateStatus('Checking...', 'Check', true);
+  autoUpdater.checkForUpdates();
+}); 
+
+ipcMain.on('download-update', () => {
+  if (!app.isPackaged) {
+    sendUpdateStatus('Downloading...', 'Download', true);
+    setTimeout(() => {
+      sendUpdateStatus('Restart App to Install', 'Restart Now', false);
+    }, 2500);
+    return;
+  }
+  sendUpdateStatus('Downloading...', 'Download', true);
+  autoUpdater.downloadUpdate();
+});
+
+autoUpdater.on('update-available', () => {
+  sendUpdateStatus('Update Available', 'Download', false);
+});
+
+autoUpdater.on('update-not-available', () => {
+  sendUpdateStatus('Up to date', 'Check', false);
+});
+
+autoUpdater.on('error', (err) => {
+  console.log("Error:", err.message);
+  sendUpdateStatus('Error', 'Check', false);
+});
+
+autoUpdater.on('update-downloaded', () => {
+  sendUpdateStatus('Restart App to Install', 'Restart Now', false);
+});
+
+ipcMain.on('restart-app', () => {
+  if (!app.isPackaged) {
+    app.relaunch();
+    app.quit();
+    return;
+  }
+  autoUpdater.quitAndInstall();
+});
+
+ipcMain.handle('get-version', () => {
+  return app.getVersion();
 });
 
 app.on("window-all-closed", () => {

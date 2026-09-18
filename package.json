@@ -42,10 +42,7 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "src/assets/logos/applogo.ico"
-    },
-    "extraResources": [
-      "pawse.db"
-    ]
+      "icon": "src/assets/logos/logo.png"
+    }
   }
 }

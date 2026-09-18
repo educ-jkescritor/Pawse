@@ -8,5 +8,12 @@ contextBridge.exposeInMainWorld('mainAPI', {
     close: () => ipcRenderer.send('close-window'),
     savesession: (data) => ipcRenderer.send('save-session', data),
     setAlwaysOnTop: (isAlwaysOnTop) => ipcRenderer.send('set-always-on-top', isAlwaysOnTop),
-    loadanalytics: (weeksAgo) => ipcRenderer.invoke('load-analytics', weeksAgo)
+    loadanalytics: (weeksAgo) => ipcRenderer.invoke('load-analytics', weeksAgo),
+    restoreWindow: () => ipcRenderer.send('restore-window'),
+    checkForUpdates: () => ipcRenderer.send('check-for-updates'),
+    downloadUpdate: () => ipcRenderer.send('download-update'),
+    restartApp: () => ipcRenderer.send('restart-app'),
+    onUpdateMessage: (callback) => ipcRenderer.on('update-message', (event, message) => callback(message)),
+    getUpdateStatus: () => ipcRenderer.invoke('get-update-status'),
+    getVersion: () => ipcRenderer.invoke('get-version') 
 });

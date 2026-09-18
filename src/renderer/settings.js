@@ -458,5 +458,62 @@ function updateDashboardDateTime() {
     dtElement.textContent = `${dateStr} • ${timeStr}`;
 }
 
+const updateBtn = document.getElementById("update-btn");
+const updateMessage = document.getElementById("update-message");
+
+// Restore status from main process whenever Settings window opens:
+if (window.mainAPI && window.mainAPI.getUpdateStatus) {
+    window.mainAPI.getUpdateStatus().then((status) => {
+        if (status) {
+            if (updateMessage) updateMessage.textContent = status.message;
+            if (updateBtn) {
+                updateBtn.textContent = status.buttonText;
+                updateBtn.disabled = status.disabled;
+            }
+        }
+    });
+}
+
+if (window.mainAPI && window.mainAPI.getVersion) {
+    window.mainAPI.getVersion().then((version) => {
+        const badge = document.querySelector('.version-badge');
+        if (badge && version) badge.textContent = `v${version}`;
+    });
+}
+
+
+if (updateBtn) {
+    updateBtn.onclick = function() {
+        if (updateBtn.textContent === "Download") {
+            if (updateMessage) updateMessage.textContent = "Downloading...";
+            updateBtn.disabled = true;
+            window.mainAPI.downloadUpdate();
+        } else if (updateBtn.textContent === "Restart Now") {
+            window.mainAPI.restartApp();
+        } else {
+            if (updateMessage) updateMessage.textContent = "Checking...";
+            updateBtn.disabled = true;
+            window.mainAPI.checkForUpdates();
+        }
+    };
+}
+
+if (window.mainAPI && window.mainAPI.onUpdateMessage) {
+    window.mainAPI.onUpdateMessage((message) => {
+        if (updateMessage) updateMessage.textContent = message;
+
+        if (message === "Update Available") {
+            updateBtn.textContent = "Download";
+            updateBtn.disabled = false;
+        } else if (message === "Restart App to Install") {
+            updateBtn.textContent = "Restart Now";
+            updateBtn.disabled = false;
+        } else if (message === "Up to date" || message === "Error") {
+            updateBtn.textContent = "Check";
+            updateBtn.disabled = false;
+        }
+    });
+}
+
 updateDashboardDateTime();
 setInterval(updateDashboardDateTime, 1000);
