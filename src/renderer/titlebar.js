@@ -21,6 +21,19 @@ if (closeButton !== null) {
     };
 }
 
+let homeButton = document.getElementById("home-btn");
+if (homeButton !== null) {
+    homeButton.onclick = function goHome() {
+        let exitModal = document.getElementById("exit-modal-overlay");
+        if (exitModal !== null) {
+            exitModal.classList.remove("hidden");
+            return;
+        }
+        localStorage.removeItem('pawseDurableState');
+        window.location.replace("../index.html");
+    };
+}
+
 let minimizeButton = document.getElementById("minimize-btn");
 if (minimizeButton !== null) {
     minimizeButton.onclick = function minimizeWindow() {
