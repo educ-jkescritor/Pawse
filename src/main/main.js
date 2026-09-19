@@ -203,6 +203,18 @@ ipcMain.on('save-session', (event, data) => {
       console.log("Error inserting session data:", err.message);
     } else {
       console.log("Session data inserted successfully.");
+
+      // In development, keep AppData mirrored as backup so both copies stay in sync
+      if (!app.isPackaged) {
+        try {
+          const fs = require("fs");
+          const appDataDb = path.join(app.getPath("userData"), "pawse.db");
+          const rootDb = path.join(__dirname, "../../pawse.db");
+          fs.copyFileSync(rootDb, appDataDb);
+        } catch (copyErr) {
+          // Non-critical background mirror
+        }
+      }
     }
   });
 });

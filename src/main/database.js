@@ -2,7 +2,30 @@ const { app } = require("electron");
 const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
 const crypto = require("crypto");
-const dbPath = path.join(app.getPath("userData"), "pawse.db");
+const fs = require("fs");
+
+// In development, read/write directly to ./pawse.db in project root so changes are visible in IDE.
+// In production (packaged app), use AppData to comply with OS permissions.
+const isDev = !app.isPackaged;
+const appDataDb = path.join(app.getPath("userData"), "pawse.db");
+const rootDb = path.join(__dirname, "../../pawse.db");
+
+// If AppData has newer sessions (e.g. from testing a packaged .exe build),
+// automatically pull them into the local project pawse.db so the IDE stays up-to-date.
+if (isDev && fs.existsSync(appDataDb) && fs.existsSync(rootDb)) {
+    try {
+        const appDataMtime = fs.statSync(appDataDb).mtimeMs;
+        const rootMtime = fs.statSync(rootDb).mtimeMs;
+        if (appDataMtime > rootMtime) {
+            fs.copyFileSync(appDataDb, rootDb);
+            console.log("Synced newer database from AppData into local pawse.db.");
+        }
+    } catch (syncErr) {
+        // Non-critical startup check
+    }
+}
+
+const dbPath = isDev ? rootDb : appDataDb;
 
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
