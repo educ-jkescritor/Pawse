@@ -4,7 +4,7 @@
   "description": "A secure, resilient, and adorable Pomodoro timer built with Electron.",
   "main": "src/main/main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "node start.js",
     "build": "electron-builder --win"
   },
   "keywords": [
