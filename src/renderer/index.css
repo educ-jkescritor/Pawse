@@ -301,13 +301,15 @@ ease;
     image-rendering: pixelated; /* Keeps the pixel art sharp when scaled down */
 }
 
-.main-window-controls {
+.main-window-controls,
+.settings-window-controls {
     display: flex;
     gap: 8px;
     align-items: center;
 }
 
-.main-window-controls button {
+.main-window-controls button,
+.settings-window-controls button {
     border: none;
     background: transparent;
     padding: 8px 0px;
@@ -316,15 +318,68 @@ ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    width: 24px;
+    height: 40px;
+    box-sizing: border-box;
 }
 
-.main-window-controls button img {
+.main-window-controls button img,
+.settings-window-controls button img {
     image-rendering: pixelated;
     width: 24px;
     height: 24px;
     object-fit: contain;
     pointer-events: none;
     -webkit-user-drag: none;
+    transition: opacity 0.1s ease;
+}
+
+/* Hide static icon on hover */
+.main-window-controls button:hover img,
+.settings-window-controls button:hover img {
+    opacity: 0;
+}
+
+/* Base overlay for the hover sprite */
+.main-window-controls button::after,
+.settings-window-controls button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 24px;
+    background-repeat: no-repeat;
+    background-size: 48px 24px; /* 2 frames of 24px each */
+    background-position: -24px 0px; /* Frame 2 (Hover state with shadow) */
+    image-rendering: pixelated;
+    pointer-events: none;
+    display: none;
+}
+
+.main-window-controls button:hover::after,
+.settings-window-controls button:hover::after {
+    display: block;
+}
+
+/* Specific sprites per button */
+#minimize-btn:hover::after {
+    background-image: url('../assets/sprites/minimize-btn-hover.png');
+}
+
+#close-btn:hover::after {
+    background-image: url('../assets/sprites/close-btn-hover.png');
+}
+
+#resize-btn:hover::after,
+#decrease-btn:hover::after {
+    background-image: url('../assets/sprites/decrease-btn-hover.png');
+}
+
+#home-btn:hover::after {
+    background-image: url('../assets/sprites/home-btn-hover.png');
 }
 
 /* --- MAIN CONTENT --- */

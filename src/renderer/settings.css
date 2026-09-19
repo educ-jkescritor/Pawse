@@ -24,32 +24,7 @@ p {
     background: var(--topbar-fill);
     position: relative;
 }
-
-.settings-window-controls {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-}
-
-.settings-window-controls button {
-    border: none;
-    background: transparent;
-    padding: 8px 0px;
-    -webkit-app-region: no-drag;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.settings-window-controls button img {
-    image-rendering: pixelated;
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-    pointer-events: none;
-    -webkit-user-drag: none;
-}
+/* .settings-window-controls and .main-window-controls are defined in index.css */
 
 /* --- SETTINGS LAYOUT --- */
 .settings-layout {
