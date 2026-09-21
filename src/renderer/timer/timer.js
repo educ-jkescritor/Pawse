@@ -41,7 +41,7 @@ let actualWork = 0;
 let actualBreak = 0;
 let workCount = 0;
 let breakCount = 0;
-
+let isAlarmPlaying = false;
 let sessionDate = new Date();
 
 // --- DURABLE EXECUTION ENGINE (Local Persistence) ---
@@ -145,55 +145,37 @@ const meowAudios = {
 Object.values(meowAudios).forEach(audio => audio.volume = 0.3); // Lowered click/meow volume
 
 function updateAudioSettings() {
+    const soundIcon = document.getElementById("sound-icon");
+    if (soundIcon) {
+        soundIcon.src = soundEnabled 
+            ? "../../assets/icons/soundon-btn.png" 
+            : "../../assets/icons/soundoff-btn.png";
+    }
+    
+    // 1. Read volume slider numbers (default to 50% if not set)
     let ambVol = parseInt(localStorage.getItem('ambientVolume'));
     if (isNaN(ambVol)) ambVol = 50;
     
     let purVol = parseInt(localStorage.getItem('purrVolume'));
     if (isNaN(purVol)) purVol = 50;
-    
+
+    // 2. Read the ticking toggle
     let tickStr = localStorage.getItem('tickSound');
     tickEnabled = tickStr === null ? true : (tickStr === 'true');
 
+    // 3. Set the loudness of the audios
     ambientAudio.volume = ambVol / 100;
     purrAudio.volume = purVol / 100;
 
-    const soundIcon = document.getElementById("sound-icon");
-
-    // Smart Mute if ambient and purr are zeroed out in settings
-    if (ambVol === 0 && purVol === 0) {
-        if (soundEnabled) {
-            // User manually dragged both to 0%. Clear the history so unmuting defaults to 50%
-            localStorage.setItem('prevAmbientVolume', '0');
-            localStorage.setItem('prevPurrVolume', '0');
-        }
-        soundEnabled = false;
-        ambientAudio.muted = true;
-        purrAudio.muted = true;
-        alarmAudio.muted = true;
-        for (let key in meowAudios) {
-            meowAudios[key].muted = true;
-        }
-        if (soundIcon) soundIcon.src = "../../assets/icons/soundoff-btn.png";
-    } else {
-        soundEnabled = true;
-        ambientAudio.muted = false;
-        purrAudio.muted = false;
-        alarmAudio.muted = false;
-        for (let key in meowAudios) {
-            meowAudios[key].muted = false;
-        }
-        if (soundIcon) soundIcon.src = "../../assets/icons/soundon-btn.png";
-    }
-
-    // Play or Pause based on strict state conditions
-    if (ambVol > 0 && soundEnabled) {
+    // 4. Ambient checklist: (volume > 0) AND (unmuted) AND (session running)
+    if (ambVol > 0 && soundEnabled && isRunning && !isAlarmPlaying) {
         ambientAudio.play().catch(e => {});
     } else {
         ambientAudio.pause();
     }
     
-    // Purr only plays during working time and when timer is running
-    if (purVol > 0 && soundEnabled && workingTime && isRunning) {
+    // 5. Purr checklist: (volume > 0) AND (unmuted) AND (session running) AND (work mode)
+    if (purVol > 0 && soundEnabled && isRunning && !isAlarmPlaying && workingTime) {
         purrAudio.play().catch(e => {});
     } else {
         purrAudio.pause();
@@ -539,46 +521,21 @@ let playButton = document.getElementById("play-btn");
 let skipButton = document.getElementById("skip-btn");
 
 soundButton.addEventListener("click", () => {
-    const soundIcon = document.getElementById("sound-icon");
-    if(soundEnabled) {
-        // Remember volumes before muting
-        let currentAmb = localStorage.getItem('ambientVolume') || '50';
-        let currentPurr = localStorage.getItem('purrVolume') || '50';
-        localStorage.setItem('prevAmbientVolume', currentAmb);
-        localStorage.setItem('prevPurrVolume', currentPurr);
+    // 1. Toggle master sound on/off
+    soundEnabled = !soundEnabled;
 
-        soundEnabled = false;
-        soundIcon.src = "../../assets/icons/soundoff-btn.png";
-        ambientAudio.muted = true;
-        purrAudio.muted = true;
+    // 2. Change the speaker icon
 
-        // Force settings UI to visually drop to 0 / Off for ambient and purr only
-        localStorage.setItem('ambientVolume', '0');
-        localStorage.setItem('purrVolume', '0');
-    }else{
-        soundEnabled = true;
-        soundIcon.src = "../../assets/icons/soundon-btn.png";
-        ambientAudio.muted = false;
-        purrAudio.muted = false;
-
-        // Restore previous volumes
-        let prevAmbVol = parseInt(localStorage.getItem('prevAmbientVolume'));
-        let prevPurrVol = parseInt(localStorage.getItem('prevPurrVolume'));
-        
-        if (isNaN(prevAmbVol)) prevAmbVol = 0;
-        if (isNaN(prevPurrVol)) prevPurrVol = 0;
-
-        // If they muted while both were 0, unmuting should set to 50% baseline
-        if (prevAmbVol === 0 && prevPurrVol === 0) {
-            prevAmbVol = 50;
-            prevPurrVol = 50;
-        }
-
-        localStorage.setItem('ambientVolume', prevAmbVol.toString());
-        localStorage.setItem('purrVolume', prevPurrVol.toString());
-
-        updateAudioSettings(); // Re-apply everything
+    // 3. Mute or unmute all audio elements
+    ambientAudio.muted = !soundEnabled;
+    purrAudio.muted = !soundEnabled;
+    alarmAudio.muted = !soundEnabled;
+    for (let key in meowAudios) {
+        meowAudios[key].muted = !soundEnabled;
     }
+
+    // 4. Update playback
+    updateAudioSettings();
 });
 
 playButton.addEventListener("click", () => {
@@ -639,14 +596,17 @@ function showModal(title, message, btnText, nextAction) {
     dialogBtn.innerText = btnText;   
 
     modalOverlay.classList.remove("hidden");
-    
+    isAlarmPlaying = true;
     // Start playing the alarm on a loop if the user has it enabled in Settings AND master sound is ON
     if (localStorage.getItem('alarmSound') !== 'false' && soundEnabled) {
+        ambientAudio.pause();
+        purrAudio.pause();
         alarmAudio.play().catch(e => {});
     }
 
     dialogBtn.onclick = function() {
         // Stop the alarm when the user proceeds
+        isAlarmPlaying = false;
         alarmAudio.pause();
         alarmAudio.currentTime = 0;
         

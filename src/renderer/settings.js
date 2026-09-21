@@ -253,9 +253,6 @@ volumeSliders.forEach(slider => {
         if (storageKey) {
             localStorage.setItem(storageKey, event.target.value);
         }
-        
-        // Check if master mute triggered (both 0%)
-        if (typeof updateAudioLocks === 'function') updateAudioLocks();
     });
 });
 
@@ -317,36 +314,6 @@ if (tickToggle) {
     tickToggle.checked = localStorage.getItem('tickSound') === 'true';
     tickToggle.addEventListener('change', (e) => localStorage.setItem('tickSound', e.target.checked));
 }
-
-function updateAudioLocks() {
-    const clickElement = document.querySelector('.click-toggle');
-    const tickElement = document.querySelector('.tick-toggle');
-    const alarmElement = document.querySelector('.alarm-toggle');
-    
-    let ambVol = parseInt(localStorage.getItem('ambientVolume'));
-    if (isNaN(ambVol)) ambVol = 50;
-    
-    let purVol = parseInt(localStorage.getItem('purrVolume'));
-    if (isNaN(purVol)) purVol = 50;
-    
-    const isMasterMuted = (ambVol === 0 && purVol === 0);
-    
-    if (clickElement) {
-        const parentItem = clickElement.closest('.settings-item');
-        if (parentItem) parentItem.style.opacity = isMasterMuted ? '0.5' : '1';
-    }
-    
-    if (tickElement) {
-        const parentItem = tickElement.closest('.settings-item');
-        if (parentItem) parentItem.style.opacity = isMasterMuted ? '0.5' : '1';
-    }
-    
-    if (alarmElement) {
-        const parentItem = alarmElement.closest('.settings-item');
-        if (parentItem) parentItem.style.opacity = isMasterMuted ? '0.5' : '1';
-    }
-}
-updateAudioLocks();
 
 // Custom Graph Dropdown Logic
 const dropdownTrigger = document.getElementById('dropdown-trigger');
@@ -414,7 +381,6 @@ window.addEventListener('storage', (e) => {
             slider.value = e.newValue;
             updateSliderFill(slider);
         }
-        updateAudioLocks();
     }
     if (e.key === 'purrVolume') {
         const slider = document.querySelector('.purr-slider');
@@ -422,7 +388,6 @@ window.addEventListener('storage', (e) => {
             slider.value = e.newValue;
             updateSliderFill(slider);
         }
-        updateAudioLocks();
     }
     if (e.key === 'clickSound') {
         const toggle = document.querySelector('.click-toggle');
