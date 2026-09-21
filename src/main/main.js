@@ -62,7 +62,7 @@ function settingsWindow() {
     show: false,
     width: 720, // initially 292 from initial build
     height: 430, // initially 430 from initial build
-    alwaysOnTop: globalAlwaysOnTop,
+    alwaysOnTop: false,
     resizable: true, // Keep resizable true to match main window's OS frame styling
     minWidth: 720,
     maxWidth: 720,
@@ -224,16 +224,8 @@ ipcMain.on('set-always-on-top', (event, isAlwaysOnTop) => {
   const activeWindow = BrowserWindow.fromWebContents(event.sender);
   
   // Set all background windows first
-  BrowserWindow.getAllWindows().forEach((window) => {
-    if (window !== activeWindow) {
-      window.setAlwaysOnTop(isAlwaysOnTop);
-    }
-  });
-
-  // Set the active window last so it stays on top of the others, and focus it to clear Windows DWM lag
-  if (activeWindow) {
-    activeWindow.setAlwaysOnTop(isAlwaysOnTop);
-    activeWindow.focus();
+  if (win && !win.isDestroyed()) {
+    win.setAlwaysOnTop(isAlwaysOnTop);
   }
 });
 
