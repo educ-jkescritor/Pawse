@@ -586,9 +586,10 @@ function showModal(title, message, btnText, nextAction) {
         if (title === "Session Complete!" || title === "Paws-itively Brilliant!") {
             document.body.classList.remove("timer-only-mode", "cat-only-mode");
             window.mainAPI.resize('default');
+        } else {
+            nextAction();
+            return;
         }
-        nextAction();
-        return;
     }
 
     dialogTitle.innerText = title;
