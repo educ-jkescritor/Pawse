@@ -159,6 +159,8 @@ function updateAudioSettings() {
     let purVol = parseInt(localStorage.getItem('purrVolume'));
     if (isNaN(purVol)) purVol = 50;
 
+    let alrVol = parseInt(localStorage.getItem('alarmVolume'));
+    if (isNaN(alrVol)) alrVol = 50;
     // 2. Read the ticking toggle
     let tickStr = localStorage.getItem('tickSound');
     tickEnabled = tickStr === null ? true : (tickStr === 'true');
@@ -166,6 +168,7 @@ function updateAudioSettings() {
     // 3. Set the loudness of the audios
     ambientAudio.volume = ambVol / 100;
     purrAudio.volume = purVol / 100;
+    alarmAudio.volume = alrVol / 100;
 
     // 4. Ambient checklist: (volume > 0) AND (unmuted) AND (session running)
     if (ambVol > 0 && soundEnabled && isRunning && !isAlarmPlaying) {
@@ -184,7 +187,7 @@ function updateAudioSettings() {
 
 // Listen for settings changes from the Settings window
 window.addEventListener('storage', (e) => {
-    if (['ambientVolume', 'purrVolume', 'tickSound'].includes(e.key)) {
+    if (['ambientVolume', 'purrVolume', 'alarmVolume', 'tickSound'].includes(e.key)) {
         updateAudioSettings();
     }
 });
@@ -596,10 +599,13 @@ function showModal(title, message, btnText, nextAction) {
     dialogMessage.innerText = message;
     dialogBtn.innerText = btnText;   
 
+    let alrVol = parseInt(localStorage.getItem('alarmVolume'));
+    if(isNaN(alrVol)) alrVol = 50;
+
     modalOverlay.classList.remove("hidden");
     isAlarmPlaying = true;
     // Start playing the alarm on a loop if the user has it enabled in Settings AND master sound is ON
-    if (localStorage.getItem('alarmSound') !== 'false' && soundEnabled) {
+    if (alrVol > 0 && soundEnabled) {
         ambientAudio.pause();
         purrAudio.pause();
         alarmAudio.play().catch(e => {});

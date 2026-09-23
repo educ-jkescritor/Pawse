@@ -234,6 +234,8 @@ volumeSliders.forEach(slider => {
         storageKey = 'ambientVolume';
     } else if (slider.classList.contains('purr-slider')) {
         storageKey = 'purrVolume';
+    } else if (slider.classList.contains('alarm-slider')){
+        storageKey = 'alarmVolume';
     }
 
     // 2. Load the saved value on window startup (default to 50 if empty)
@@ -301,12 +303,6 @@ const clickToggle = document.querySelector('.click-toggle');
 if (clickToggle) {
     clickToggle.checked = localStorage.getItem('clickSound') !== 'false';
     clickToggle.addEventListener('change', (e) => localStorage.setItem('clickSound', e.target.checked));
-}
-
-const alarmToggle = document.querySelector('.alarm-toggle');
-if (alarmToggle) {
-    alarmToggle.checked = localStorage.getItem('alarmSound') !== 'false';
-    alarmToggle.addEventListener('change', (e) => localStorage.setItem('alarmSound', e.target.checked));
 }
 
 const tickToggle = document.querySelector('.tick-toggle');
@@ -389,12 +385,15 @@ window.addEventListener('storage', (e) => {
             updateSliderFill(slider);
         }
     }
+    if (e.key === 'alarmVolume') {
+        const slider = document.querySelector('.alarm-slider');
+        if (slider) {
+            slider.value = e.newValue;
+            updateSliderFill(slider);
+        }
+    }
     if (e.key === 'clickSound') {
         const toggle = document.querySelector('.click-toggle');
-        if (toggle) toggle.checked = (e.newValue !== 'false');
-    }
-    if (e.key === 'alarmSound') {
-        const toggle = document.querySelector('.alarm-toggle');
         if (toggle) toggle.checked = (e.newValue !== 'false');
     }
     if (e.key === 'tickSound') {
