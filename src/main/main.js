@@ -16,7 +16,7 @@ function createWindow() {
   win = new BrowserWindow({
     icon: iconPath,
     show: false,
-    useContentSize: true,
+    //useContentSize: true,
     width: 310, // content area width
     height: 430, // content area height
     alwaysOnTop: globalAlwaysOnTop,
@@ -46,7 +46,7 @@ function createWindow() {
   });
 
   win.once('ready-to-show', () => {
-    win.setContentSize(310, 430);
+    win.setSize(310, 430);
     win.webContents.setVisualZoomLevelLimits(1, 1);
     win.webContents.setZoomLevel(0);
     win.show();
@@ -71,7 +71,7 @@ function settingsWindow() {
   set = new BrowserWindow({
     icon: iconPath,
     show: false,
-    useContentSize: true,
+    //useContentSize: true,
     width: 720, // content area width
     height: 430, // content area height
     alwaysOnTop: false,
@@ -101,7 +101,7 @@ function settingsWindow() {
   });
 
   set.once('ready-to-show', () => {
-    set.setContentSize(720, 430);
+    set.setSize(720, 430);
     set.webContents.setVisualZoomLevelLimits(1, 1);
     set.webContents.setZoomLevel(0);
     set.show();
