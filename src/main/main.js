@@ -13,8 +13,9 @@ function createWindow() {
   win = new BrowserWindow({
     icon: iconPath,
     show: false,
-    width: 310, // initially 292 from initial build
-    height: 430, // initially 430 from initial build
+    useContentSize: true,
+    width: 310, // content area width
+    height: 430, // content area height
     alwaysOnTop: globalAlwaysOnTop,
     resizable: true, // Keep resizable true to allow programmatic resizing on Windows
     minWidth: 310,
@@ -26,7 +27,6 @@ function createWindow() {
     frame: false,
     transparent: false,
     webPreferences: {
-      highDPISupport: 'auto',
       backgroundThrottling: false,
       nodeIntegration: false,
       contextIsolation: true,
@@ -37,8 +37,15 @@ function createWindow() {
 
   win.loadFile(path.join(__dirname, "../renderer/index.html"));
 
+  win.webContents.on('did-finish-load', () => {
+    win.webContents.setVisualZoomLevelLimits(1, 1);
+    win.webContents.setZoomLevel(0);
+  });
+
   win.once('ready-to-show', () => {
-    win.setSize(310, 430);
+    win.setContentSize(310, 430);
+    win.webContents.setVisualZoomLevelLimits(1, 1);
+    win.webContents.setZoomLevel(0);
     win.show();
     win.setAlwaysOnTop(true);
     win.focus();
@@ -61,8 +68,9 @@ function settingsWindow() {
   set = new BrowserWindow({
     icon: iconPath,
     show: false,
-    width: 720, // initially 292 from initial build
-    height: 430, // initially 430 from initial build
+    useContentSize: true,
+    width: 720, // content area width
+    height: 430, // content area height
     alwaysOnTop: false,
     resizable: true, // Keep resizable true to match main window's OS frame styling
     minWidth: 720,
@@ -84,8 +92,15 @@ function settingsWindow() {
 
   set.loadFile(path.join(__dirname, "../renderer/settings.html"));
 
+  set.webContents.on('did-finish-load', () => {
+    set.webContents.setVisualZoomLevelLimits(1, 1);
+    set.webContents.setZoomLevel(0);
+  });
+
   set.once('ready-to-show', () => {
-    set.setSize(720, 430);
+    set.setContentSize(720, 430);
+    set.webContents.setVisualZoomLevelLimits(1, 1);
+    set.webContents.setZoomLevel(0);
     set.show();
     set.focus();
   });
