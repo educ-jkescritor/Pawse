@@ -1,9 +1,11 @@
-const { app, BrowserWindow, ipcMain, shell } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, nativeTheme } = require("electron");
 const path = require("path");
 const iconPath = path.join(__dirname, "../assets/logos/logo.png");
 const { db, generateAnalytics } = require("./database.js");
 const { autoUpdater } = require("electron-updater");
 const { randomUUID } = require("crypto");
+
+nativeTheme.themeSource = 'light';
 
 // Suppress internal Chromium C++ diagnostics (e.g. unconfigured Crashpad pipes)
 app.commandLine.appendSwitch('log-level', '3');
