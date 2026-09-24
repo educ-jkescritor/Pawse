@@ -5,6 +5,9 @@ const { db, generateAnalytics } = require("./database.js");
 const { autoUpdater } = require("electron-updater");
 const { randomUUID } = require("crypto");
 
+// Suppress internal Chromium C++ diagnostics (e.g. unconfigured Crashpad pipes)
+app.commandLine.appendSwitch('log-level', '3');
+
 let win = null;
 let set = null;
 let globalAlwaysOnTop = false;
@@ -152,19 +155,19 @@ ipcMain.on('resize-window', (event, mode) => {
   const senderWindow = BrowserWindow.fromWebContents(event.sender);
   
   if (mode === 'timer-only') {
+    senderWindow.setContentSize(240, 100); 
     senderWindow.setMinimumSize(240, 100);
     senderWindow.setMaximumSize(240, 100);
-    senderWindow.setSize(240, 100); 
     senderWindow.setAlwaysOnTop(true);
   } else if (mode === 'cat-only') {
+    senderWindow.setContentSize(240, 240); 
     senderWindow.setMinimumSize(240, 240);
     senderWindow.setMaximumSize(240, 240);
-    senderWindow.setSize(240, 240); 
     senderWindow.setAlwaysOnTop(true);
   } else {
+    senderWindow.setContentSize(310, 430); 
     senderWindow.setMinimumSize(310, 430);
     senderWindow.setMaximumSize(310, 430);
-    senderWindow.setSize(310, 430); 
     senderWindow.setAlwaysOnTop(globalAlwaysOnTop);
   }
 });
