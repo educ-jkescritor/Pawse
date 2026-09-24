@@ -26,6 +26,7 @@ function createWindow() {
     frame: false,
     transparent: false,
     webPreferences: {
+      highDPISupport: 'auto',
       backgroundThrottling: false,
       nodeIntegration: false,
       contextIsolation: true,

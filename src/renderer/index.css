@@ -67,11 +67,18 @@
 body {
     margin: 0px;
     padding: 0px;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
     font-family: var(--font-inter);
     font-size: 10px;
     font-weight: 400;
     color: var(--text-black);
     background: var(--bg-main);
+}
+
+input, textarea {
+    user-select: auto;
 }
 
 .font-pixel-20-medium {
