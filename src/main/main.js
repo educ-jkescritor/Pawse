@@ -40,26 +40,28 @@ function createWindow() {
     }
   });
 
+  let isShown = false;
+  const showWindow = () => {
+    if (!isShown && win && !win.isDestroyed()) {
+      isShown = true;
+      win.setSize(310, 430);
+      win.webContents.setVisualZoomLevelLimits(1, 1);
+      win.webContents.setZoomLevel(0);
+      win.show();
+      win.setAlwaysOnTop(true);
+      win.focus();
+      setTimeout(() => {
+        if (!win.isDestroyed()) {
+          win.setAlwaysOnTop(globalAlwaysOnTop);
+        }
+      }, 300);
+    }
+  };
+
+  win.once('ready-to-show', showWindow);
+  win.webContents.once('did-finish-load', showWindow);
+
   win.loadFile(path.join(__dirname, "../renderer/index.html"));
-
-  win.webContents.on('did-finish-load', () => {
-    win.webContents.setVisualZoomLevelLimits(1, 1);
-    win.webContents.setZoomLevel(0);
-  });
-
-  win.once('ready-to-show', () => {
-    win.setSize(310, 430);
-    win.webContents.setVisualZoomLevelLimits(1, 1);
-    win.webContents.setZoomLevel(0);
-    win.show();
-    win.setAlwaysOnTop(true);
-    win.focus();
-    setTimeout(() => {
-      if (!win.isDestroyed()) {
-        win.setAlwaysOnTop(globalAlwaysOnTop);
-      }
-    }, 300);
-  });
 
   win.on('closed', () => {
     if(set) {
@@ -95,20 +97,22 @@ function settingsWindow() {
     }
   });
 
+  let isSettingsShown = false;
+  const showSettings = () => {
+    if (!isSettingsShown && set && !set.isDestroyed()) {
+      isSettingsShown = true;
+      set.setSize(720, 430);
+      set.webContents.setVisualZoomLevelLimits(1, 1);
+      set.webContents.setZoomLevel(0);
+      set.show();
+      set.focus();
+    }
+  };
+
+  set.once('ready-to-show', showSettings);
+  set.webContents.once('did-finish-load', showSettings);
+
   set.loadFile(path.join(__dirname, "../renderer/settings.html"));
-
-  set.webContents.on('did-finish-load', () => {
-    set.webContents.setVisualZoomLevelLimits(1, 1);
-    set.webContents.setZoomLevel(0);
-  });
-
-  set.once('ready-to-show', () => {
-    set.setSize(720, 430);
-    set.webContents.setVisualZoomLevelLimits(1, 1);
-    set.webContents.setZoomLevel(0);
-    set.show();
-    set.focus();
-  });
 
   set.on('closed', () => {
     set = null;
