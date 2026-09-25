@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, nativeTheme } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, nativeTheme, screen} = require("electron");
 const path = require("path");
 const iconPath = path.join(__dirname, "../assets/logos/logo.png");
 const { db, generateAnalytics } = require("./database.js");
@@ -135,6 +135,19 @@ app.whenReady().then(() => {
       event.preventDefault();
     });
   });
+  
+  // Automatically re-evaluate frameless window bounds when display scale/orientation/resolution changes
+  screen.on('display-metrics-changed', () => {
+    if (win && !win.isDestroyed()) {
+      const bounds = win.getBounds();
+      win.setBounds(bounds);
+    }
+    if (set && !set.isDestroyed()) {
+      const bounds = set.getBounds();
+      set.setBounds(bounds);
+    }
+  });
+
 });
 
 ipcMain.on('minimize-window', (event) => {

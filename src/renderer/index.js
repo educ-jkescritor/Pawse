@@ -96,3 +96,18 @@ function balanceLayout() {
 // Run on load and whenever display scale/window changes
 window.addEventListener('DOMContentLoaded', balanceLayout);
 window.addEventListener('resize', balanceLayout);
+
+  // 1. Listen for orientation changes (Portrait <-> Landscape)
+if (window.screen && window.screen.orientation) {
+    window.screen.orientation.addEventListener('change', balanceLayout);
+}
+
+// 2. Hardware-level DPI listener (fires immediately when 100% <-> 125% <-> 150% changes)
+function watchDpiChanges() {
+    const mediaQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+    mediaQuery.addEventListener('change', () => {
+        balanceLayout();
+        watchDpiChanges(); // Re-arm for the next scale change
+    }, { once: true });
+}
+watchDpiChanges();
