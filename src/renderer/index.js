@@ -73,3 +73,26 @@ confirmButton.onclick = function () {
         window.location.assign(`timer/timer.html?cat=${selectedCat}`);
     }
 }
+
+// Align bottom gap to 14px (125% golden reference) across all scales
+function balanceLayout() {
+    const confirmBtn = document.querySelector('.confirmation_button');
+    const catButtons = document.querySelector('.cat_buttons');
+    if (!confirmBtn || !catButtons) return;
+
+    // Reset gap to calculate natural rendered position
+    catButtons.style.gap = '8px';
+
+    const targetBottomGap = 14; // 125% reference bottom spacing
+    const rect = confirmBtn.getBoundingClientRect();
+    const currentGap = window.innerHeight - rect.bottom;
+    const delta = currentGap - targetBottomGap;
+
+    // Distribute delta across the 2 spaces between the 3 cat cards
+    const adjustedGap = Math.max(3, Math.min(16, 8 + (delta / 2)));
+    catButtons.style.gap = `${adjustedGap}px`;
+}
+
+// Run on load and whenever display scale/window changes
+window.addEventListener('DOMContentLoaded', balanceLayout);
+window.addEventListener('resize', balanceLayout);
