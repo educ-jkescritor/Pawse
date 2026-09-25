@@ -18,11 +18,10 @@ function createWindow() {
   win = new BrowserWindow({
     icon: iconPath,
     show: false,
-    //useContentSize: true,
     width: 310, // content area width
     height: 430, // content area height
     alwaysOnTop: globalAlwaysOnTop,
-    resizable: true, // Keep resizable true to allow programmatic resizing on Windows
+    //resizable: false,
     minWidth: 310,
     maxWidth: 310,
     minHeight: 430,
@@ -45,6 +44,8 @@ function createWindow() {
     if (!isShown && win && !win.isDestroyed()) {
       isShown = true;
       win.setSize(310, 430);
+      const b = win.getBounds();
+      win.setBounds({ x: b.x, y: b.y, width: 310, height: 430 });
       win.webContents.setVisualZoomLevelLimits(1, 1);
       win.webContents.setZoomLevel(0);
       win.show();
@@ -75,11 +76,10 @@ function settingsWindow() {
   set = new BrowserWindow({
     icon: iconPath,
     show: false,
-    //useContentSize: true,
     width: 720, // content area width
     height: 430, // content area height
     alwaysOnTop: false,
-    resizable: true, // Keep resizable true to match main window's OS frame styling
+    //resizable: false,
     minWidth: 720,
     maxWidth: 720,
     minHeight: 430,
@@ -102,6 +102,8 @@ function settingsWindow() {
     if (!isSettingsShown && set && !set.isDestroyed()) {
       isSettingsShown = true;
       set.setSize(720, 430);
+      const b = set.getBounds();
+      set.setBounds({ x: b.x, y: b.y, width: 720, height: 430 });
       set.webContents.setVisualZoomLevelLimits(1, 1);
       set.webContents.setZoomLevel(0);
       set.show();
