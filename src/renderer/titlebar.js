@@ -30,6 +30,9 @@ if (homeButton !== null) {
             return;
         }
         localStorage.removeItem('pawseDurableState');
+        if (window.mainAPI && window.mainAPI.resize) {
+            window.mainAPI.resize('default');
+        }
         window.location.replace("../index.html");
     };
 }

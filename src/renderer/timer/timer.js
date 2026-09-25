@@ -640,12 +640,14 @@ let catOnlyButton = document.getElementById("cat-only");
 if (timerOnlyButton !== null) {
     timerOnlyButton.onclick = function() {
         resizeModal.classList.add("hidden");
+        document.body.classList.remove("cat-only-mode");
         document.body.classList.add("timer-only-mode");
         window.mainAPI.resize('timer-only');
     }
 
     catOnlyButton.onclick = function() {
         resizeModal.classList.add("hidden");
+        document.body.classList.remove("timer-only-mode");
         document.body.classList.add("cat-only-mode");
         window.mainAPI.resize('cat-only');
     }
@@ -672,6 +674,9 @@ let exitConfirmBtn = document.getElementById('exit-confirm-btn');
 if (exitConfirmBtn) {
     exitConfirmBtn.onclick = function() {
         localStorage.removeItem('pawseDurableState');
+        if (window.mainAPI && window.mainAPI.resize) {
+            window.mainAPI.resize('default');
+        }
         window.location.replace("../index.html");
     }
 }

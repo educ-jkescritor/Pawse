@@ -171,23 +171,49 @@ ipcMain.on('maximize-window', (event) => {
 
 ipcMain.on('resize-window', (event, mode) => {
   const senderWindow = BrowserWindow.fromWebContents(event.sender);
+  if (!senderWindow || senderWindow.isDestroyed()) return;
   
+  let targetWidth = 310;
+  let targetHeight = 430;
+  let alwaysOnTop = globalAlwaysOnTop;
+
   if (mode === 'timer-only') {
-    senderWindow.setContentSize(240, 100); 
-    senderWindow.setMinimumSize(240, 100);
-    senderWindow.setMaximumSize(240, 100);
-    senderWindow.setAlwaysOnTop(true);
+    targetWidth = 240;
+    targetHeight = 100;
+    alwaysOnTop = true;
   } else if (mode === 'cat-only') {
-    senderWindow.setContentSize(240, 240); 
-    senderWindow.setMinimumSize(240, 240);
-    senderWindow.setMaximumSize(240, 240);
-    senderWindow.setAlwaysOnTop(true);
-  } else {
-    senderWindow.setContentSize(310, 430); 
-    senderWindow.setMinimumSize(310, 430);
-    senderWindow.setMaximumSize(310, 430);
-    senderWindow.setAlwaysOnTop(globalAlwaysOnTop);
+    targetWidth = 240;
+    targetHeight = 240;
+    alwaysOnTop = true;
   }
+
+  // 1. Temporarily release min/max boundaries so the window manager doesn't clamp the resize operation
+  senderWindow.setMinimumSize(0, 0);
+  senderWindow.setMaximumSize(10000, 10000);
+
+  // 2. Set the window size using setSize (consistent with outer bounds WS_THICKFRAME geometry)
+  senderWindow.setSize(targetWidth, targetHeight);
+
+  // 3. Immediately re-evaluate bounds to force the OS and Chromium compositor to conform synchronously
+  // (Identical to our display-metrics-changed fix that solved display scale conformity)
+  const currentBounds = senderWindow.getBounds();
+  senderWindow.setBounds({
+    x: currentBounds.x,
+    y: currentBounds.y,
+    width: targetWidth,
+    height: targetHeight
+  });
+
+  // 4. Lock min and max to the target dimensions to maintain fixed sizing
+  senderWindow.setMinimumSize(targetWidth, targetHeight);
+  senderWindow.setMaximumSize(targetWidth, targetHeight);
+
+  // 5. Ensure zoom level limits remain strictly locked
+  senderWindow.webContents.setVisualZoomLevelLimits(1, 1);
+  senderWindow.webContents.setZoomLevel(0);
+
+  // 6. Apply always on top state
+  senderWindow.setAlwaysOnTop(alwaysOnTop);
 });
 
 ipcMain.on('close-window', (event) => {

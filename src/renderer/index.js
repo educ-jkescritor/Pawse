@@ -1,3 +1,8 @@
+// Ensure window conforms to default dimensions when index loads
+if (window.mainAPI && window.mainAPI.resize) {
+    window.mainAPI.resize('default');
+}
+
 // Also recalculate as soon as custom web fonts finish rendering
 if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(balanceLayout);
