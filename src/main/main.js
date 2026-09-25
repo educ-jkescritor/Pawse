@@ -138,16 +138,15 @@ app.whenReady().then(() => {
   
   // Automatically re-evaluate frameless window bounds when display scale/orientation/resolution changes
   screen.on('display-metrics-changed', () => {
-    if (win && !win.isDestroyed()) {
+    if (win && !win.isDestroyed() && !win.isMinimized()) {
       const bounds = win.getBounds();
       win.setBounds(bounds);
     }
-    if (set && !set.isDestroyed()) {
+    if (set && !set.isDestroyed() && !set.isMinimized()) {
       const bounds = set.getBounds();
       set.setBounds(bounds);
     }
   });
-
 });
 
 ipcMain.on('minimize-window', (event) => {

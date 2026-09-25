@@ -1,3 +1,8 @@
+// Also recalculate as soon as custom web fonts finish rendering
+if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(balanceLayout);
+}
+
 if (localStorage.getItem('alwaysOnTop') === 'true') {
     if (window.mainAPI && window.mainAPI.setAlwaysOnTop) {
         window.mainAPI.setAlwaysOnTop(true);
