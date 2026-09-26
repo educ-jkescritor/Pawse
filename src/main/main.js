@@ -13,16 +13,25 @@ app.commandLine.appendSwitch('log-level', '3');
 let win = null;
 let set = null;
 let globalAlwaysOnTop = false;
+let currentMode = 'default';
+
+function getDimensionsForMode(mode) {
+  if (mode === 'timer-only') return [240, 100];
+  if (mode === 'cat-only') return [240, 240];
+  return [310, 430];
+}
 
 function createWindow() {
   win = new BrowserWindow({
     icon: iconPath,
     show: false,
+    useContentSize: true,
     width: 310, // content area width
     height: 430, // content area height
+    backgroundColor: '#F6F8F7',
     alwaysOnTop: globalAlwaysOnTop,
-    resizable: true,
-    thickFrame: false,
+    resizable: false,
+    thickFrame: true,
     maximizable: false,
     fullscreenable: false,
     frame: false,
@@ -40,9 +49,7 @@ function createWindow() {
   const showWindow = () => {
     if (!isShown && win && !win.isDestroyed()) {
       isShown = true;
-      win.setSize(310, 430);
-      const b = win.getBounds();
-      win.setBounds({ x: b.x, y: b.y, width: 310, height: 430 });
+      win.setContentSize(310, 430);
       win.webContents.setVisualZoomLevelLimits(1, 1);
       win.webContents.setZoomLevel(0);
       win.show();
@@ -73,11 +80,13 @@ function settingsWindow() {
   set = new BrowserWindow({
     icon: iconPath,
     show: false,
+    useContentSize: true,
     width: 720, // content area width
     height: 430, // content area height
+    backgroundColor: '#F6F8F7',
     alwaysOnTop: false,
-    resizable: true,
-    thickFrame: false,
+    resizable: false,
+    thickFrame: true,
     maximizable: false,
     fullscreenable: false,
     frame: false,
@@ -95,9 +104,7 @@ function settingsWindow() {
   const showSettings = () => {
     if (!isSettingsShown && set && !set.isDestroyed()) {
       isSettingsShown = true;
-      set.setSize(720, 430);
-      const b = set.getBounds();
-      set.setBounds({ x: b.x, y: b.y, width: 720, height: 430 });
+      set.setContentSize(720, 430);
       set.webContents.setVisualZoomLevelLimits(1, 1);
       set.webContents.setZoomLevel(0);
       set.show();
@@ -136,16 +143,19 @@ app.whenReady().then(() => {
     });
   });
   
-  // Automatically re-evaluate frameless window bounds when display scale/orientation/resolution changes
+  // Automatically re-evaluate frameless window content dimensions when display scale/orientation/resolution changes
+  let metricsDebounceTimer = null;
   screen.on('display-metrics-changed', () => {
-    if (win && !win.isDestroyed() && !win.isMinimized()) {
-      const bounds = win.getBounds();
-      win.setBounds(bounds);
-    }
-    if (set && !set.isDestroyed() && !set.isMinimized()) {
-      const bounds = set.getBounds();
-      set.setBounds(bounds);
-    }
+    clearTimeout(metricsDebounceTimer);
+    metricsDebounceTimer = setTimeout(() => {
+      if (win && !win.isDestroyed() && !win.isMinimized()) {
+        const [w, h] = getDimensionsForMode(currentMode);
+        win.setContentSize(w, h);
+      }
+      if (set && !set.isDestroyed() && !set.isMinimized()) {
+        set.setContentSize(720, 430);
+      }
+    }, 150);
   });
 });
 
@@ -169,46 +179,18 @@ ipcMain.on('resize-window', (event, mode) => {
   const senderWindow = BrowserWindow.fromWebContents(event.sender);
   if (!senderWindow || senderWindow.isDestroyed()) return;
   
-  let targetWidth = 310;
-  let targetHeight = 430;
-  let alwaysOnTop = globalAlwaysOnTop;
+  currentMode = mode || 'default';
+  const [targetWidth, targetHeight] = getDimensionsForMode(currentMode);
+  let alwaysOnTop = (currentMode === 'timer-only' || currentMode === 'cat-only') ? true : globalAlwaysOnTop;
 
-  if (mode === 'timer-only') {
-    targetWidth = 240;
-    targetHeight = 100;
-    alwaysOnTop = true;
-  } else if (mode === 'cat-only') {
-    targetWidth = 240;
-    targetHeight = 240;
-    alwaysOnTop = true;
-  }
+  // 1. Set the content size directly (guarantees the exact web content dimensions without outer frame padding)
+  senderWindow.setContentSize(targetWidth, targetHeight);
 
-  // 1. Temporarily release min/max boundaries so the window manager doesn't clamp the resize operation
-  senderWindow.setMinimumSize(0, 0);
-  senderWindow.setMaximumSize(10000, 10000);
-
-  // 2. Set the window size using setSize (consistent with outer bounds WS_THICKFRAME geometry)
-  senderWindow.setSize(targetWidth, targetHeight);
-
-  // 3. Immediately re-evaluate bounds to force the OS and Chromium compositor to conform synchronously
-  // (Identical to our display-metrics-changed fix that solved display scale conformity)
-  const currentBounds = senderWindow.getBounds();
-  senderWindow.setBounds({
-    x: currentBounds.x,
-    y: currentBounds.y,
-    width: targetWidth,
-    height: targetHeight
-  });
-
-  // 4. Lock min and max to the target dimensions to maintain fixed sizing
-  senderWindow.setMinimumSize(targetWidth, targetHeight);
-  senderWindow.setMaximumSize(targetWidth, targetHeight);
-
-  // 5. Ensure zoom level limits remain strictly locked
+  // 2. Ensure zoom level limits remain strictly locked
   senderWindow.webContents.setVisualZoomLevelLimits(1, 1);
   senderWindow.webContents.setZoomLevel(0);
 
-  // 6. Apply always on top state
+  // 3. Apply always on top state
   senderWindow.setAlwaysOnTop(alwaysOnTop);
 });
 
