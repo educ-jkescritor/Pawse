@@ -21,11 +21,8 @@ function createWindow() {
     width: 310, // content area width
     height: 430, // content area height
     alwaysOnTop: globalAlwaysOnTop,
-    //resizable: false,
-    minWidth: 310,
-    maxWidth: 310,
-    minHeight: 430,
-    maxHeight: 430,
+    resizable: true,
+    thickFrame: false,
     maximizable: false,
     fullscreenable: false,
     frame: false,
@@ -79,11 +76,8 @@ function settingsWindow() {
     width: 720, // content area width
     height: 430, // content area height
     alwaysOnTop: false,
-    //resizable: false,
-    minWidth: 720,
-    maxWidth: 720,
-    minHeight: 430,
-    maxHeight: 430,
+    resizable: true,
+    thickFrame: false,
     maximizable: false,
     fullscreenable: false,
     frame: false,
