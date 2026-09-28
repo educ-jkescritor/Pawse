@@ -69,7 +69,7 @@ html {
 }
 
 body {
-    margin: 0.1px 0px 0px 0.1px;
+    margin: 0.2px 0px 0px 0.4px;
     padding: 0px;
     height: calc(100vh - 1px);
     width: calc(100vw - 1px);
@@ -80,7 +80,7 @@ body {
     font-weight: 400;
     color: var(--text-black);
     background: var(--bg-main);
-    border: 1px solid #7a7a7a;
+    border: 1px solid var(--bg-main);
     box-shadow: inset 0px 0px 18px rgba(0, 0, 0, 0.08);
     box-sizing: border-box;
 }

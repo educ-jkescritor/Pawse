@@ -404,6 +404,7 @@ body.cat-only-mode {
     width: 100vw;
     margin: 0.1px 0px 0px 0.1px;
     overflow: hidden;
+    border: 1px solid #7a7a7a !important;
 }
 
 .restore-btn {
