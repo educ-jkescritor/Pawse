@@ -228,7 +228,7 @@ html, body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: transparent;
+    background-color: rgba(0, 0, 0, 0.5);
     z-index: 1000; /* Floats above everything */
     display: flex;
     justify-content: center;
@@ -245,8 +245,7 @@ html, body {
     text-align: center;
     color: var(--text-black);
     width: 80%;
-    /* Create a balanced shadow around all edges of the card */
-    box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.90); /* MODIFY CARD SHADOW @jasmin @ysa */
+    box-shadow: none;
 }
 
 .text-container {
@@ -336,7 +335,7 @@ body.cat-only-mode .timer-controls {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: transparent; /* No screen dimming, just show the buttons */
+    background-color: rgba(0, 0, 0, 0.18);
     align-items: flex-end; /* Move buttons to the bottom */
     padding-bottom: 24px; /* Spacing from the bottom edge */
     justify-content: center;
