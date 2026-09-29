@@ -80,7 +80,8 @@ body {
     font-weight: 400;
     color: var(--text-black);
     background: var(--bg-main);
-    border: 1px solid var(--bg-main);
+    /* Change the "2px" below to adjust thickness, and "0.08" to adjust darkness */
+    border: 2px solid rgba(0, 0, 0, 0.08); 
     box-shadow: inset 0px 0px 18px rgba(0, 0, 0, 0.08);
     box-sizing: border-box;
 }
