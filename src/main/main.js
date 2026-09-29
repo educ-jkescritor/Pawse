@@ -263,12 +263,13 @@ ipcMain.on('close-window', (event) => {
 });
 
 ipcMain.on('settings-window', (event) => {
-  if (set) {
-    if (set.isMinimized()) {
-      set.restore();
-      set.focus();
+  if (set && !set.isDestroyed()) {
+    if (set.isFocused()) {
+      set.close(); // Toggle off only if it is the actively focused window
     } else {
-      set.close();
+      if (set.isMinimized()) set.restore();
+      set.show();
+      set.focus();
     }
   } else {
     settingsWindow();
@@ -327,9 +328,17 @@ ipcMain.on('set-always-on-top', (event, isAlwaysOnTop) => {
   globalAlwaysOnTop = isAlwaysOnTop;
   const activeWindow = BrowserWindow.fromWebContents(event.sender);
   
-  // Set all background windows first
   if (win && !win.isDestroyed()) {
     win.setAlwaysOnTop(isAlwaysOnTop);
+    
+    // Fix Windows Z-order caching bug: when demoting 'win' from the topmost group,
+    // Windows leaves it at the top of the normal group (above the settings window).
+    // Re-focusing the settings window forces Windows to recalculate the stack properly.
+    if (!isAlwaysOnTop && activeWindow && !activeWindow.isDestroyed()) {
+      setTimeout(() => {
+        if (!activeWindow.isDestroyed()) activeWindow.focus();
+      }, 50);
+    }
   }
 });
 
