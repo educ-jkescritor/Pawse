@@ -90,17 +90,21 @@ function balanceLayout() {
     const catButtons = document.querySelector('.cat_buttons');
     if (!confirmBtn || !catButtons) return;
 
-    // Reset gap to calculate natural rendered position
+    // Reset gap and padding to calculate natural rendered position
     catButtons.style.gap = '8px';
+    catButtons.style.paddingBottom = '8px';
 
-    const targetBottomGap = 14; // 125% reference bottom spacing
+    const targetBottomGap = 30; // 14px visual gap + 16px invisible window border
     const rect = confirmBtn.getBoundingClientRect();
     const currentGap = window.innerHeight - rect.bottom;
     const delta = currentGap - targetBottomGap;
 
-    // Distribute delta across the 2 spaces between the 3 cat cards
-    const adjustedGap = Math.max(3, Math.min(16, 8 + (delta / 2)));
+    // Distribute the extra space across 3 areas (between cats, and below the last cat), capping max gap at 12px
+    const adjustedGap = Math.max(8, Math.min(12, 8 + (delta / 3)));
+    
+    // Apply the uniform spacing to both the flex gap and the bottom padding
     catButtons.style.gap = `${adjustedGap}px`;
+    catButtons.style.paddingBottom = `${adjustedGap}px`;
 }
 
 // Run on load and whenever display scale/window changes
