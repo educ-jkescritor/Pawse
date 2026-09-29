@@ -13,6 +13,7 @@ app.commandLine.appendSwitch('log-level', '3');
 let win = null;
 let set = null;
 let globalAlwaysOnTop = false;
+let currentMode = 'default'; // Tracks the active window mode: 'default', 'timer-only', or 'cat-only'
 
 function createWindow() {
   win = new BrowserWindow({
@@ -145,12 +146,42 @@ app.whenReady().then(() => {
   // Automatically re-evaluate frameless window bounds when display scale/orientation/resolution changes
   screen.on('display-metrics-changed', () => {
     if (win && !win.isDestroyed() && !win.isMinimized()) {
-      const bounds = win.getBounds();
-      win.setBounds(bounds);
+      // Determine the correct target dimensions based on the active mode
+      let targetWidth = 310;
+      let targetHeight = 430;
+      if (currentMode === 'timer-only') {
+        targetWidth = 240;
+        targetHeight = 100;
+      } else if (currentMode === 'cat-only') {
+        targetWidth = 240;
+        targetHeight = 240;
+      }
+
+      // Temporarily unlock resizing, re-apply bounds, then lock again
+      win.setResizable(true);
+      win.setMinimumSize(0, 0);
+      win.setMaximumSize(targetWidth, targetHeight);
+      win.setSize(targetWidth, targetHeight);
+      const b = win.getBounds();
+      win.setBounds({ x: b.x, y: b.y, width: targetWidth, height: targetHeight });
+      win.setMinimumSize(targetWidth, targetHeight);
+      win.setMaximumSize(targetWidth, targetHeight);
+      win.setResizable(false);
+      win.webContents.setVisualZoomLevelLimits(1, 1);
+      win.webContents.setZoomLevel(0);
     }
     if (set && !set.isDestroyed() && !set.isMinimized()) {
-      const bounds = set.getBounds();
-      set.setBounds(bounds);
+      set.setResizable(true);
+      set.setMinimumSize(0, 0);
+      set.setMaximumSize(720, 430);
+      set.setSize(720, 430);
+      const b = set.getBounds();
+      set.setBounds({ x: b.x, y: b.y, width: 720, height: 430 });
+      set.setMinimumSize(720, 430);
+      set.setMaximumSize(720, 430);
+      set.setResizable(false);
+      set.webContents.setVisualZoomLevelLimits(1, 1);
+      set.webContents.setZoomLevel(0);
     }
   });
 });
@@ -189,15 +220,20 @@ ipcMain.on('resize-window', (event, mode) => {
     alwaysOnTop = true;
   }
 
-  // 1. Temporarily release min/max boundaries so the window manager doesn't clamp the resize operation
-  senderWindow.setMinimumSize(0, 0);
-  senderWindow.setMaximumSize(10000, 10000);
+  // Track the active mode for display-metrics-changed re-evaluation
+  currentMode = mode;
 
-  // 2. Set the window size using setSize (consistent with outer bounds WS_THICKFRAME geometry)
+  // 1. Temporarily enable resizing so we can programmatically change dimensions
+  senderWindow.setResizable(true);
+
+  // 2. Release minimum constraint, but cap maximum at exactly the target to prevent overshoot
+  senderWindow.setMinimumSize(0, 0);
+  senderWindow.setMaximumSize(targetWidth, targetHeight);
+
+  // 3. Set the window size using setSize (consistent with outer bounds WS_THICKFRAME geometry)
   senderWindow.setSize(targetWidth, targetHeight);
 
-  // 3. Immediately re-evaluate bounds to force the OS and Chromium compositor to conform synchronously
-  // (Identical to our display-metrics-changed fix that solved display scale conformity)
+  // 4. Immediately re-evaluate bounds to force the OS and Chromium compositor to conform synchronously
   const currentBounds = senderWindow.getBounds();
   senderWindow.setBounds({
     x: currentBounds.x,
@@ -206,15 +242,18 @@ ipcMain.on('resize-window', (event, mode) => {
     height: targetHeight
   });
 
-  // 4. Lock min and max to the target dimensions to maintain fixed sizing
+  // 5. Lock min and max to the target dimensions to maintain fixed sizing
   senderWindow.setMinimumSize(targetWidth, targetHeight);
   senderWindow.setMaximumSize(targetWidth, targetHeight);
 
-  // 5. Ensure zoom level limits remain strictly locked
+  // 6. Disable resizing so the user cannot drag the window edges
+  senderWindow.setResizable(false);
+
+  // 7. Ensure zoom level limits remain strictly locked
   senderWindow.webContents.setVisualZoomLevelLimits(1, 1);
   senderWindow.webContents.setZoomLevel(0);
 
-  // 6. Apply always on top state
+  // 8. Apply always on top state
   senderWindow.setAlwaysOnTop(alwaysOnTop);
 });
 
