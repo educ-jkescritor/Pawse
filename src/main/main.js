@@ -19,14 +19,14 @@ function createWindow() {
   win = new BrowserWindow({
     icon: iconPath,
     show: false,
-    width: 310, // buffered window width
-    height: 430, // buffered window height
+    width: 309, // buffered window width
+    height: 429, // buffered window height
     alwaysOnTop: globalAlwaysOnTop,
     //resizable: false,
-    minWidth: 310,
-    maxWidth: 310,
-    minHeight: 430,
-    maxHeight: 430,
+    minWidth: 309,
+    maxWidth: 309,
+    minHeight: 429,
+    maxHeight: 429,
     maximizable: false,
     fullscreenable: false,
     frame: false,
@@ -44,9 +44,9 @@ function createWindow() {
   const showWindow = () => {
     if (!isShown && win && !win.isDestroyed()) {
       isShown = true;
-      win.setSize(310, 430);
+      win.setSize(309, 429);
       const b = win.getBounds();
-      win.setBounds({ x: b.x, y: b.y, width: 310, height: 430 });
+      win.setBounds({ x: b.x, y: b.y, width: 309, height: 429 });
       win.webContents.setVisualZoomLevelLimits(1, 1);
       win.webContents.setZoomLevel(0);
       win.show();
@@ -147,8 +147,8 @@ app.whenReady().then(() => {
   screen.on('display-metrics-changed', () => {
     if (win && !win.isDestroyed() && !win.isMinimized()) {
       // Determine the correct target dimensions based on the active mode
-      let targetWidth = 310;
-      let targetHeight = 430;
+      let targetWidth = 309;
+      let targetHeight = 429;
       if (currentMode === 'timer-only') {
         targetWidth = 240;
         targetHeight = 100;
@@ -206,8 +206,8 @@ ipcMain.on('resize-window', (event, mode) => {
   const senderWindow = BrowserWindow.fromWebContents(event.sender);
   if (!senderWindow || senderWindow.isDestroyed()) return;
   
-  let targetWidth = 310;
-  let targetHeight = 430;
+  let targetWidth = 309;
+  let targetHeight = 429;
   let alwaysOnTop = globalAlwaysOnTop;
 
   if (mode === 'timer-only') {
