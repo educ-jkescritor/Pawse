@@ -790,36 +790,6 @@ p {
     pointer-events: none;
 }
 
-/* --- SEGMENTED THEME SELECTOR GROUP --- */
-.theme-selector-group {
-    display: flex;
-    border: 1px solid var(--stroke-color);
-    border-radius: 6px;
-    overflow: hidden;
-    background-color: var(--topbar-fill);
-}
-
-.theme-btn {
-    border: none;
-    background: transparent;
-    padding: 6px 12px;
-    font-family: var(--font-inter);
-    font-size: 10px;
-    font-weight: 500;
-    color: var(--text-gray);
-    cursor: default;
-}
-
-.theme-btn:not(:last-child) {
-    border-right: 1px solid var(--stroke-color);
-}
-
-.theme-btn.active {
-    background-color: #FFFFFF;
-    color: var(--text-black);
-    font-weight: bold;
-}
-
 .slider-container {
     display: flex;
     align-items: center;
