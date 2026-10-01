@@ -125,3 +125,32 @@ function watchDpiChanges() {
     }, { once: true });
 }
 watchDpiChanges();
+
+// --- KEYBOARD NAVIGATION (Desktop Standards) ---
+window.addEventListener('keydown', (e) => {
+    // Ignore keystrokes if an input is focused (future-proofing)
+    if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+
+    const catKeys = ['tuxedo', 'orange', 'black'];
+    if (e.key === '1') {
+        selectCompanion('tuxedo');
+    } else if (e.key === '2') {
+        selectCompanion('orange');
+    } else if (e.key === '3') {
+        selectCompanion('black');
+    } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const currentIndex = catKeys.indexOf(selectedCat);
+        const nextIndex = currentIndex === -1 || currentIndex === catKeys.length - 1 ? 0 : currentIndex + 1;
+        selectCompanion(catKeys[nextIndex]);
+        buttons[catKeys[nextIndex]]?.focus();
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const currentIndex = catKeys.indexOf(selectedCat);
+        const prevIndex = currentIndex <= 0 ? catKeys.length - 1 : currentIndex - 1;
+        selectCompanion(catKeys[prevIndex]);
+        buttons[catKeys[prevIndex]]?.focus();
+    } else if (e.key === 'Enter' && selectedCat && confirmButton && !confirmButton.disabled) {
+        confirmButton.click();
+    }
+});

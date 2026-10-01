@@ -480,3 +480,14 @@ if (window.mainAPI && window.mainAPI.onUpdateMessage) {
 
 updateDashboardDateTime();
 setInterval(updateDashboardDateTime, 1000);
+
+// --- KEYBOARD NAVIGATION (Desktop Standards) ---
+window.addEventListener('keydown', (e) => {
+    // Escape closes settings window if not editing a text input
+    if (e.key === 'Escape' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+        e.preventDefault();
+        if (window.mainAPI && window.mainAPI.close) {
+            window.mainAPI.close();
+        }
+    }
+});

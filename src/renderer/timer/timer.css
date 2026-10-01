@@ -360,11 +360,13 @@ body.cat-only-mode .timer-controls #play-btn {
 }
 
 body.timer-only-mode:hover .timer-controls,
-body.cat-only-mode:hover .timer-controls {
+body.cat-only-mode:hover .timer-controls,
+body.timer-only-mode .timer-controls:focus-within,
+body.cat-only-mode .timer-controls:focus-within {
     opacity: 1;
 }
 
-/* Show timer on hover in cat-only mode */
+/* Show timer on hover or keyboard focus in cat-only mode */
 body.cat-only-mode #timer-container {
     display: flex !important;
     position: absolute;

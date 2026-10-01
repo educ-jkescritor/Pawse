@@ -680,3 +680,96 @@ if (exitConfirmBtn) {
         window.location.replace("../index.html");
     }
 }
+
+// --- GLOBAL KEYBOARD NAVIGATION & SHORTCUTS (Desktop Standards) ---
+window.addEventListener('keydown', (e) => {
+    // Ignore keyboard shortcuts if an input or textarea is active
+    if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+
+    const modalOverlay = document.getElementById("modal-overlay");
+    const exitModal = document.getElementById("exit-modal-overlay");
+    const resizeModal = document.getElementById("resize-modal-overlay");
+
+    const isExitOpen = exitModal && !exitModal.classList.contains("hidden");
+    const isResizeOpen = resizeModal && !resizeModal.classList.contains("hidden");
+    const isModalOpen = modalOverlay && !modalOverlay.classList.contains("hidden");
+
+    // 1. Escape: Dismiss any active modal or restore mini-mode
+    if (e.key === 'Escape') {
+        if (isExitOpen) {
+            e.preventDefault();
+            exitModal.classList.add("hidden");
+            return;
+        }
+        if (isResizeOpen) {
+            e.preventDefault();
+            resizeModal.classList.add("hidden");
+            return;
+        }
+        if (isModalOpen) {
+            e.preventDefault();
+            const dialogBtn = document.getElementById("dialog-btn");
+            if (dialogBtn) dialogBtn.click();
+            return;
+        }
+        // If in mini-mode and Escape pressed, restore to default size
+        if (document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode")) {
+            e.preventDefault();
+            document.body.classList.remove("timer-only-mode", "cat-only-mode");
+            if (window.mainAPI && window.mainAPI.resize) {
+                window.mainAPI.resize('default');
+            }
+            return;
+        }
+    }
+
+    // 2. Enter: Confirm primary action on open modal
+    if (e.key === 'Enter') {
+        if (isExitOpen) {
+            e.preventDefault();
+            exitConfirmBtn?.click();
+            return;
+        }
+        if (isModalOpen) {
+            e.preventDefault();
+            document.getElementById("dialog-btn")?.click();
+            return;
+        }
+    }
+
+    // Don't trigger timer controls if a modal is currently open
+    if (isExitOpen || isResizeOpen || isModalOpen) return;
+
+    // 3. Space: Play / Pause timer
+    if (e.code === 'Space') {
+        // Prevent default spacebar page scrolling
+        e.preventDefault();
+        playButton?.click();
+        return;
+    }
+
+    // 4. 'S' or 's': Skip session
+    if (e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        if (skipButton && !skipButton.disabled) {
+            skipButton.click();
+        }
+        return;
+    }
+
+    // 5. 'M' or 'm': Toggle Sound (Mute/Unmute)
+    if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        soundButton?.click();
+        return;
+    }
+
+    // 6. 'R' or 'r': Restore size from mini-mode
+    if (e.key === 'r' || e.key === 'R') {
+        if (document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode")) {
+            e.preventDefault();
+            restoreBtn?.click();
+            return;
+        }
+    }
+});

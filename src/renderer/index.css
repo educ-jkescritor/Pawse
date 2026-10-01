@@ -64,6 +64,11 @@
     box-sizing: border-box;
 }
 
+:focus-visible {
+    outline: 2px solid var(--sys-blue-solid) !important;
+    outline-offset: 2px !important;
+}
+
 html, body {
     width: 100%;
     height: 100%;
@@ -331,7 +336,7 @@ ease;
 .settings-window-controls button {
     border: none;
     background: transparent;
-    padding: 8px 0px;
+    padding: 0;
     -webkit-app-region: no-drag;
     cursor: pointer;
     display: flex;
@@ -339,7 +344,8 @@ ease;
     justify-content: center;
     position: relative;
     width: 24px;
-    height: 40px;
+    height: 24px;
+    border-radius: 4px;
     box-sizing: border-box;
 }
 

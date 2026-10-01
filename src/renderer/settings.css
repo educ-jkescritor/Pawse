@@ -829,3 +829,54 @@ p {
 .hidden{
     display: none;
 }
+
+/* --- ACCESSIBILITY / KEYBOARD FOCUS --- */
+.side-bar button:focus-visible,
+.dropdown-trigger:focus-visible,
+.dropdown-item:focus-visible,
+.social-icon-link:focus-visible,
+.meta-link:focus-visible,
+#update-btn:focus-visible {
+    outline: 2px solid var(--sys-blue-solid) !important;
+    outline-offset: 2px !important;
+}
+
+/* Show focus outline on the toggle slider capsule when the hidden checkbox is focused */
+.toggle-switch input:focus-visible + .slider {
+    outline: 2px solid var(--sys-blue-solid) !important;
+    outline-offset: 2px !important;
+}
+
+/* Range volume slider keyboard focus outline */
+.volume-slider:focus-visible {
+    outline: 2px solid var(--sys-blue-solid) !important;
+    outline-offset: 3px !important;
+}
+
+/* Update button standard styling */
+#update-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--stroke-color);
+    background-color: var(--bg-main);
+    color: var(--text-black);
+    cursor: pointer;
+    font-family: var(--font-inter);
+    font-size: 12px;
+    font-weight: 500;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+#update-btn:hover:not(:disabled) {
+    background-color: #ECECEC;
+    border-color: var(--sys-blue-solid);
+}
+
+#update-btn:active:not(:disabled) {
+    transform: scale(0.96);
+}
+
+#update-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
