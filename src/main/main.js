@@ -165,11 +165,11 @@ app.whenReady().then(() => {
       let targetWidth = 310;
       let targetHeight = 430;
       if (currentMode === 'timer-only') {
-        targetWidth = 272;
-        targetHeight = 132;
+        targetWidth = 240;
+        targetHeight = 100;
       } else if (currentMode === 'cat-only') {
-        targetWidth = 272;
-        targetHeight = 272;
+        targetWidth = 240;
+        targetHeight = 240;
       }
 
       // Temporarily unlock resizing, re-apply bounds, then lock again
@@ -226,12 +226,12 @@ ipcMain.on('resize-window', (event, mode) => {
   let alwaysOnTop = globalAlwaysOnTop;
 
   if (mode === 'timer-only') {
-    targetWidth = 272;
-    targetHeight = 132;
+    targetWidth = 240;
+    targetHeight = 100;
     alwaysOnTop = true;
   } else if (mode === 'cat-only') {
-    targetWidth = 272;
-    targetHeight = 272;
+    targetWidth = 240;
+    targetHeight = 240;
     alwaysOnTop = true;
   }
 
