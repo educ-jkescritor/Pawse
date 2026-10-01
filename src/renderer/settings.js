@@ -420,14 +420,12 @@ function updateDashboardDateTime() {
 
     const now = new Date();
     
-    // Format: "Jul 6, 2026 • 02:53:15 AM"
+    // Format: "Oct 1, 2026"
     const optionsDate = { year: 'numeric', month: 'short', day: 'numeric' };
-    const optionsTime = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
     
     const dateStr = now.toLocaleDateString('en-US', optionsDate);
-    const timeStr = now.toLocaleTimeString('en-US', optionsTime);
-    
-    dtElement.textContent = `${dateStr} • ${timeStr}`;
+
+    dtElement.textContent = dateStr;
 }
 
 const updateBtn = document.getElementById("update-btn");
