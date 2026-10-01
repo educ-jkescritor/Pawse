@@ -25,7 +25,7 @@ html, body {
 
 /* --- MAIN CONTENT --- */
 .main-content{
-    padding: 10px 20px;
+    padding: 10px 20px 22px 20px;
 }
 
 #timer-container{
@@ -54,10 +54,10 @@ html, body {
 }
 
 /* --- CAT AREA --- */
-
+ 
 .cat-area {
     width: 100%;
-    height: 220px;
+    height: 210px;
     padding: 8px 0px;
     display: flex;
     justify-content: center;
@@ -70,7 +70,7 @@ html, body {
     flex-shrink: 0; /* Prevents flexbox from crushing the exact frame size */
     background-repeat: no-repeat;
     background-position: 0px 0px;
-    transform: scale(0.4) translateY(50px); /* Scale 512px down to ~204px and push down ~20px to create top clearance */
+    transform: scale(0.4) translateY(20px); /* Centered with balanced clearance to counter and controls */
     transform-origin: center;
     image-rendering: pixelated; /* Keeps pixel art crisp */
     display: none; /* hidden by default or blank */
@@ -430,6 +430,10 @@ body.cat-only-mode .cat-area {
     /* Removed translateY(-18px) to perfectly center the cat */
 }
 
+body.cat-only-mode .cat-sprite {
+    transform: scale(0.4) translateY(0); /* Zero vertical offset for perfect centering in 240x240 mini window */
+}
+
 body.timer-only-mode, 
 body.cat-only-mode {
     -webkit-app-region: no-drag; /* We disable full-window drag so hover works everywhere */
@@ -483,7 +487,7 @@ body.cat-only-mode .restore-btn:hover img {
 
 .chat-bubble {
     position: absolute;
-    bottom: 150px; /* Float higher above the cat's head with clear offset spacing */
+    bottom: 165px; /* Float higher above the cat's head with clear offset spacing */
     left: 50%;
     transform: translateX(-50%) translateY(0) scale(1);
     background-color: #FFFFFF;
