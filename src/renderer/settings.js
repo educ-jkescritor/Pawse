@@ -260,8 +260,8 @@ volumeSliders.forEach(slider => {
 
 // Workflow Settings Logic
 const strictToggle = document.querySelector('.strict-toggle');
-const breakToggle = document.querySelector('.break-toggle');
-const pomodoroToggle = document.querySelector('.pomodoro-toggle');
+// const breakToggle = document.querySelector('.break-toggle'); unused since auto-start focus and breaks are now combined
+const pomodoroToggle = document.querySelector('.timer-toggle');
 
 if (strictToggle) {
     strictToggle.checked = localStorage.getItem('strictMode') === 'true';
@@ -287,14 +287,22 @@ function updateStrictLock() {
 }
 updateStrictLock();
 
-if (breakToggle) {
+// Auto-start focus and breaks combined into one; code block can be deleted. Please check po @jude
+/* if (breakToggle) {
     breakToggle.checked = localStorage.getItem('autoStartBreaks') === 'true';
     breakToggle.addEventListener('change', (e) => localStorage.setItem('autoStartBreaks', e.target.checked));
 }
+*/
 
+// Updated logic for combined auto-start focus and breaks toggle. Please check po @jude
 if (pomodoroToggle) {
     pomodoroToggle.checked = localStorage.getItem('autoStartPomodoros') === 'true';
-    pomodoroToggle.addEventListener('change', (e) => localStorage.setItem('autoStartPomodoros', e.target.checked));
+    
+    pomodoroToggle.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        localStorage.setItem('autoStartPomodoros', isChecked);
+        localStorage.setItem('autoStartBreaks', isChecked);
+    });
 }
 
 // Audio Settings Logic
@@ -412,14 +420,12 @@ function updateDashboardDateTime() {
 
     const now = new Date();
     
-    // Format: "Jul 6, 2026 • 02:53:15 AM"
+    // Format: "Oct 1, 2026"
     const optionsDate = { year: 'numeric', month: 'short', day: 'numeric' };
-    const optionsTime = { hour: '2-digit', minute: '2-digit', second: '2-digit' };
     
     const dateStr = now.toLocaleDateString('en-US', optionsDate);
-    const timeStr = now.toLocaleTimeString('en-US', optionsTime);
-    
-    dtElement.textContent = `${dateStr} • ${timeStr}`;
+
+    dtElement.textContent = dateStr;
 }
 
 const updateBtn = document.getElementById("update-btn");

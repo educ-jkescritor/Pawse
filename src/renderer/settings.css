@@ -825,6 +825,48 @@ p {
     transition: transform 0.1s ease;
 }
 
+/* UPDATE BUTTON */
+/* Check */
+#update-btn {
+    background-color: transparent;
+    border: 1px solid var(--sys-blue-solid);
+    color: var(--sys-blue-solid);
+    border-radius: 20px;
+    padding: 6px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+#update-btn:hover {
+    background-color: var(--sys-blue-solid);
+    color: #FFFFFF;
+}
+
+/* Restart */
+#update-btn.btn-action {
+    background-color: var(--sys-blue-solid);
+    color: #FFFFFF;
+}
+
+#update-btn.btn-action:hover {
+    filter: brightness(0.9);
+}
+
+/* Checking & Downloading */
+#update-btn.btn-loading {
+    border-color: var(--text-gray);
+    color: var(--text-gray);
+    background-color: transparent;
+    pointer-events: none;
+}
+
+/* Up to Date */
+#update-btn.btn-success {
+    border-color: var(--sys-green-solid);
+    color: var(--sys-green-solid);
+    background-color: transparent;
+    pointer-events: none; 
+}
+
 /* HIDDEN */
 .hidden{
     display: none;
