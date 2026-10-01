@@ -19,14 +19,14 @@ function createWindow() {
   win = new BrowserWindow({
     icon: iconPath,
     show: false,
-    width: 309, // buffered window width
-    height: 429, // buffered window height
+    width: 324, // buffered window width
+    height: 462, // buffered window height
     alwaysOnTop: globalAlwaysOnTop,
     //resizable: false,
-    minWidth: 309,
-    maxWidth: 309,
-    minHeight: 429,
-    maxHeight: 429,
+    minWidth: 324,
+    maxWidth: 324,
+    minHeight: 462,
+    maxHeight: 462,
     maximizable: false,
     fullscreenable: false,
     frame: false,
@@ -44,9 +44,9 @@ function createWindow() {
   const showWindow = () => {
     if (!isShown && win && !win.isDestroyed()) {
       isShown = true;
-      win.setSize(309, 429);
+      win.setSize(324, 462);
       const b = win.getBounds();
-      win.setBounds({ x: b.x, y: b.y, width: 309, height: 429 });
+      win.setBounds({ x: b.x, y: b.y, width: 324, height: 462 });
       win.webContents.setVisualZoomLevelLimits(1, 1);
       win.webContents.setZoomLevel(0);
       win.show();
@@ -77,14 +77,14 @@ function settingsWindow() {
   set = new BrowserWindow({
     icon: iconPath,
     show: false,
-    width: 720, // content area width
-    height: 429, // buffered window height
+    width: 752, // content area width
+    height: 462, // buffered window height
     alwaysOnTop: false,
     //resizable: false,
-    minWidth: 720,
-    maxWidth: 720,
-    minHeight: 429,
-    maxHeight: 429,
+    minWidth: 752,
+    maxWidth: 752,
+    minHeight: 462,
+    maxHeight: 462,
     maximizable: false,
     fullscreenable: false,
     frame: false,
@@ -102,9 +102,9 @@ function settingsWindow() {
   const showSettings = () => {
     if (!isSettingsShown && set && !set.isDestroyed()) {
       isSettingsShown = true;
-      set.setSize(720, 429);
+      set.setSize(752, 462);
       const b = set.getBounds();
-      set.setBounds({ x: b.x, y: b.y, width: 720, height: 429 });
+      set.setBounds({ x: b.x, y: b.y, width: 752, height: 462 });
       set.webContents.setVisualZoomLevelLimits(1, 1);
       set.webContents.setZoomLevel(0);
       set.show();
@@ -147,14 +147,14 @@ app.whenReady().then(() => {
   screen.on('display-metrics-changed', () => {
     if (win && !win.isDestroyed() && !win.isMinimized()) {
       // Determine the correct target dimensions based on the active mode
-      let targetWidth = 309;
-      let targetHeight = 429;
+      let targetWidth = 324;
+      let targetHeight = 462;
       if (currentMode === 'timer-only') {
-        targetWidth = 240;
-        targetHeight = 100;
+        targetWidth = 272;
+        targetHeight = 132;
       } else if (currentMode === 'cat-only') {
-        targetWidth = 240;
-        targetHeight = 240;
+        targetWidth = 272;
+        targetHeight = 272;
       }
 
       // Temporarily unlock resizing, re-apply bounds, then lock again
@@ -173,12 +173,12 @@ app.whenReady().then(() => {
     if (set && !set.isDestroyed() && !set.isMinimized()) {
       set.setResizable(true);
       set.setMinimumSize(0, 0);
-      set.setMaximumSize(720, 429);
-      set.setSize(720, 429);
+      set.setMaximumSize(752, 462);
+      set.setSize(752, 462);
       const b = set.getBounds();
-      set.setBounds({ x: b.x, y: b.y, width: 720, height: 429 });
-      set.setMinimumSize(720, 429);
-      set.setMaximumSize(720, 429);
+      set.setBounds({ x: b.x, y: b.y, width: 752, height: 462 });
+      set.setMinimumSize(752, 462);
+      set.setMaximumSize(752, 462);
       set.setResizable(false);
       set.webContents.setVisualZoomLevelLimits(1, 1);
       set.webContents.setZoomLevel(0);
@@ -206,17 +206,17 @@ ipcMain.on('resize-window', (event, mode) => {
   const senderWindow = BrowserWindow.fromWebContents(event.sender);
   if (!senderWindow || senderWindow.isDestroyed()) return;
   
-  let targetWidth = 309;
-  let targetHeight = 429;
+  let targetWidth = 324;
+  let targetHeight = 462;
   let alwaysOnTop = globalAlwaysOnTop;
 
   if (mode === 'timer-only') {
-    targetWidth = 240;
-    targetHeight = 100;
+    targetWidth = 272;
+    targetHeight = 132;
     alwaysOnTop = true;
   } else if (mode === 'cat-only') {
-    targetWidth = 240;
-    targetHeight = 240;
+    targetWidth = 272;
+    targetHeight = 272;
     alwaysOnTop = true;
   }
 
