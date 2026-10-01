@@ -19,19 +19,21 @@ function createWindow() {
   win = new BrowserWindow({
     icon: iconPath,
     show: false,
-    width: 324, // buffered window width
-    height: 462, // buffered window height
+    width: 310, // buffered window width
+    height: 430, // buffered window height
     alwaysOnTop: globalAlwaysOnTop,
     //resizable: false,
-    minWidth: 324,
-    maxWidth: 324,
-    minHeight: 462,
-    maxHeight: 462,
+    minWidth: 310,
+    maxWidth: 310,
+    minHeight: 430,
+    maxHeight: 430,
     maximizable: false,
     fullscreenable: false,
     frame: false,
     transparent: true,
+    hasShadow: false,
     webPreferences: {
+      devTools: !app.isPackaged,
       backgroundThrottling: false,
       nodeIntegration: false,
       contextIsolation: true,
@@ -44,9 +46,9 @@ function createWindow() {
   const showWindow = () => {
     if (!isShown && win && !win.isDestroyed()) {
       isShown = true;
-      win.setSize(324, 462);
+      win.setSize(310, 430);
       const b = win.getBounds();
-      win.setBounds({ x: b.x, y: b.y, width: 324, height: 462 });
+      win.setBounds({ x: b.x, y: b.y, width: 310, height: 430 });
       win.webContents.setVisualZoomLevelLimits(1, 1);
       win.webContents.setZoomLevel(0);
       win.show();
@@ -77,19 +79,21 @@ function settingsWindow() {
   set = new BrowserWindow({
     icon: iconPath,
     show: false,
-    width: 752, // content area width
-    height: 462, // buffered window height
+    width: 720, // content area width
+    height: 430, // buffered window height
     alwaysOnTop: false,
     //resizable: false,
-    minWidth: 752,
-    maxWidth: 752,
-    minHeight: 462,
-    maxHeight: 462,
+    minWidth: 720,
+    maxWidth: 720,
+    minHeight: 430,
+    maxHeight: 430,
     maximizable: false,
     fullscreenable: false,
     frame: false,
     transparent: true,
+    hasShadow: false,
     webPreferences: {
+      devTools: !app.isPackaged,
       backgroundThrottling: false,
       nodeIntegration: false,
       contextIsolation: true,
@@ -102,9 +106,9 @@ function settingsWindow() {
   const showSettings = () => {
     if (!isSettingsShown && set && !set.isDestroyed()) {
       isSettingsShown = true;
-      set.setSize(752, 462);
+      set.setSize(720, 430);
       const b = set.getBounds();
-      set.setBounds({ x: b.x, y: b.y, width: 752, height: 462 });
+      set.setBounds({ x: b.x, y: b.y, width: 720, height: 430 });
       set.webContents.setVisualZoomLevelLimits(1, 1);
       set.webContents.setZoomLevel(0);
       set.show();
@@ -141,14 +145,25 @@ app.whenReady().then(() => {
     contents.on('will-navigate', (event, navigationUrl) => {
       event.preventDefault();
     });
+
+    // SECURITY: Block inspection shortcuts in packaged/production builds
+    if (app.isPackaged) {
+      contents.on('before-input-event', (event, input) => {
+        const isDevToolsShortcut = (input.control || input.meta) && input.shift && input.key.toLowerCase() === 'i';
+        const isF12 = input.key === 'F12';
+        if (isDevToolsShortcut || isF12) {
+          event.preventDefault();
+        }
+      });
+    }
   });
   
   // Automatically re-evaluate frameless window bounds when display scale/orientation/resolution changes
   screen.on('display-metrics-changed', () => {
     if (win && !win.isDestroyed() && !win.isMinimized()) {
       // Determine the correct target dimensions based on the active mode
-      let targetWidth = 324;
-      let targetHeight = 462;
+      let targetWidth = 310;
+      let targetHeight = 430;
       if (currentMode === 'timer-only') {
         targetWidth = 272;
         targetHeight = 132;
@@ -173,12 +188,12 @@ app.whenReady().then(() => {
     if (set && !set.isDestroyed() && !set.isMinimized()) {
       set.setResizable(true);
       set.setMinimumSize(0, 0);
-      set.setMaximumSize(752, 462);
-      set.setSize(752, 462);
+      set.setMaximumSize(720, 430);
+      set.setSize(720, 430);
       const b = set.getBounds();
-      set.setBounds({ x: b.x, y: b.y, width: 752, height: 462 });
-      set.setMinimumSize(752, 462);
-      set.setMaximumSize(752, 462);
+      set.setBounds({ x: b.x, y: b.y, width: 720, height: 430 });
+      set.setMinimumSize(720, 430);
+      set.setMaximumSize(720, 430);
       set.setResizable(false);
       set.webContents.setVisualZoomLevelLimits(1, 1);
       set.webContents.setZoomLevel(0);
@@ -206,8 +221,8 @@ ipcMain.on('resize-window', (event, mode) => {
   const senderWindow = BrowserWindow.fromWebContents(event.sender);
   if (!senderWindow || senderWindow.isDestroyed()) return;
   
-  let targetWidth = 324;
-  let targetHeight = 462;
+  let targetWidth = 310;
+  let targetHeight = 430;
   let alwaysOnTop = globalAlwaysOnTop;
 
   if (mode === 'timer-only') {
