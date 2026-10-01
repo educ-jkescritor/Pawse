@@ -3,11 +3,6 @@ if (window.mainAPI && window.mainAPI.resize) {
     window.mainAPI.resize('default');
 }
 
-// Also recalculate as soon as custom web fonts finish rendering
-if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(balanceLayout);
-}
-
 if (localStorage.getItem('alwaysOnTop') === 'true') {
     if (window.mainAPI && window.mainAPI.setAlwaysOnTop) {
         window.mainAPI.setAlwaysOnTop(true);
@@ -83,49 +78,6 @@ confirmButton.onclick = function () {
         window.location.assign(`timer/timer.html?cat=${selectedCat}`);
     }
 }
-
-// Lock bottom gap to exactly 14px (125% golden reference) across all display scales
-function balanceLayout() {
-    const confirmBtn = document.querySelector('.confirmation_button');
-    const wrapper = document.querySelector('.app-wrapper');
-    if (!confirmBtn || !wrapper) return;
-
-    // Reset inline margin first to measure natural rendered flow
-    confirmBtn.style.marginTop = '';
-
-    requestAnimationFrame(() => {
-        const wrapperRect = wrapper.getBoundingClientRect();
-        const btnRect = confirmBtn.getBoundingClientRect();
-        
-        // Exact pixel distance between the button bottom and the visible card bottom
-        const currentGap = wrapperRect.bottom - btnRect.bottom;
-        const targetGap = 14; // 125% scale golden reference
-        
-        const delta = currentGap - targetGap;
-        if (Math.abs(delta) >= 0.5) {
-            confirmBtn.style.marginTop = `${delta}px`;
-        }
-    });
-}
-
-// Run on load and whenever display scale/window changes
-window.addEventListener('DOMContentLoaded', balanceLayout);
-window.addEventListener('resize', balanceLayout);
-
-  // 1. Listen for orientation changes (Portrait <-> Landscape)
-if (window.screen && window.screen.orientation) {
-    window.screen.orientation.addEventListener('change', balanceLayout);
-}
-
-// 2. Hardware-level DPI listener (fires immediately when 100% <-> 125% <-> 150% changes)
-function watchDpiChanges() {
-    const mediaQuery = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
-    mediaQuery.addEventListener('change', () => {
-        balanceLayout();
-        watchDpiChanges(); // Re-arm for the next scale change
-    }, { once: true });
-}
-watchDpiChanges();
 
 // --- KEYBOARD NAVIGATION (Desktop Standards) ---
 window.addEventListener('keydown', (e) => {
