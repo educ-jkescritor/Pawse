@@ -44,6 +44,9 @@
     --sys-blue-solid: #35A6F1;
     --sys-blue-grad: #A8DCFF;
 
+    /* --- SYSTEM ALERTS (Green) --- */
+    --sys-green-solid: #4CAF50;
+
     /* --- CLASSIC TIMER (Green) --- */
     --theme-classic-solid: #CFE58A;
     --theme-classic-light: #ECFEA9;
