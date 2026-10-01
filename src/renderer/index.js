@@ -84,29 +84,28 @@ confirmButton.onclick = function () {
     }
 }
 
-// Align bottom gap to 14px (125% golden reference) across all scales
+// Lock bottom gap to exactly 14px (125% golden reference) across all display scales
 function balanceLayout() {
     const confirmBtn = document.querySelector('.confirmation_button');
-    const catButtons = document.querySelector('.cat_buttons');
     const wrapper = document.querySelector('.app-wrapper');
-    if (!confirmBtn || !catButtons || !wrapper) return;
+    if (!confirmBtn || !wrapper) return;
 
-    // Reset gap and padding to calculate natural rendered position
-    catButtons.style.gap = '8px';
-    catButtons.style.paddingBottom = '8px';
+    // Reset inline margin first to measure natural rendered flow
+    confirmBtn.style.marginTop = '';
 
-    const targetBottomGap = 14; // Exact 14px visual gap to the app card edge
-    const wrapperRect = wrapper.getBoundingClientRect();
-    const btnRect = confirmBtn.getBoundingClientRect();
-    const currentGap = wrapperRect.bottom - btnRect.bottom;
-    const delta = currentGap - targetBottomGap;
-
-    // Distribute the extra space smoothly across the cat buttons
-    const adjustedGap = Math.max(6, Math.min(14, 8 + (delta / 3)));
-    
-    // Apply the uniform spacing to both the flex gap and the bottom padding
-    catButtons.style.gap = `${adjustedGap}px`;
-    catButtons.style.paddingBottom = `${adjustedGap}px`;
+    requestAnimationFrame(() => {
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const btnRect = confirmBtn.getBoundingClientRect();
+        
+        // Exact pixel distance between the button bottom and the visible card bottom
+        const currentGap = wrapperRect.bottom - btnRect.bottom;
+        const targetGap = 14; // 125% scale golden reference
+        
+        const delta = currentGap - targetGap;
+        if (Math.abs(delta) >= 0.5) {
+            confirmBtn.style.marginTop = `${delta}px`;
+        }
+    });
 }
 
 // Run on load and whenever display scale/window changes
