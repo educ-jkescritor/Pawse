@@ -343,7 +343,7 @@ body.cat-only-mode .timer-controls {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.18);
+    background-color: rgba(0, 0, 0, 0.5);
     align-items: flex-end; /* Move buttons to the bottom */
     padding-bottom: 24px; /* Spacing from the bottom edge */
     justify-content: center;
@@ -378,7 +378,7 @@ body.timer-only-mode:hover .app-wrapper,
 body.cat-only-mode:hover .app-wrapper,
 body.timer-only-mode:has(.timer-controls:focus-within) .app-wrapper,
 body.cat-only-mode:has(.timer-controls:focus-within) .app-wrapper {
-    border-color: rgba(0, 0, 0, 0.18);
+    border-color: rgba(0, 0, 0, 0.5);
 }
 
 /* Show timer on hover or keyboard focus in cat-only mode */
