@@ -81,15 +81,15 @@
                                     <p class="font-inter-10-regular text-gray" style="margin: 2px 0 0 0;" id="chart-header-subtitle">Calculating...</p>
                                 </div>
                                 <div class="custom-dropdown" id="week-dropdown-container">
-                                    <button class="dropdown-trigger font-inter-10-medium" id="dropdown-trigger">
+                                    <button class="dropdown-trigger font-inter-10-medium" id="dropdown-trigger" aria-haspopup="listbox">
                                         <span id="selected-week-label">This Week</span>
                                         <span class="chevron">▼</span>
                                     </button>
-                                    <div class="dropdown-menu hidden" id="dropdown-menu">
-                                        <div class="dropdown-item active" data-value="0">This Week</div>
-                                        <div class="dropdown-item" data-value="1">One Week Ago</div>
-                                        <div class="dropdown-item" data-value="2">Two Weeks Ago</div>
-                                        <div class="dropdown-item" data-value="3">Three Weeks Ago</div>
+                                    <div class="dropdown-menu hidden" id="dropdown-menu" role="listbox">
+                                        <div class="dropdown-item active" data-value="0" tabindex="0" role="option">This Week</div>
+                                        <div class="dropdown-item" data-value="1" tabindex="0" role="option">One Week Ago</div>
+                                        <div class="dropdown-item" data-value="2" tabindex="0" role="option">Two Weeks Ago</div>
+                                        <div class="dropdown-item" data-value="3" tabindex="0" role="option">Three Weeks Ago</div>
                                     </div>
                                 </div>
                             </div>

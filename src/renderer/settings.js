@@ -334,24 +334,31 @@ if (dropdownTrigger && dropdownMenu) {
         dropdownContainer.classList.toggle('open');
     });
 
-    // Handle item selection
+    // Handle item selection (mouse & keyboard)
+    const selectItem = (item) => {
+        const val = item.getAttribute('data-value');
+        selectedWeekLabel.textContent = item.textContent;
+        
+        // Toggle active classes
+        dropdownItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        
+        // Close dropdown & return focus to trigger
+        dropdownMenu.classList.add('hidden');
+        dropdownContainer.classList.remove('open');
+        dropdownTrigger.focus();
+        
+        // Load requested week's analytics
+        loadAnalytics(parseInt(val));
+    };
+
     dropdownItems.forEach(item => {
-        item.addEventListener('click', () => {
-            const val = item.getAttribute('data-value');
-            selectedWeekLabel.textContent = item.textContent;
-            
-            // Keep main chart title static as "Weekly Flow"
-            
-            // Toggle active classes
-            dropdownItems.forEach(i => i.classList.remove('active'));
-            item.classList.add('active');
-            
-            // Close dropdown
-            dropdownMenu.classList.add('hidden');
-            dropdownContainer.classList.remove('open');
-            
-            // Load requested week's analytics
-            loadAnalytics(parseInt(val));
+        item.addEventListener('click', () => selectItem(item));
+        item.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.code === 'Space') {
+                e.preventDefault();
+                selectItem(item);
+            }
         });
     });
 
@@ -489,11 +496,24 @@ setInterval(updateDashboardDateTime, 1000);
 
 // --- KEYBOARD NAVIGATION (Desktop Standards) ---
 window.addEventListener('keydown', (e) => {
-    // Escape closes settings window if not editing a text input
-    if (e.key === 'Escape' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
-        e.preventDefault();
-        if (window.mainAPI && window.mainAPI.close) {
-            window.mainAPI.close();
+    if (e.key === 'Escape') {
+        // If the custom week dropdown is open, dismiss it first
+        const dropdownMenu = document.getElementById('dropdown-menu');
+        const dropdownContainer = document.getElementById('week-dropdown-container');
+        if (dropdownMenu && !dropdownMenu.classList.contains('hidden')) {
+            e.preventDefault();
+            dropdownMenu.classList.add('hidden');
+            dropdownContainer?.classList.remove('open');
+            document.getElementById('dropdown-trigger')?.focus();
+            return;
+        }
+
+        // Otherwise close settings window (unless editing text)
+        if (!['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+            e.preventDefault();
+            if (window.mainAPI && window.mainAPI.close) {
+                window.mainAPI.close();
+            }
         }
     }
 });
