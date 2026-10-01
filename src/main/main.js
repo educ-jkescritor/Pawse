@@ -31,6 +31,7 @@ function createWindow() {
     fullscreenable: false,
     frame: false,
     transparent: true,
+    hasShadow: false,
     webPreferences: {
       devTools: !app.isPackaged,
       backgroundThrottling: false,
@@ -90,6 +91,7 @@ function settingsWindow() {
     fullscreenable: false,
     frame: false,
     transparent: true,
+    hasShadow: false,
     webPreferences: {
       devTools: !app.isPackaged,
       backgroundThrottling: false,
