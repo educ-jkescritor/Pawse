@@ -88,19 +88,21 @@ confirmButton.onclick = function () {
 function balanceLayout() {
     const confirmBtn = document.querySelector('.confirmation_button');
     const catButtons = document.querySelector('.cat_buttons');
-    if (!confirmBtn || !catButtons) return;
+    const wrapper = document.querySelector('.app-wrapper');
+    if (!confirmBtn || !catButtons || !wrapper) return;
 
     // Reset gap and padding to calculate natural rendered position
     catButtons.style.gap = '8px';
     catButtons.style.paddingBottom = '8px';
 
-    const targetBottomGap = 30; // 14px visual gap + 16px invisible window border
-    const rect = confirmBtn.getBoundingClientRect();
-    const currentGap = window.innerHeight - rect.bottom;
+    const targetBottomGap = 14; // Exact 14px visual gap to the app card edge
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const btnRect = confirmBtn.getBoundingClientRect();
+    const currentGap = wrapperRect.bottom - btnRect.bottom;
     const delta = currentGap - targetBottomGap;
 
-    // Distribute the extra space across 3 areas (between cats, and below the last cat), capping max gap at 12px
-    const adjustedGap = Math.max(8, Math.min(12, 8 + (delta / 3)));
+    // Distribute the extra space smoothly across the cat buttons
+    const adjustedGap = Math.max(6, Math.min(14, 8 + (delta / 3)));
     
     // Apply the uniform spacing to both the flex gap and the bottom padding
     catButtons.style.gap = `${adjustedGap}px`;
