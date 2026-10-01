@@ -236,6 +236,13 @@ html, body {
     align-items: center;
 }
 
+/* Eliminate white border outline when modal overlays are active */
+.app-wrapper:has(#modal-overlay:not(.hidden)),
+.app-wrapper:has(#resize-modal-overlay:not(.hidden)),
+.app-wrapper:has(#exit-modal-overlay:not(.hidden)) {
+    border-color: rgba(0, 0, 0, 0.5);
+}
+
 .custom-dialog {
     padding: 24px;
     display: flex;
@@ -364,6 +371,14 @@ body.cat-only-mode:hover .timer-controls,
 body.timer-only-mode .timer-controls:focus-within,
 body.cat-only-mode .timer-controls:focus-within {
     opacity: 1;
+}
+
+/* Eliminate white border outline on mini-mode hover */
+body.timer-only-mode:hover .app-wrapper,
+body.cat-only-mode:hover .app-wrapper,
+body.timer-only-mode:has(.timer-controls:focus-within) .app-wrapper,
+body.cat-only-mode:has(.timer-controls:focus-within) .app-wrapper {
+    border-color: rgba(0, 0, 0, 0.18);
 }
 
 /* Show timer on hover or keyboard focus in cat-only mode */
