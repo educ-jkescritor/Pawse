@@ -65,12 +65,23 @@ function getWeekDateRangeString(weeksAgo) {
     const saturday = new Date(sunday);
     saturday.setDate(sunday.getDate() + 6);
     
-    // 'long' month formatting (e.g. "June 5")
-    const options = { month: 'long', day: 'numeric' };
-    const startStr = sunday.toLocaleDateString('en-US', options);
-    const endStr = saturday.toLocaleDateString('en-US', options);
+    const startMonth = sunday.toLocaleDateString('en-US', { month: 'short' });
+    const endMonth = saturday.toLocaleDateString('en-US', { month: 'short' });
+    const startDay = sunday.getDate();
+    const endDay = saturday.getDate();
     
-    return `${startStr} - ${endStr}`;
+    // If spanning across different years (e.g. Dec 27, 2026 – Jan 2, 2027)
+    if (sunday.getFullYear() !== saturday.getFullYear()) {
+        return `${startMonth} ${startDay}, ${sunday.getFullYear()} – ${endMonth} ${endDay}, ${saturday.getFullYear()}`;
+    }
+    
+    // If within the same month (e.g. Oct 4 – 10)
+    if (startMonth === endMonth) {
+        return `${startMonth} ${startDay} – ${endDay}`;
+    }
+    
+    // If crossing month boundary within same year (e.g. Sep 27 – Oct 3)
+    return `${startMonth} ${startDay} – ${endMonth} ${endDay}`;
 }
 
 async function loadAnalytics(weeksAgo = 0) {
