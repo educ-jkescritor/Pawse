@@ -181,11 +181,12 @@ p {
 
 .analytics-card .card-subtext.trend-up {
     color: var(--sys-green-solid);
-    font-weight: 600;
+    font-weight: 400;
 }
 
 .analytics-card .card-subtext.trend-down {
     color: var(--text-gray);
+    font-weight: 400;
 }
 
 /* Warm orange/amber gradient for active streak */
@@ -462,7 +463,9 @@ p {
     color: #FFFFFF;
     padding: 4px 6px;
     border-radius: 4px;
-    font-size: 9px;
+    font-family: var(--font-inter);
+    font-size: 10px;
+    font-weight: 500;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
@@ -498,13 +501,13 @@ p {
 /* Highlight today's label by default */
 .bar-wrapper.today .bar-label {
     color: var(--text-black);
-    font-weight: bold;
+    font-weight: 600;
 }
 
 /* Highlight hovered day label */
 .bar-wrapper:hover .bar-label {
     color: var(--text-black);
-    font-weight: bold;
+    font-weight: 600;
 }
 
 /* ABOUT */
