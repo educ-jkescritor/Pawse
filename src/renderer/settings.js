@@ -221,11 +221,13 @@ async function loadAnalytics(weeksAgo = 0) {
             graphBarsContainer.classList.add("empty-state"); // Disable hover highlights
         }
         
-        // Find max seconds for scaling, default to at least 1 second to prevent divide by zero
-        const maxSeconds = Math.max(...data.weekly_data, 1); 
+        // Scale ceiling considers both the tallest bar of the week and daily average so neither overflows
+        const avgSeconds = data.avg_daily_seconds || 0;
+        const maxBarSeconds = Math.max(...data.weekly_data, 1); 
+        const ceilingSeconds = Math.max(maxBarSeconds, avgSeconds);
         
         data.weekly_data.forEach((seconds, index) => {
-            const heightPercent = (seconds / maxSeconds) * 100;
+            const heightPercent = (seconds / ceilingSeconds) * 100;
             
             const barWrapper = document.createElement("div");
             barWrapper.className = "bar-wrapper";
@@ -281,6 +283,32 @@ async function loadAnalytics(weeksAgo = 0) {
             barWrapper.appendChild(label);
             graphBarsContainer.appendChild(barWrapper);
         });
+
+        // Draw Daily Average Benchmark Line if user has focus history and current week has data
+        if (hasData && avgSeconds > 0) {
+            const avgLine = document.createElement("div");
+            avgLine.className = "avg-benchmark-line";
+
+            // Format average time for badge (e.g. "avg 12m" or "avg 1h 15m")
+            const avgH = Math.floor(avgSeconds / 3600);
+            const avgM = Math.round((avgSeconds % 3600) / 60);
+            const formattedAvg = avgH > 0 ? (avgM > 0 ? `${avgH}h ${avgM}m` : `${avgH}h`) : `${avgM}m`;
+
+            const avgBadge = document.createElement("span");
+            avgBadge.className = "avg-benchmark-label font-inter-10-medium";
+            avgBadge.textContent = `avg ${formattedAvg}`;
+            avgLine.appendChild(avgBadge);
+
+            // Compute bottom offset accurately: baseline of bars is 20px, max bar area is (containerHeight - 36px)
+            const containerHeight = graphBarsContainer.clientHeight || 79;
+            const baselineBottom = 20; // 12px label + 8px gap
+            const maxBarHeight = Math.max(containerHeight - 20 - 16, 10); // 16px padding-top
+            const avgRatio = Math.min(avgSeconds / ceilingSeconds, 1);
+            const lineBottom = baselineBottom + (avgRatio * maxBarHeight);
+            
+            avgLine.style.bottom = `${lineBottom}px`;
+            graphBarsContainer.appendChild(avgLine);
+        }
     }
 }
 

@@ -361,8 +361,8 @@ p {
     align-items: stretch; /* Stretch column wrappers to full height so track underlays consume the full canvas height */
     justify-content: space-between;
     padding-top: 16px;
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: 12px;
+    padding-right: 68px; /* Dedicated right gutter for the average benchmark badge */
     height: 0; /* Fixes browser percentage height calculation bug inside flex items */
 }
 
@@ -451,6 +451,35 @@ p {
 /* --- Focused Theme (Purple / Void) --- */
 .graph-bars.black_cat .bar-wrapper:hover .bar {
     background-color: var(--theme-focused-solid) !important; /* Brand Focused Purple (#BDA9FE) */
+}
+
+/* Daily Average Benchmark Line */
+.avg-benchmark-line {
+    position: absolute;
+    left: 8px;
+    right: 6px;
+    height: 0;
+    border-top: 1.5px dashed rgba(53, 166, 241, 0.75);
+    z-index: 4;
+    pointer-events: none;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    transition: bottom 0.3s ease;
+}
+
+.avg-benchmark-label {
+    font-family: var(--font-inter);
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--sys-blue-solid);
+    background-color: #FFFFFF;
+    padding: 1px 6px;
+    border-radius: 4px 4px 0 0; /* [top-left] [top-right] [bottom-right] [bottom-left] */
+    border: 1.5px solid rgba(53, 166, 241, 0.75);
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.04);
+    transform: translateY(calc(-100% + 7.5px));
+    white-space: nowrap;
 }
 
 /* Custom Tooltip Styling */
