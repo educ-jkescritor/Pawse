@@ -438,55 +438,42 @@ if (tickToggle) {
     tickToggle.addEventListener('change', (e) => localStorage.setItem('tickSound', e.target.checked));
 }
 
-// Custom Graph Dropdown Logic
-const dropdownTrigger = document.getElementById('dropdown-trigger');
-const dropdownMenu = document.getElementById('dropdown-menu');
-const dropdownContainer = document.getElementById('week-dropdown-container');
-const selectedWeekLabel = document.getElementById('selected-week-label');
-const dropdownItems = document.querySelectorAll('.dropdown-item');
+// Custom Graph Week Segmented Control Logic
+const segmentButtons = document.querySelectorAll('.segment-btn');
 
-if (dropdownTrigger && dropdownMenu) {
-    // Toggle menu visibility
-    dropdownTrigger.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dropdownMenu.classList.toggle('hidden');
-        dropdownContainer.classList.toggle('open');
-    });
-
-    // Handle item selection (mouse & keyboard)
-    const selectItem = (item) => {
-        const val = item.getAttribute('data-value');
-        selectedWeekLabel.textContent = item.textContent;
+if (segmentButtons.length > 0) {
+    const selectSegment = (btn) => {
+        if (btn.classList.contains('active')) return;
         
-        // Toggle active classes
-        dropdownItems.forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
+        segmentButtons.forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-selected', 'false');
+        });
         
-        // Close dropdown & return focus to trigger
-        dropdownMenu.classList.add('hidden');
-        dropdownContainer.classList.remove('open');
-        dropdownTrigger.focus();
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
         
-        // Load requested week's analytics
-        loadAnalytics(parseInt(val));
+        const val = btn.getAttribute('data-value');
+        loadAnalytics(parseInt(val, 10));
     };
 
-    dropdownItems.forEach(item => {
-        item.addEventListener('click', () => selectItem(item));
-        item.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.code === 'Space') {
+    segmentButtons.forEach((btn, idx) => {
+        btn.addEventListener('click', () => selectSegment(btn));
+        
+        // Arrow key navigation across segments
+        btn.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                 e.preventDefault();
-                selectItem(item);
+                const nextIdx = (idx + 1) % segmentButtons.length;
+                segmentButtons[nextIdx].focus();
+                selectSegment(segmentButtons[nextIdx]);
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                const prevIdx = (idx - 1 + segmentButtons.length) % segmentButtons.length;
+                segmentButtons[prevIdx].focus();
+                selectSegment(segmentButtons[prevIdx]);
             }
         });
-    });
-
-    // Close menu when clicking outside
-    document.addEventListener('click', (e) => {
-        if (dropdownContainer && !dropdownContainer.contains(e.target)) {
-            dropdownMenu.classList.add('hidden');
-            dropdownContainer.classList.remove('open');
-        }
     });
 }
 
@@ -616,18 +603,7 @@ setInterval(updateDashboardDateTime, 1000);
 // --- KEYBOARD NAVIGATION (Desktop Standards) ---
 window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-        // If the custom week dropdown is open, dismiss it first
-        const dropdownMenu = document.getElementById('dropdown-menu');
-        const dropdownContainer = document.getElementById('week-dropdown-container');
-        if (dropdownMenu && !dropdownMenu.classList.contains('hidden')) {
-            e.preventDefault();
-            dropdownMenu.classList.add('hidden');
-            dropdownContainer?.classList.remove('open');
-            document.getElementById('dropdown-trigger')?.focus();
-            return;
-        }
-
-        // Otherwise close settings window (unless editing text)
+        // Close settings window (unless editing text)
         if (!['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
             e.preventDefault();
             if (window.mainAPI && window.mainAPI.close) {

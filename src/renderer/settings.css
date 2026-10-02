@@ -272,102 +272,48 @@ p {
     line-height: 1.2;
 }
 
-/* Custom Dropdown Container */
-.custom-dropdown {
-    position: relative;
-    display: inline-block;
-}
-
-/* Custom Dropdown Trigger Button */
-.dropdown-trigger {
-    width: 120px; /* Fixed width to accommodate 'Three Weeks Ago' and match the menu box */
-    font-family: var(--font-inter);
-    font-size: 10px;
-    font-weight: 500;
-    color: var(--text-gray);
+/* Week Segmented Control */
+.week-segmented-control {
+    display: inline-flex;
+    align-items: center;
     background-color: var(--bg-main);
     border: 1px solid var(--stroke-color);
     border-radius: 6px;
-    padding: 4px 10px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between; /* Pushes selection text left and chevron right */
-    cursor: pointer;
-    outline: none;
-    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+    padding: 2px;
+    gap: 2px;
 }
 
-.dropdown-trigger:hover {
-    border-color: var(--sys-blue-solid);
-    color: var(--text-black);
-    background-color: #ECECEC;
-}
-
-.dropdown-trigger .chevron {
-    font-size: 8px;
-    color: var(--text-gray);
-    transition: transform 0.2s ease;
-}
-
-.custom-dropdown.open .dropdown-trigger .chevron {
-    transform: rotate(180deg);
-}
-
-/* Custom Dropdown Menu Panel */
-.dropdown-menu {
-    position: absolute;
-    top: calc(100% + 6px);
-    right: 0;
-    width: 120px;
-    max-height: 80px; /* Cap height to prevent overflowing the dashboard page */
-    overflow-y: auto; /* Enable vertical scrolling */
-    background-color: #FFFFFF;
-    border: 1px solid var(--stroke-color);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 100;
-    transition: opacity 0.15s ease, transform 0.15s ease;
-}
-
-/* Custom scrollbar to keep layout clean and thin */
-.dropdown-menu::-webkit-scrollbar {
-    width: 4px;
-}
-
-.dropdown-menu::-webkit-scrollbar-track {
+.segment-btn {
+    border: none;
     background: transparent;
-}
-
-.dropdown-menu::-webkit-scrollbar-thumb {
-    background-color: var(--stroke-color);
-    border-radius: 4px;
-}
-
-.dropdown-menu::-webkit-scrollbar-thumb:hover {
-    background-color: var(--text-gray);
-}
-
-/* Custom Dropdown Item styling */
-.dropdown-item {
     font-family: var(--font-inter);
     font-size: 10px;
     font-weight: 500;
-    color: var(--text-black);
-    padding: 8px 12px;
-    text-align: left;
+    color: var(--text-gray);
+    padding: 3px 8px;
+    border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+    outline: none;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
 }
 
-.dropdown-item:hover {
-    background-color: rgba(53, 166, 241, 0.08); /* 8% opacity system blue */
-    color: var(--sys-blue-solid);
+.segment-btn:hover:not(.active) {
+    color: var(--text-black);
+    background-color: rgba(0, 0, 0, 0.04);
 }
 
-.dropdown-item.active {
-    background-color: rgba(53, 166, 241, 0.12); /* 12% opacity system blue */
-    color: var(--sys-blue-solid);
+.segment-btn.active {
+    background-color: #FFFFFF;
+    color: var(--text-black);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.segment-btn:focus-visible {
+    outline: 2px solid var(--sys-blue-solid) !important;
+    outline-offset: -1px !important;
 }
 
 .graph-bars {
