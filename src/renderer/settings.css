@@ -462,13 +462,13 @@ p {
     border-top: 1.5px dashed rgba(53, 166, 241, 0.75);
     z-index: 4;
     pointer-events: none;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
     transition: bottom 0.3s ease;
 }
 
 .avg-benchmark-label {
+    position: absolute;
+    right: 0;
+    bottom: 0;
     font-family: var(--font-inter);
     font-size: 10px;
     font-weight: 500;
@@ -478,7 +478,6 @@ p {
     border-radius: 4px 4px 0 0; /* [top-left] [top-right] [bottom-right] [bottom-left] */
     border: 1.5px solid rgba(53, 166, 241, 0.75);
     box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.04);
-    transform: translateY(calc(-100% + 7.5px));
     white-space: nowrap;
 }
 
