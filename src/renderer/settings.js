@@ -82,34 +82,114 @@ async function loadAnalytics(weeksAgo = 0) {
         chartSubtitle.textContent = getWeekDateRangeString(weeksAgo);
     }
 
-    const todayWorkSecondsElement = document.getElementById("today_work_seconds");
-    const historicalPomodoroElement = document.getElementById("historical_pomodoro");
-    const favoriteCatElement = document.getElementById("favorite_cat");
+    // 1. Focus Streak Card
+    const currentStreakEl = document.getElementById("current_streak");
+    const streakUnitEl = document.getElementById("streak_unit");
+    const bestStreakEl = document.getElementById("best_streak");
+    const streakCard = document.getElementById("streak-card");
 
-    // Format seconds into Xh Ym
+    const streak = data.current_streak || 0;
+    const bestStreak = data.best_streak || streak;
+
+    if (currentStreakEl) currentStreakEl.textContent = streak;
+    if (streakUnitEl) streakUnitEl.textContent = streak === 1 ? 'day' : 'days';
+    if (bestStreakEl) bestStreakEl.textContent = `Best: ${bestStreak} ${bestStreak === 1 ? 'day' : 'days'}`;
+    if (streakCard) {
+        if (streak >= 3) {
+            streakCard.classList.add('active-streak');
+        } else {
+            streakCard.classList.remove('active-streak');
+        }
+    }
+
+    // 2. Today's Focus Card & Trend vs Average
+    const todayWorkSecondsElement = document.getElementById("today_work_seconds");
+    const todayVsAvgEl = document.getElementById("today_vs_avg");
+
     const totalSeconds = data.today_work_seconds || 0;
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
-    
-    let timeString = `${hours}h ${minutes}m`;
+    const timeString = `${hours}h ${minutes}m`;
+    if (todayWorkSecondsElement) todayWorkSecondsElement.textContent = timeString;
 
-    todayWorkSecondsElement.textContent = timeString;
-    historicalPomodoroElement.textContent = data.historical_pomodoro || 0;
+    if (todayVsAvgEl) {
+        const avgSeconds = data.avg_daily_seconds || 0;
+        if (avgSeconds === 0) {
+            todayVsAvgEl.textContent = "First day tracking";
+            todayVsAvgEl.className = "card-subtext font-inter-10-regular text-gray";
+        } else {
+            const diffSeconds = totalSeconds - avgSeconds;
+            const absDiff = Math.abs(diffSeconds);
+            const diffHours = Math.floor(absDiff / 3600);
+            const diffMins = Math.round((absDiff % 3600) / 60);
+            const formattedDiff = diffHours > 0 ? `${diffHours}h ${diffMins}m` : `${diffMins}m`;
 
-    // Map cat_type to corresponding face image
-    const catFaceImages = {
-        'orange_cat': './../assets/photos/orange-cat-face.png',
-        'tuxedo_cat': './../assets/photos/tuxedo-cat-face.png',
-        'black_cat': './../assets/photos/black-cat-face.png'
-    };
-    
-    if (data.favorite_cat && catFaceImages[data.favorite_cat]) {
-        favoriteCatElement.innerHTML = `<img src="${catFaceImages[data.favorite_cat]}" alt="${data.favorite_cat}" class="favorite-cat-img">`;
-    } else {
-        favoriteCatElement.textContent = 'None';
+            if (diffSeconds > 60) {
+                todayVsAvgEl.textContent = `▲ +${formattedDiff} vs avg`;
+                todayVsAvgEl.className = "card-subtext font-inter-10-regular trend-up";
+            } else if (diffSeconds < -60) {
+                todayVsAvgEl.textContent = `▼ -${formattedDiff} vs avg`;
+                todayVsAvgEl.className = "card-subtext font-inter-10-regular trend-down";
+            } else {
+                todayVsAvgEl.textContent = "On par with daily avg";
+                todayVsAvgEl.className = "card-subtext font-inter-10-regular text-gray";
+            }
+        }
     }
 
-    // Update favorite companion card theme class
+    // 3. Personal Best Card
+    const personalBestEl = document.getElementById("personal_best_time");
+    const personalBestDateEl = document.getElementById("personal_best_date");
+    const personalBestCard = document.getElementById("personal-best-card");
+
+    const pbSeconds = data.personal_best_seconds || 0;
+    const pbHours = Math.floor(pbSeconds / 3600);
+    const pbMinutes = Math.floor((pbSeconds % 3600) / 60);
+    const pbTimeString = `${pbHours}h ${pbMinutes}m`;
+    if (personalBestEl) personalBestEl.textContent = pbTimeString;
+
+    if (personalBestDateEl) {
+        if (pbSeconds === 0 || !data.personal_best_date) {
+            personalBestDateEl.textContent = "No record yet";
+            if (personalBestCard) personalBestCard.classList.remove('highlight-record');
+        } else {
+            const now = new Date();
+            const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            
+            if (data.personal_best_date === todayKey && pbSeconds > 0) {
+                personalBestDateEl.textContent = "Achieved today! 🏆";
+                if (personalBestCard) personalBestCard.classList.add('highlight-record');
+            } else {
+                const [y, m, d] = data.personal_best_date.split('-').map(Number);
+                const pbDate = new Date(y, m - 1, d);
+                const dateOptions = { month: 'short', day: 'numeric', year: 'numeric' };
+                personalBestDateEl.textContent = pbDate.toLocaleDateString('en-US', dateOptions);
+                if (personalBestCard) personalBestCard.classList.remove('highlight-record');
+            }
+        }
+    }
+
+    // Legacy fallbacks (in case DOM or tests look for historical elements)
+    const historicalPomodoroElement = document.getElementById("historical_pomodoro");
+    if (historicalPomodoroElement) {
+        historicalPomodoroElement.textContent = data.historical_pomodoro || 0;
+    }
+
+    const favoriteCatElement = document.getElementById("favorite_cat");
+    if (favoriteCatElement) {
+        const catFaceImages = {
+            'orange_cat': './../assets/photos/orange-cat-face.png',
+            'tuxedo_cat': './../assets/photos/tuxedo-cat-face.png',
+            'black_cat': './../assets/photos/black-cat-face.png'
+        };
+        
+        if (data.favorite_cat && catFaceImages[data.favorite_cat]) {
+            favoriteCatElement.innerHTML = `<img src="${catFaceImages[data.favorite_cat]}" alt="${data.favorite_cat}" class="favorite-cat-img">`;
+        } else {
+            favoriteCatElement.textContent = 'None';
+        }
+    }
+
     const favoriteCatCard = document.getElementById("favorite-cat-card");
     if (favoriteCatCard) {
         favoriteCatCard.classList.remove('orange_cat', 'tuxedo_cat', 'black_cat');

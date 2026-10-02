@@ -134,16 +134,68 @@ p {
 }
 
 .analytics-card {
-    padding: 12px;
-    gap: 2px;
+    padding: 10px 12px;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
+    justify-content: space-between;
     flex: 1;
     height: 102px;
     border-radius: 8px;
     background: linear-gradient(180deg, #FFF 0%, var(--sys-blue-grad) 100%);
     box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
+    transition: background 0.3s ease;
+    overflow: hidden;
+}
+
+.analytics-card .card-titles {
+    display: flex;
+    flex-direction: column;
+}
+
+.analytics-card .card-titles span {
+    line-height: 1.15;
+}
+
+.analytics-card .card-value-row {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin: 1px 0;
+}
+
+.analytics-card .card-value-row .card-data {
+    line-height: 1;
+}
+
+.analytics-card .card-value-row .card-unit {
+    line-height: 1;
+}
+
+.analytics-card .card-subtext {
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 10px;
+}
+
+.analytics-card .card-subtext.trend-up {
+    color: var(--sys-green-solid);
+    font-weight: 600;
+}
+
+.analytics-card .card-subtext.trend-down {
+    color: var(--text-gray);
+}
+
+/* Warm orange/amber gradient for active streak */
+#streak-card.active-streak {
+    background: linear-gradient(180deg, #FFF 0%, var(--theme-sprint-light) 100%);
+}
+
+/* Celebratory warm highlight when personal best is achieved/tied */
+#personal-best-card.highlight-record {
+    background: linear-gradient(180deg, #FFF 0%, var(--theme-sprint-light) 100%);
 }
 
 #favorite-cat-card {

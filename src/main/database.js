@@ -82,7 +82,12 @@ function generateAnalytics(weeksAgo = 0) {
             today_work_seconds: 0,
             historical_pomodoro: 0,
             favorite_cat: 'None',
-            weekly_data: [0, 0, 0, 0, 0, 0, 0] // Sun to Sat
+            weekly_data: [0, 0, 0, 0, 0, 0, 0], // Sun to Sat
+            current_streak: 0,
+            best_streak: 0,
+            avg_daily_seconds: 0,
+            personal_best_seconds: 0,
+            personal_best_date: ''
         };
 
         // Establish accurate local timezone bounds for "Today" using JavaScript
@@ -108,36 +113,154 @@ function generateAnalytics(weeksAgo = 0) {
                 db.get(favoriteCatQuery, [], (err, row3) => {
                     if (!err && row3 && row3.cat_type) analyticData.favorite_cat = row3.cat_type;
 
-                    // Determine local start of week (Sunday 00:00:00) based on weeksAgo
-                    const now = new Date();
-                    const startOfWeek = new Date(now);
-                    startOfWeek.setDate(now.getDate() - now.getDay() - (weeksAgo * 7));
-                    startOfWeek.setHours(0,0,0,0);
-                    
-                    const endOfWeek = new Date(startOfWeek);
-                    endOfWeek.setDate(startOfWeek.getDate() + 7);
-                    
-                    // Convert local boundaries to UTC string format (YYYY-MM-DD HH:MM:SS) for SQLite
-                    const startOfWeekUTC = startOfWeek.toISOString().replace('T', ' ').substring(0, 19);
-                    const endOfWeekUTC = endOfWeek.toISOString().replace('T', ' ').substring(0, 19);
-                    
-                    const weeklyDataQuery = `SELECT date_completed, total_work_seconds FROM session WHERE date_completed >= ? AND date_completed < ?`;
+                    // Query historical sessions to compute streaks, personal best, and daily average
+                    const allSessionsQuery = `SELECT date_completed, total_work_seconds, total_pomodoro FROM session WHERE date_completed IS NOT NULL`;
+                    db.all(allSessionsQuery, [], (err, allRows) => {
+                        if (!err && allRows && allRows.length > 0) {
+                            const dailyWorkMap = {};
+                            const dailyPomodoroMap = {};
 
-                    db.all(weeklyDataQuery, [startOfWeekUTC, endOfWeekUTC], (err, rows) => {
-                        if (!err && rows) {
-                            rows.forEach(row => {
-                                // Parse the UTC date from database to get local day
+                            allRows.forEach(row => {
+                                if (!row.date_completed) return;
                                 const dateString = row.date_completed.replace(' ', 'T') + 'Z';
                                 const localDate = new Date(dateString);
-                                
-                                analyticData.weekly_data[localDate.getDay()] += row.total_work_seconds;
+                                if (isNaN(localDate.getTime())) return;
+
+                                const y = localDate.getFullYear();
+                                const m = String(localDate.getMonth() + 1).padStart(2, '0');
+                                const d = String(localDate.getDate()).padStart(2, '0');
+                                const dayKey = `${y}-${m}-${d}`;
+
+                                dailyWorkMap[dayKey] = (dailyWorkMap[dayKey] || 0) + (row.total_work_seconds || 0);
+                                dailyPomodoroMap[dayKey] = (dailyPomodoroMap[dayKey] || 0) + (row.total_pomodoro || 0);
                             });
-                            
-                            // We now send raw seconds instead of destructively rounding to hours
-                            // to ensure even short sessions (like 2 minutes) are accurately graphed.
+
+                            const recordedDays = Object.keys(dailyWorkMap);
+
+                            // 1. Daily Average Focus Seconds (averaged across days with focus)
+                            const activeWorkDays = recordedDays.filter(k => dailyWorkMap[k] > 0);
+                            if (activeWorkDays.length > 0) {
+                                const totalWork = activeWorkDays.reduce((acc, k) => acc + dailyWorkMap[k], 0);
+                                analyticData.avg_daily_seconds = Math.round(totalWork / activeWorkDays.length);
+                            }
+
+                            // 2. Personal Best (day with highest total focus seconds)
+                            let bestSeconds = 0;
+                            let bestDateKey = '';
+                            recordedDays.forEach(k => {
+                                if (dailyWorkMap[k] > bestSeconds) {
+                                    bestSeconds = dailyWorkMap[k];
+                                    bestDateKey = k;
+                                }
+                            });
+                            analyticData.personal_best_seconds = bestSeconds;
+                            analyticData.personal_best_date = bestDateKey;
+
+                            // 3. Streak Calculation (qualifying day: >= 60 seconds or >= 1 pomodoro)
+                            const qualifyingDates = recordedDays.filter(k => 
+                                dailyWorkMap[k] >= 60 || (dailyPomodoroMap[k] && dailyPomodoroMap[k] >= 1)
+                            ).sort();
+
+                            if (qualifyingDates.length > 0) {
+                                const qualifyingSet = new Set(qualifyingDates);
+
+                                const toDayKey = (dt) => {
+                                    const y = dt.getFullYear();
+                                    const m = String(dt.getMonth() + 1).padStart(2, '0');
+                                    const d = String(dt.getDate()).padStart(2, '0');
+                                    return `${y}-${m}-${d}`;
+                                };
+
+                                const nowLocal = new Date();
+                                const todayKey = toDayKey(nowLocal);
+
+                                const yesterdayLocal = new Date(nowLocal);
+                                yesterdayLocal.setDate(nowLocal.getDate() - 1);
+                                const yesterdayKey = toDayKey(yesterdayLocal);
+
+                                // Current streak: starts from today if active, else yesterday if active (grace period until end of today)
+                                let currentStreak = 0;
+                                let checkDate = null;
+
+                                if (qualifyingSet.has(todayKey)) {
+                                    checkDate = new Date(nowLocal);
+                                } else if (qualifyingSet.has(yesterdayKey)) {
+                                    checkDate = new Date(yesterdayLocal);
+                                }
+
+                                if (checkDate) {
+                                    while (true) {
+                                        const key = toDayKey(checkDate);
+                                        if (qualifyingSet.has(key)) {
+                                            currentStreak++;
+                                            checkDate.setDate(checkDate.getDate() - 1);
+                                        } else {
+                                            break;
+                                        }
+                                    }
+                                }
+                                analyticData.current_streak = currentStreak;
+
+                                // Best streak ever (longest consecutive sequence in sorted qualifying dates)
+                                let longestStreak = 0;
+                                let tempStreak = 0;
+                                let prevDateObj = null;
+
+                                qualifyingDates.forEach(k => {
+                                    const [y, m, d] = k.split('-').map(Number);
+                                    const currDateObj = new Date(y, m - 1, d);
+
+                                    if (!prevDateObj) {
+                                        tempStreak = 1;
+                                    } else {
+                                        const diffDays = Math.round((currDateObj - prevDateObj) / (1000 * 60 * 60 * 24));
+                                        if (diffDays === 1) {
+                                            tempStreak++;
+                                        } else if (diffDays > 1) {
+                                            tempStreak = 1;
+                                        }
+                                    }
+                                    if (tempStreak > longestStreak) {
+                                        longestStreak = tempStreak;
+                                    }
+                                    prevDateObj = currDateObj;
+                                });
+
+                                analyticData.best_streak = Math.max(longestStreak, currentStreak);
+                            }
                         }
 
-                        resolve(analyticData);
+                        // Determine local start of week (Sunday 00:00:00) based on weeksAgo
+                        const now = new Date();
+                        const startOfWeek = new Date(now);
+                        startOfWeek.setDate(now.getDate() - now.getDay() - (weeksAgo * 7));
+                        startOfWeek.setHours(0,0,0,0);
+                        
+                        const endOfWeek = new Date(startOfWeek);
+                        endOfWeek.setDate(startOfWeek.getDate() + 7);
+                        
+                        // Convert local boundaries to UTC string format (YYYY-MM-DD HH:MM:SS) for SQLite
+                        const startOfWeekUTC = startOfWeek.toISOString().replace('T', ' ').substring(0, 19);
+                        const endOfWeekUTC = endOfWeek.toISOString().replace('T', ' ').substring(0, 19);
+                        
+                        const weeklyDataQuery = `SELECT date_completed, total_work_seconds FROM session WHERE date_completed >= ? AND date_completed < ?`;
+
+                        db.all(weeklyDataQuery, [startOfWeekUTC, endOfWeekUTC], (err, rows) => {
+                            if (!err && rows) {
+                                rows.forEach(row => {
+                                    // Parse the UTC date from database to get local day
+                                    const dateString = row.date_completed.replace(' ', 'T') + 'Z';
+                                    const localDate = new Date(dateString);
+                                    
+                                    analyticData.weekly_data[localDate.getDay()] += row.total_work_seconds;
+                                });
+                                
+                                // We now send raw seconds instead of destructively rounding to hours
+                                // to ensure even short sessions (like 2 minutes) are accurately graphed.
+                            }
+
+                            resolve(analyticData);
+                        });
                     });
                 });
             });

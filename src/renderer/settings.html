@@ -56,20 +56,36 @@
                     </div>
 
                     <div class="analytics-container">
-                        <div class="analytics-card">
-                            <span class="font-inter-10-medium">TOTAL FOCUS TIME<br></span>
-                            <span class="font-inter-16-medium">TODAY<br></span>
-                            <span class="card-data font-pixel-36-medium" id="today_work_seconds">0</span>
+                        <div class="analytics-card" id="streak-card">
+                            <div class="card-titles">
+                                <span class="font-inter-10-medium">FOCUS</span>
+                                <span class="font-inter-16-medium">STREAK</span>
+                            </div>
+                            <div class="card-value-row">
+                                <span class="card-data font-pixel-36-medium" id="current_streak">0</span>
+                                <span class="card-unit font-inter-12-medium text-gray" id="streak_unit">days</span>
+                            </div>
+                            <span class="card-subtext font-inter-10-regular text-gray" id="best_streak">Best: 0 days</span>
                         </div>
-                        <div class="analytics-card">
-                            <span class="font-inter-10-medium">COMPLETED<br></span>
-                            <span class="font-inter-16-medium">POMODOROS<br></span>
-                            <span class="card-data font-pixel-36-medium" id="historical_pomodoro">0</span>
+                        <div class="analytics-card" id="today-focus-card">
+                            <div class="card-titles">
+                                <span class="font-inter-10-medium">TOTAL FOCUS TIME</span>
+                                <span class="font-inter-16-medium">TODAY</span>
+                            </div>
+                            <div class="card-value-row">
+                                <span class="card-data font-pixel-36-medium" id="today_work_seconds">0h 0m</span>
+                            </div>
+                            <span class="card-subtext font-inter-10-regular text-gray" id="today_vs_avg">vs daily avg</span>
                         </div>
-                        <div class="analytics-card" id="favorite-cat-card">
-                            <span class="font-inter-10-medium">FAVORITE<br></span>
-                            <span class="font-inter-16-medium">COMPANION<br></span>
-                            <span class="card-data font-pixel-36-medium" id="favorite_cat">None</span>
+                        <div class="analytics-card" id="personal-best-card">
+                            <div class="card-titles">
+                                <span class="font-inter-10-medium">PERSONAL</span>
+                                <span class="font-inter-16-medium">BEST</span>
+                            </div>
+                            <div class="card-value-row">
+                                <span class="card-data font-pixel-36-medium" id="personal_best_time">0h 0m</span>
+                            </div>
+                            <span class="card-subtext font-inter-10-regular text-gray" id="personal_best_date">No record yet</span>
                         </div>
                     </div>
 
