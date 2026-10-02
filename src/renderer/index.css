@@ -356,6 +356,13 @@ ease;
     height: 24px;
     border-radius: 4px;
     box-sizing: border-box;
+    transition: background-color 0.15s ease;
+}
+
+/* Subtle, clean hover plate without prematurely depressing the pixel icon */
+.main-window-controls button:hover,
+.settings-window-controls button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
 .main-window-controls button img,
@@ -366,16 +373,15 @@ ease;
     object-fit: contain;
     pointer-events: none;
     -webkit-user-drag: none;
-    transition: opacity 0.1s ease;
 }
 
-/* Hide static icon on hover */
-.main-window-controls button:hover img,
-.settings-window-controls button:hover img {
+/* Hide static icon only when actively pressed */
+.main-window-controls button:active img,
+.settings-window-controls button:active img {
     opacity: 0;
 }
 
-/* Base overlay for the hover sprite */
+/* Base overlay for the active click sprite */
 .main-window-controls button::after,
 .settings-window-controls button::after {
     content: '';
@@ -386,34 +392,34 @@ ease;
     width: 24px;
     height: 24px;
     background-repeat: no-repeat;
-    background-size: 48px 24px; /* 2 frames of 24px each */
-    background-position: -24px 0px; /* Frame 2 (Hover state with shadow) */
+    background-size: 96px 24px; /* 4 frames of 24px each */
+    background-position: -48px 0px; /* Frame 3: Depressed / pressed down */
     image-rendering: pixelated;
     pointer-events: none;
     display: none;
 }
 
-.main-window-controls button:hover::after,
-.settings-window-controls button:hover::after {
+.main-window-controls button:active::after,
+.settings-window-controls button:active::after {
     display: block;
 }
 
-/* Specific sprites per button */
-#minimize-btn:hover::after {
-    background-image: url('../assets/sprites/minimize-btn-hover.png');
+/* Specific click sprites per button */
+#minimize-btn:active::after {
+    background-image: url('../assets/sprites/minimize-btn-click.png');
 }
 
-#close-btn:hover::after {
-    background-image: url('../assets/sprites/close-btn-hover.png');
+#close-btn:active::after {
+    background-image: url('../assets/sprites/close-btn-click.png');
 }
 
-#resize-btn:hover::after,
-#decrease-btn:hover::after {
-    background-image: url('../assets/sprites/decrease-btn-hover.png');
+#resize-btn:active::after,
+#decrease-btn:active::after {
+    background-image: url('../assets/sprites/decrease-btn-click.png');
 }
 
-#home-btn:hover::after {
-    background-image: url('../assets/sprites/home-btn-hover.png');
+#home-btn:active::after {
+    background-image: url('../assets/sprites/home-btn-click.png');
 }
 
 /* --- MAIN CONTENT --- */
