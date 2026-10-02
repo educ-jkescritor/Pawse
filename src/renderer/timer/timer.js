@@ -581,6 +581,19 @@ function updateSessionCounter() {
     });
 };
 
+function hideModal(modalElement, onComplete) {
+    if (!modalElement || modalElement.classList.contains("hidden") || modalElement.classList.contains("closing")) {
+        if (onComplete) onComplete();
+        return;
+    }
+    modalElement.classList.add("closing");
+    setTimeout(() => {
+        modalElement.classList.remove("closing");
+        modalElement.classList.add("hidden");
+        if (onComplete) onComplete();
+    }, 200);
+}
+
 function showModal(title, message, btnText, nextAction) {
     const isMiniMode = document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode");
 
@@ -602,6 +615,7 @@ function showModal(title, message, btnText, nextAction) {
     let alrVol = parseInt(localStorage.getItem('alarmVolume'));
     if(isNaN(alrVol)) alrVol = 50;
 
+    modalOverlay.classList.remove("closing");
     modalOverlay.classList.remove("hidden");
     isAlarmPlaying = true;
     // Start playing the alarm on a loop if the user has it enabled in Settings AND master sound is ON
@@ -617,8 +631,9 @@ function showModal(title, message, btnText, nextAction) {
         alarmAudio.pause();
         alarmAudio.currentTime = 0;
         
-        modalOverlay.classList.add("hidden");
-        nextAction();
+        hideModal(modalOverlay, () => {
+            nextAction();
+        });
     }
 }
 
@@ -627,18 +642,17 @@ let resizeModal = document.getElementById("resize-modal-overlay");
 if (resizeModal !== null) {
     resizeModal.addEventListener("click", function(event) {
         if (event.target === resizeModal) {
-            resizeModal.classList.add("hidden");
+            hideModal(resizeModal);
         }
     });   
 }
-
-
 
 let timerOnlyButton = document.getElementById("timer-only");
 let catOnlyButton = document.getElementById("cat-only");
 
 if (timerOnlyButton !== null) {
     timerOnlyButton.onclick = function() {
+        resizeModal.classList.remove("closing");
         resizeModal.classList.add("hidden");
         document.body.classList.remove("cat-only-mode");
         document.body.classList.add("timer-only-mode");
@@ -646,13 +660,13 @@ if (timerOnlyButton !== null) {
     }
 
     catOnlyButton.onclick = function() {
+        resizeModal.classList.remove("closing");
         resizeModal.classList.add("hidden");
         document.body.classList.remove("timer-only-mode");
         document.body.classList.add("cat-only-mode");
         window.mainAPI.resize('cat-only');
     }
 }
-
 
 let restoreBtn = document.getElementById("restore-btn");
 if (restoreBtn) {
@@ -663,10 +677,19 @@ if (restoreBtn) {
 }
 
 // --- EXIT MODAL HANDLERS ---
+let exitModalEl = document.getElementById('exit-modal-overlay');
+if (exitModalEl) {
+    exitModalEl.addEventListener('click', function(event) {
+        if (event.target === exitModalEl) {
+            hideModal(exitModalEl);
+        }
+    });
+}
+
 let exitCancelBtn = document.getElementById('exit-cancel-btn');
 if (exitCancelBtn) {
     exitCancelBtn.onclick = function() {
-        document.getElementById('exit-modal-overlay').classList.add('hidden');
+        hideModal(document.getElementById('exit-modal-overlay'));
     }
 }
 
@@ -698,12 +721,12 @@ window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         if (isExitOpen) {
             e.preventDefault();
-            exitModal.classList.add("hidden");
+            hideModal(exitModal);
             return;
         }
         if (isResizeOpen) {
             e.preventDefault();
-            resizeModal.classList.add("hidden");
+            hideModal(resizeModal);
             return;
         }
         if (isModalOpen) {

@@ -21,6 +21,12 @@ html, body {
     position: relative;
     display: flex;
     flex-direction: column;
+    transition: border-color 200ms ease;
+}
+
+/* Mini mode uses 0.3s border transition matching .timer-controls */
+body.timer-only-mode .app-wrapper,
+body.cat-only-mode .app-wrapper {
     transition: border-color 0.3s ease;
 }
 
@@ -237,13 +243,22 @@ html, body {
     align-items: center;
 }
 
-/* Smooth modal entrance animation (300ms matching UI standards and mini-mode overlay transition) */
+/* Smooth modal entrance and exit animations */
 @keyframes modalOverlayFadeIn {
     from {
         opacity: 0;
     }
     to {
         opacity: 1;
+    }
+}
+
+@keyframes modalOverlayFadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
     }
 }
 
@@ -258,22 +273,46 @@ html, body {
     }
 }
 
-#modal-overlay:not(.hidden),
-#resize-modal-overlay:not(.hidden),
-#exit-modal-overlay:not(.hidden) {
-    animation: modalOverlayFadeIn 200ms ease-out forwards; /* 300 */
+@keyframes modalDialogPopOut {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.92);
+    }
 }
 
-#modal-overlay:not(.hidden) .custom-dialog,
-#resize-modal-overlay:not(.hidden) .custom-dialog,
-#exit-modal-overlay:not(.hidden) .custom-dialog {
-    animation: modalDialogPopIn 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards; /* 300 */
+#modal-overlay:not(.hidden):not(.closing),
+#resize-modal-overlay:not(.hidden):not(.closing),
+#exit-modal-overlay:not(.hidden):not(.closing) {
+    animation: modalOverlayFadeIn 200ms ease-out forwards;
+}
+
+#modal-overlay:not(.hidden):not(.closing) .custom-dialog,
+#resize-modal-overlay:not(.hidden):not(.closing) .custom-dialog,
+#exit-modal-overlay:not(.hidden):not(.closing) .custom-dialog {
+    animation: modalDialogPopIn 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+#modal-overlay.closing,
+#resize-modal-overlay.closing,
+#exit-modal-overlay.closing {
+    animation: modalOverlayFadeOut 200ms ease-out forwards;
+    pointer-events: none;
+}
+
+#modal-overlay.closing .custom-dialog,
+#resize-modal-overlay.closing .custom-dialog,
+#exit-modal-overlay.closing .custom-dialog {
+    animation: modalDialogPopOut 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Eliminate white border outline when modal overlays are active */
-.app-wrapper:has(#modal-overlay:not(.hidden)),
-.app-wrapper:has(#resize-modal-overlay:not(.hidden)),
-.app-wrapper:has(#exit-modal-overlay:not(.hidden)) {
+.app-wrapper:has(#modal-overlay:not(.hidden):not(.closing)),
+.app-wrapper:has(#resize-modal-overlay:not(.hidden):not(.closing)),
+.app-wrapper:has(#exit-modal-overlay:not(.hidden):not(.closing)) {
     border-color: #7B7C7B;
     transition-duration: 200ms;
 }

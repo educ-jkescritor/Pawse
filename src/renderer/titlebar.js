@@ -11,6 +11,7 @@ if (closeButton !== null) {
         let exitModal = document.getElementById("exit-modal-overlay");
         if (exitModal !== null) {
             // We are on the timer screen, show the confirmation modal instead of closing immediately
+            exitModal.classList.remove("closing");
             exitModal.classList.remove("hidden");
             return;
         }
@@ -26,6 +27,7 @@ if (homeButton !== null) {
     homeButton.onclick = function goHome() {
         let exitModal = document.getElementById("exit-modal-overlay");
         if (exitModal !== null) {
+            exitModal.classList.remove("closing");
             exitModal.classList.remove("hidden");
             return;
         }
@@ -60,6 +62,7 @@ if (resizeButton !== null) {
             document.body.classList.remove("timer-only-mode", "cat-only-mode");
             window.mainAPI.resize('default');
         } else if (resizeModal !== null) {
+            resizeModal.classList.remove("closing");
             resizeModal.classList.remove("hidden");
         } else {
             window.mainAPI.resize('default');
