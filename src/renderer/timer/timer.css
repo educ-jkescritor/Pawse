@@ -21,6 +21,7 @@ html, body {
     position: relative;
     display: flex;
     flex-direction: column;
+    transition: border-color 0.3s ease;
 }
 
 /* --- MAIN CONTENT --- */
@@ -273,7 +274,8 @@ html, body {
 .app-wrapper:has(#modal-overlay:not(.hidden)),
 .app-wrapper:has(#resize-modal-overlay:not(.hidden)),
 .app-wrapper:has(#exit-modal-overlay:not(.hidden)) {
-    border-color: rgba(0, 0, 0, 0.5);
+    border-color: #7B7C7B;
+    transition-duration: 200ms;
 }
 
 .custom-dialog {
@@ -435,7 +437,7 @@ body.timer-only-mode:hover .app-wrapper,
 body.cat-only-mode:hover .app-wrapper,
 body.timer-only-mode:has(.timer-controls:focus-within) .app-wrapper,
 body.cat-only-mode:has(.timer-controls:focus-within) .app-wrapper {
-    border-color: rgba(0, 0, 0, 0.5);
+    border-color: #7B7C7B;
 }
 
 /* Show timer on hover or keyboard focus in cat-only mode */
