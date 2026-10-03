@@ -444,7 +444,7 @@ p {
     background-color: rgba(0, 0, 0, 0.03); /* Fades in on hover */
 }
 
-/* --- STATE 1: Regular Bar - Default Blue (Solid Soft Pastel) --- */
+/* --- STATE 1: Unhovered Bar - Soft Pastel Blue (#A8DCFF) --- */
 .bar {
     position: relative;
     width: 40px;
@@ -455,32 +455,10 @@ p {
     transition: height 1.0s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.25s ease, transform 0.25s ease;
 }
 
-/* --- STATE 2: Today's Bar - Default Blue (Solid Mid-Tone) --- */
-.bar-wrapper.today .bar {
-    background-color: #70C6FF; /* Distinct mid-tone blue */
-}
-
-/* --- STATE 3: Hovered Bar - Default Blue (Solid Accent + Lift) --- */
+/* --- STATE 2: Hovered Bar - Darker Blue (#35A6F1) + Lift --- */
 .bar-wrapper:hover .bar {
-    background-color: var(--sys-blue-solid) !important; /* Vibrant system blue (#35A6F1) */
+    background-color: var(--sys-blue-solid) !important; /* Vibrant darker system blue (#35A6F1) */
     transform: translateY(-2px); /* Physical lift on selection */
-}
-
-/* Dynamic Companion Themes (Applied on Hover Only) */
-
-/* --- Classic Theme (Green / Tuxedo) --- */
-.graph-bars.tuxedo_cat .bar-wrapper:hover .bar {
-    background-color: var(--theme-classic-solid) !important; /* Brand Classic Green (#CFE58A) */
-}
-
-/* --- Sprint Theme (Orange / Ginger) --- */
-.graph-bars.orange_cat .bar-wrapper:hover .bar {
-    background-color: var(--theme-sprint-solid) !important; /* Brand Sprint Orange (#F8C47F) */
-}
-
-/* --- Focused Theme (Purple / Void) --- */
-.graph-bars.black_cat .bar-wrapper:hover .bar {
-    background-color: var(--theme-focused-solid) !important; /* Brand Focused Purple (#BDA9FE) */
 }
 
 /* Daily Average Benchmark Line */
