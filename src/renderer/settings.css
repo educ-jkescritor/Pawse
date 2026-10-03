@@ -107,25 +107,41 @@ p {
     padding: 32px 24px; /* 32px top and bottom, 24px left and right */
 }
 
-/* --- SLEEK SETTING SCROLLBAR --- */
-/* Custom WebKit scrollbar (do not use standard scrollbar-width, which disables WebKit custom styling in Chromium) */
+/* --- SLEEK SETTING SCROLLBAR (WITH CORNER CLEARANCE) --- */
+/* Custom WebKit scrollbar with inset breathing room */
 *::-webkit-scrollbar,
 .main-bar::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
 }
 
-/* Remove default up and down arrow buttons completely */
-*::-webkit-scrollbar-button,
-.main-bar::-webkit-scrollbar-button,
-.main-bar::-webkit-scrollbar-button:start,
-.main-bar::-webkit-scrollbar-button:end,
-.main-bar::-webkit-scrollbar-button:vertical:start:decrement,
+/* Invisible Top Spacer (clears topbar header line) */
+*::-webkit-scrollbar-button:vertical:start:decrement,
+.main-bar::-webkit-scrollbar-button:vertical:start:decrement {
+    display: block !important;
+    height: 6px !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Invisible Bottom Spacer (clears the 12px rounded corner to prevent clipping) */
+*::-webkit-scrollbar-button:vertical:end:increment,
 .main-bar::-webkit-scrollbar-button:vertical:end:increment {
+    display: block !important;
+    height: 14px !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Suppress all other directional scrollbar buttons */
+*::-webkit-scrollbar-button:vertical:start:increment,
+*::-webkit-scrollbar-button:vertical:end:decrement,
+*::-webkit-scrollbar-button:horizontal,
+.main-bar::-webkit-scrollbar-button:vertical:start:increment,
+.main-bar::-webkit-scrollbar-button:vertical:end:decrement,
+.main-bar::-webkit-scrollbar-button:horizontal {
     display: none !important;
     width: 0 !important;
     height: 0 !important;
-    background: transparent !important;
-    border: none !important;
 }
 
 /* Transparent track so content flows seamlessly */
@@ -137,10 +153,12 @@ p {
     border: none !important;
 }
 
-/* Sleek sliding capsule thumb */
+/* Sleek sliding capsule thumb with a 2px inset from the window border */
 *::-webkit-scrollbar-thumb,
 .main-bar::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.22);
+    background-clip: padding-box;
+    border-right: 2px solid transparent;
     border-radius: 9999px;
     transition: background-color 0.2s ease;
 }
