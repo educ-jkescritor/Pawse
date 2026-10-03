@@ -543,57 +543,175 @@ function updateDashboardDateTime() {
 
 const updateBtn = document.getElementById("update-btn");
 const updateMessage = document.getElementById("update-message");
+let currentAppVersion = "";
+let updateResetTimer = null;
 
-// Restore status from main process whenever Settings window opens:
-if (window.mainAPI && window.mainAPI.getUpdateStatus) {
-    window.mainAPI.getUpdateStatus().then((status) => {
-        if (status) {
-            if (updateMessage) updateMessage.textContent = status.message;
-            if (updateBtn) {
-                updateBtn.textContent = status.buttonText;
-                updateBtn.disabled = status.disabled;
-            }
+function formatLastChecked(timestamp) {
+    if (!timestamp) return null;
+    const date = new Date(Number(timestamp));
+    if (isNaN(date.getTime())) return null;
+
+    const now = new Date();
+    const isToday = (
+        date.getDate() === now.getDate() &&
+        date.getMonth() === now.getMonth() &&
+        date.getFullYear() === now.getFullYear()
+    );
+
+    const timeStr = date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+    if (isToday) {
+        return `Today at ${timeStr}`;
+    }
+
+    const monthStr = date.toLocaleDateString([], { month: "short", day: "numeric" });
+    return `${monthStr} at ${timeStr}`;
+}
+
+function getIdleVersionMessage(version) {
+    const vStr = version ? `v${version}` : "v1.0.0";
+    const lastCheckedTs = localStorage.getItem("pawseLastUpdateCheck");
+    const formattedDate = formatLastChecked(lastCheckedTs);
+
+    if (formattedDate) {
+        return `Current version: ${vStr}. Last checked: ${formattedDate}`;
+    }
+    return `Current version: ${vStr}`;
+}
+
+function applyUpdateStatus(status) {
+    if (!status) return;
+
+    if (updateResetTimer) {
+        clearTimeout(updateResetTimer);
+        updateResetTimer = null;
+    }
+
+    if (updateMessage && status.message) {
+        updateMessage.textContent = status.message;
+    }
+
+    if (updateBtn) {
+        updateBtn.textContent = status.buttonText || "Check for Updates";
+        updateBtn.disabled = Boolean(status.disabled);
+
+        // Reset and apply proper state styling
+        updateBtn.classList.remove("btn-loading", "btn-action", "btn-success");
+        if (status.buttonClass) {
+            updateBtn.classList.add(status.buttonClass);
+        }
+    }
+
+    // Edge case: Up to Date saves timestamp and auto-resets to idle after 4 seconds
+    if (status.state === "up-to-date") {
+        localStorage.setItem("pawseLastUpdateCheck", Date.now().toString());
+
+        updateResetTimer = setTimeout(() => {
+            applyUpdateStatus({
+                state: "idle",
+                message: getIdleVersionMessage(currentAppVersion),
+                buttonText: "Check for Updates",
+                buttonClass: "",
+                disabled: false
+            });
+        }, 4000);
+    }
+}
+
+// 1. Fetch current app version and populate version labels
+if (window.mainAPI && window.mainAPI.getVersion) {
+    window.mainAPI.getVersion().then((version) => {
+        if (!version) return;
+        currentAppVersion = version;
+        const badge = document.querySelector(".version-badge");
+        if (badge) badge.textContent = `v${version}`;
+
+        // Ensure update message displays formatted version with Last checked date
+        if (updateMessage && (!updateBtn || !updateBtn.classList.contains("btn-loading"))) {
+            updateMessage.textContent = getIdleVersionMessage(version);
         }
     });
 }
 
-if (window.mainAPI && window.mainAPI.getVersion) {
-    window.mainAPI.getVersion().then((version) => {
-        const badge = document.querySelector('.version-badge');
-        if (badge && version) badge.textContent = `v${version}`;
+// 2. Restore active status from main process whenever Settings window is opened
+if (window.mainAPI && window.mainAPI.getUpdateStatus) {
+    window.mainAPI.getUpdateStatus().then((status) => {
+        if (status) {
+            // If idle on open, show Last checked timestamp if available
+            if (status.state === "idle") {
+                status.message = getIdleVersionMessage(currentAppVersion || status.version);
+            }
+            applyUpdateStatus(status);
+        }
     });
 }
 
+// 3. User interaction handler for the update button
 if (updateBtn) {
     updateBtn.onclick = function() {
-        if (updateBtn.textContent === "Download") {
-            if (updateMessage) updateMessage.textContent = "Downloading...";
-            updateBtn.disabled = true;
-            window.mainAPI.downloadUpdate();
-        } else if (updateBtn.textContent === "Restart Now") {
+        if (updateBtn.disabled || updateBtn.classList.contains("btn-loading")) {
+            return;
+        }
+
+        const currentText = updateBtn.textContent.trim();
+        if (currentText === "Restart & Update" || currentText === "Restart Now") {
+            // Immediate action: trigger app restart/reload directly on click
             window.mainAPI.restartApp();
         } else {
-            if (updateMessage) updateMessage.textContent = "Checking...";
-            updateBtn.disabled = true;
+            // "Check for Updates" or "Retry"
+            applyUpdateStatus({
+                state: "checking",
+                message: "Looking for the latest version...",
+                buttonText: "Checking...",
+                buttonClass: "btn-loading",
+                disabled: true
+            });
             window.mainAPI.checkForUpdates();
         }
     };
 }
 
-if (window.mainAPI && window.mainAPI.onUpdateMessage) {
+// 4. Listen for real-time status updates from main process
+if (window.mainAPI && window.mainAPI.onUpdateStatus) {
+    window.mainAPI.onUpdateStatus((status) => {
+        applyUpdateStatus(status);
+    });
+} else if (window.mainAPI && window.mainAPI.onUpdateMessage) {
     window.mainAPI.onUpdateMessage((message) => {
-        if (updateMessage) updateMessage.textContent = message;
+        const vStr = currentAppVersion ? `v${currentAppVersion}` : "v1.0.0";
+        let buttonText = "Check for Updates";
+        let buttonClass = "";
+        let disabled = false;
+        let state = "idle";
 
-        if (message === "Update Available") {
-            updateBtn.textContent = "Download";
-            updateBtn.disabled = false;
-        } else if (message === "Restart App to Install") {
-            updateBtn.textContent = "Restart Now";
-            updateBtn.disabled = false;
-        } else if (message === "Up to date" || message === "Error") {
-            updateBtn.textContent = "Check";
-            updateBtn.disabled = false;
+        if (message === "Update Available" || message.includes("Downloading") || message === "Downloading...") {
+            buttonText = "Downloading...";
+            buttonClass = "btn-loading";
+            state = "downloading";
+            disabled = true;
+        } else if (message === "Restart App to Install" || message === "Restart & Update" || message.includes("ready. Restart to apply")) {
+            buttonText = "Restart & Update";
+            buttonClass = "btn-action";
+            state = "downloaded";
+        } else if (message.includes("Checked just now") || message === "Up to date") {
+            buttonText = "Up to Date";
+            buttonClass = "btn-success";
+            state = "up-to-date";
+            message = `Current version: ${vStr}. Checked just now.`;
+            disabled = true;
+        } else if (message.includes("Looking for the latest version") || message === "Checking...") {
+            buttonText = "Checking...";
+            buttonClass = "btn-loading";
+            state = "checking";
+            message = "Looking for the latest version...";
+            disabled = true;
+        } else if (message.includes("Couldn't connect") || message === "Error") {
+            buttonText = "Check for Updates";
+            message = "Couldn't connect. Check your internet and try again.";
+            state = "error";
         }
+
+        applyUpdateStatus({ state, message, buttonText, buttonClass, disabled });
     });
 }
 

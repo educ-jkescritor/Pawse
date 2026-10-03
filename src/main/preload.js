@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('mainAPI', {
     downloadUpdate: () => ipcRenderer.send('download-update'),
     restartApp: () => ipcRenderer.send('restart-app'),
     onUpdateMessage: (callback) => ipcRenderer.on('update-message', (event, message) => callback(message)),
+    onUpdateStatus: (callback) => ipcRenderer.on('update-status-changed', (event, status) => callback(status)),
     getUpdateStatus: () => ipcRenderer.invoke('get-update-status'),
     getVersion: () => ipcRenderer.invoke('get-version') 
 });

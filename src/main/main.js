@@ -381,17 +381,30 @@ ipcMain.on('restore-window', (event) => {
   }, 500);
 });
 
-autoUpdater.autoDownload = false;
+autoUpdater.autoDownload = true;
 
 let currentUpdateStatus = {
-  message: 'Check for new versions of Pawse.',
-  buttonText: 'Check',
-  disabled: false
+  state: 'idle',
+  message: 'Current version: v' + app.getVersion(),
+  buttonText: 'Check for Updates',
+  buttonClass: '',
+  disabled: false,
+  version: app.getVersion(),
+  newVersion: null
 };
 
-function sendUpdateStatus(message, buttonText, disabled = false) {
-  currentUpdateStatus = { message, buttonText, disabled };
-  if (set) {
+function sendUpdateStatus(state, message, buttonText, buttonClass = '', disabled = false, newVersion = null) {
+  currentUpdateStatus = {
+    state,
+    message,
+    buttonText,
+    buttonClass,
+    disabled,
+    version: app.getVersion(),
+    newVersion
+  };
+  if (set && !set.isDestroyed()) {
+    set.webContents.send('update-status-changed', currentUpdateStatus);
     set.webContents.send('update-message', message);
   }
 }
@@ -402,47 +415,120 @@ ipcMain.handle('get-update-status', () => {
 
 ipcMain.on('check-for-updates', () => {
   if (!app.isPackaged) {
-    sendUpdateStatus('Checking...', 'Check', true);
+    console.log('[AutoUpdater - DEV SIMULATOR] Checking for updates...');
+    sendUpdateStatus('checking', 'Looking for the latest version...', 'Checking...', 'btn-loading', true);
+    
     setTimeout(() => {
-      sendUpdateStatus('Update Available', 'Download', false);
-    }, 500);
+      // Support testing edge cases via env var (e.g. PAWSE_MOCK_UPDATE="up-to-date" or "error")
+      const mockMode = (process.env.PAWSE_MOCK_UPDATE || 'available').toLowerCase();
+      if (mockMode === 'up-to-date') {
+        console.log('[AutoUpdater - DEV SIMULATOR] Simulated up to date');
+        sendUpdateStatus(
+          'up-to-date',
+          'Current version: v' + app.getVersion() + '. Checked just now.',
+          'Up to Date',
+          'btn-success',
+          true
+        );
+      } else if (mockMode === 'error') {
+        console.log('[AutoUpdater - DEV SIMULATOR] Simulated update check error');
+        sendUpdateStatus(
+          'error',
+          "Couldn't connect. Check your internet and try again.",
+          'Check for Updates',
+          '',
+          false
+        );
+      } else {
+        const simVersion = '1.1.0';
+        console.log('[AutoUpdater - DEV SIMULATOR] Update found (v' + simVersion + '). Auto-starting download...');
+        sendUpdateStatus(
+          'downloading',
+          `Downloading PAWSE v${simVersion}...`,
+          'Downloading...',
+          'btn-loading',
+          true,
+          simVersion
+        );
+
+        setTimeout(() => {
+          console.log('[AutoUpdater - DEV SIMULATOR] Download complete. Ready to restart.');
+          sendUpdateStatus(
+            'downloaded',
+            `PAWSE v${simVersion} is ready. Restart to apply.`,
+            'Restart & Update',
+            'btn-action',
+            false,
+            simVersion
+          );
+        }, 2500);
+      }
+    }, 1200);
     return;
   }
-  sendUpdateStatus('Checking...', 'Check', true);
-  autoUpdater.checkForUpdates();
+
+  sendUpdateStatus('checking', 'Looking for the latest version...', 'Checking...', 'btn-loading', true);
+  autoUpdater.checkForUpdates().catch((err) => {
+    console.error('[AutoUpdater] Check failed:', err?.message || err);
+    sendUpdateStatus(
+      'error',
+      "Couldn't connect. Check your internet and try again.",
+      'Check for Updates',
+      '',
+      false
+    );
+  });
 }); 
 
-ipcMain.on('download-update', () => {
-  if (!app.isPackaged) {
-    sendUpdateStatus('Downloading...', 'Download', true);
-    setTimeout(() => {
-      sendUpdateStatus('Restart App to Install', 'Restart Now', false);
-    }, 2500);
-    return;
-  }
-  sendUpdateStatus('Downloading...', 'Download', true);
-  autoUpdater.downloadUpdate();
-});
-
-autoUpdater.on('update-available', () => {
-  sendUpdateStatus('Update Available', 'Download', false);
+autoUpdater.on('update-available', (info) => {
+  const v = info && info.version ? `v${info.version}` : '';
+  console.log('[AutoUpdater] Update available (' + v + '), auto-downloading...');
+  sendUpdateStatus(
+    'downloading',
+    `Downloading PAWSE ${v}...`.trim(),
+    'Downloading...',
+    'btn-loading',
+    true,
+    info?.version
+  );
 });
 
 autoUpdater.on('update-not-available', () => {
-  sendUpdateStatus('Up to date', 'Check', false);
+  sendUpdateStatus(
+    'up-to-date',
+    'Current version: v' + app.getVersion() + '. Checked just now.',
+    'Up to Date',
+    'btn-success',
+    true
+  );
 });
 
 autoUpdater.on('error', (err) => {
-  console.log("Error:", err.message);
-  sendUpdateStatus('Error', 'Check', false);
+  console.error('[AutoUpdater] Error:', err?.message || err);
+  sendUpdateStatus(
+    'error',
+    "Couldn't connect. Check your internet and try again.",
+    'Check for Updates',
+    '',
+    false
+  );
 });
 
-autoUpdater.on('update-downloaded', () => {
-  sendUpdateStatus('Restart App to Install', 'Restart Now', false);
+autoUpdater.on('update-downloaded', (info) => {
+  const v = info && info.version ? `v${info.version}` : '';
+  sendUpdateStatus(
+    'downloaded',
+    `PAWSE ${v} is ready. Restart to apply.`.trim(),
+    'Restart & Update',
+    'btn-action',
+    false,
+    info?.version
+  );
 });
 
 ipcMain.on('restart-app', () => {
   if (!app.isPackaged) {
+    console.log('[AutoUpdater - DEV SIMULATOR] Restart & Update clicked. Relaunching app immediately...');
     app.relaunch();
     app.quit();
     return;
