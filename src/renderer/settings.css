@@ -107,6 +107,54 @@ p {
     padding: 32px 24px; /* 32px top and bottom, 24px left and right */
 }
 
+/* --- SLEEK SETTING SCROLLBAR --- */
+/* Custom WebKit scrollbar (do not use standard scrollbar-width, which disables WebKit custom styling in Chromium) */
+*::-webkit-scrollbar,
+.main-bar::-webkit-scrollbar {
+    width: 6px;
+}
+
+/* Remove default up and down arrow buttons completely */
+*::-webkit-scrollbar-button,
+.main-bar::-webkit-scrollbar-button,
+.main-bar::-webkit-scrollbar-button:start,
+.main-bar::-webkit-scrollbar-button:end,
+.main-bar::-webkit-scrollbar-button:vertical:start:decrement,
+.main-bar::-webkit-scrollbar-button:vertical:end:increment {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Transparent track so content flows seamlessly */
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track-piece,
+.main-bar::-webkit-scrollbar-track,
+.main-bar::-webkit-scrollbar-track-piece {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Sleek sliding capsule thumb */
+*::-webkit-scrollbar-thumb,
+.main-bar::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.22);
+    border-radius: 9999px;
+    transition: background-color 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover,
+.main-bar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+*::-webkit-scrollbar-corner,
+.main-bar::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
 .tab-panel {
     display: flex;
     flex-direction: column;
