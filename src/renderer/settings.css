@@ -111,7 +111,7 @@ p {
 /* Custom WebKit scrollbar with inset breathing room */
 *::-webkit-scrollbar,
 .main-bar::-webkit-scrollbar {
-    width: 8px;
+    width: 10px;
 }
 
 /* Invisible Top Spacer (clears topbar header line) */
@@ -153,13 +153,14 @@ p {
     border: none !important;
 }
 
-/* Sleek sliding capsule thumb with a 2px inset from the window border */
+/* Sleek sliding capsule thumb with symmetrical 2px inset and smooth rounded ends */
 *::-webkit-scrollbar-thumb,
 .main-bar::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.22);
     background-clip: padding-box;
-    border-right: 2px solid transparent;
-    border-radius: 9999px;
+    border: 2px solid transparent; /* Symmetrical on all 4 sides so Skia draws uniform round corners */
+    border-radius: 10px;
+    min-height: 36px;
     transition: background-color 0.2s ease;
 }
 
