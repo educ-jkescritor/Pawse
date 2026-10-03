@@ -917,35 +917,53 @@ p {
 }
 
 /* UPDATE BUTTON */
-/* Check */
+
+/* Check for Updates (Default) */
 #update-btn {
     background-color: transparent;
-    border: 1px solid var(--sys-blue-solid);
-    color: var(--sys-blue-solid);
+    border: 1px solid #35A6F1;
+    color: #35A6F1;
     border-radius: 20px;
     padding: 6px 16px;
     cursor: pointer;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
+
 #update-btn:hover {
-    background-color: var(--sys-blue-solid);
-    color: #FFFFFF;
+    border-color: #288BD0;
+    background-color: rgba(40, 139, 208, 0.1); /* #288BD0 at 10% opacity */
+    color: #288BD0;
 }
 
-/* Restart */
+#update-btn:active {
+    border-color: #288BD0;
+    background-color: rgba(40, 139, 208, 0.2); /* #288BD0 at 20% opacity */
+    color: #288BD0;
+}
+
+/* Restart & Update (Action) */
 #update-btn.btn-action {
-    background-color: var(--sys-blue-solid);
+    border: 1px solid #35A6F1;
+    background-color: #35A6F1;
     color: #FFFFFF;
 }
 
 #update-btn.btn-action:hover {
-    filter: brightness(0.9);
+    border-color: #288BD0;
+    background-color: #288BD0;
+    color: #FFFFFF;
+}
+
+#update-btn.btn-action:active {
+    border-color: #1F70A8;
+    background-color: #1F70A8;
+    color: #FFFFFF;
 }
 
 /* Checking & Downloading */
 #update-btn.btn-loading {
-    border-color: var(--text-gray);
-    color: var(--text-gray);
+    border-color: #9E9E9E;
+    color: #9E9E9E;
     background-color: transparent;
     pointer-events: none;
 }
