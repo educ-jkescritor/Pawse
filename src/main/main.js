@@ -67,6 +67,12 @@ function createWindow() {
 
   win.loadFile(path.join(__dirname, "../renderer/index.html"));
 
+  win.on('focus', () => {
+    if (win && !win.isDestroyed()) {
+      win.flashFrame(false);
+    }
+  });
+
   win.on('closed', () => {
     if(set) {
       set.close();
@@ -379,6 +385,19 @@ ipcMain.on('restore-window', (event) => {
   setTimeout(() => {
     targetWin.setAlwaysOnTop(globalAlwaysOnTop);
   }, 500);
+});
+
+ipcMain.on('flash-frame', (event, flag) => {
+  const senderWindow = BrowserWindow.fromWebContents(event.sender);
+  if (senderWindow && !senderWindow.isDestroyed()) {
+    if (flag) {
+      if (!senderWindow.isFocused() || senderWindow.isMinimized()) {
+        senderWindow.flashFrame(true);
+      }
+    } else {
+      senderWindow.flashFrame(false);
+    }
+  }
 });
 
 autoUpdater.autoDownload = true;

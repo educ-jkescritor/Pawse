@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('mainAPI', {
     setAlwaysOnTop: (isAlwaysOnTop) => ipcRenderer.send('set-always-on-top', isAlwaysOnTop),
     loadanalytics: (weeksAgo) => ipcRenderer.invoke('load-analytics', weeksAgo),
     restoreWindow: () => ipcRenderer.send('restore-window'),
+    flashFrame: (flag) => ipcRenderer.send('flash-frame', flag),
     checkForUpdates: () => ipcRenderer.send('check-for-updates'),
     downloadUpdate: () => ipcRenderer.send('download-update'),
     restartApp: () => ipcRenderer.send('restart-app'),

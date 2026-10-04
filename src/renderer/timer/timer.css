@@ -459,23 +459,23 @@ body.timer-only-mode #timer-container {
 }
 
 body.timer-only-mode:hover #timer-container,
-body.timer-only-mode:has(.timer-controls:focus-within) #timer-container {
+body.timer-only-mode:has(.timer-controls button:focus-visible) #timer-container {
     filter: blur(3px);
     opacity: 0.45;
 }
 
 body.timer-only-mode:hover .timer-controls,
 body.cat-only-mode:hover .timer-controls,
-body.timer-only-mode .timer-controls:focus-within,
-body.cat-only-mode .timer-controls:focus-within {
+body.timer-only-mode .timer-controls:has(button:focus-visible),
+body.cat-only-mode .timer-controls:has(button:focus-visible) {
     opacity: 1;
 }
 
 /* Eliminate white border outline on mini-mode hover */
 body.timer-only-mode:hover .app-wrapper,
 body.cat-only-mode:hover .app-wrapper,
-body.timer-only-mode:has(.timer-controls:focus-within) .app-wrapper,
-body.cat-only-mode:has(.timer-controls:focus-within) .app-wrapper {
+body.timer-only-mode:has(.timer-controls button:focus-visible) .app-wrapper,
+body.cat-only-mode:has(.timer-controls button:focus-visible) .app-wrapper {
     border-color: #7B7C7B;
 }
 
@@ -549,7 +549,7 @@ body.cat-only-mode .cat-sprite {
 }
 
 body.cat-only-mode:hover .cat-sprite,
-body.cat-only-mode:has(.timer-controls:focus-within) .cat-sprite {
+body.cat-only-mode:has(.timer-controls button:focus-visible) .cat-sprite {
     filter: blur(4px);
 }
 
