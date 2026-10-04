@@ -321,6 +321,7 @@ ease;
     height: 24px;
     border-radius: 4px;
     box-sizing: border-box;
+    transition: background-color 0.15s ease;
 }
 
 .main-window-controls button img,
@@ -331,17 +332,16 @@ ease;
     object-fit: contain;
     pointer-events: none;
     -webkit-user-drag: none;
-    transition: opacity 0.1s ease;
 }
 
-/* Hide static icon on hover */
-.main-window-controls button:not(#hub-btn):hover img,
-.settings-window-controls button:hover img {
-    opacity: 0;
+/* Hover: soft desktop pill highlight (no icon shifting or glitching) */
+.main-window-controls button:hover,
+.settings-window-controls button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
-/* Base overlay for the hover sprite */
-.main-window-controls button:not(#hub-btn)::after,
+/* Base overlay for the clicked asset */
+.main-window-controls button::after,
 .settings-window-controls button::after {
     content: '';
     position: absolute;
@@ -351,43 +351,64 @@ ease;
     width: 24px;
     height: 24px;
     background-repeat: no-repeat;
-    background-size: 48px 24px; /* 2 frames of 24px each */
-    background-position: -24px 0px; /* Frame 2 (Hover state with shadow) */
+    background-size: 24px 24px;
+    background-position: center;
     image-rendering: pixelated;
     pointer-events: none;
     display: none;
 }
 
-.main-window-controls button:not(#hub-btn):hover::after,
-.settings-window-controls button:hover::after {
+/* Pre-assigned clicked asset per button */
+#hub-btn::after {
+    background-image: url('../assets/icons/hub-btn-click.png');
+}
+
+#minimize-btn::after {
+    background-image: url('../assets/icons/minimize-btn-click.png');
+}
+
+#close-btn::after {
+    background-image: url('../assets/icons/close-btn-click.png');
+}
+
+#resize-btn::after,
+#decrease-btn::after {
+    background-image: url('../assets/icons/decrease-btn-click.png');
+}
+
+#home-btn::after {
+    background-image: url('../assets/icons/home-btn-click.png');
+}
+
+/* On click press (:active), swap seamlessly to the depressed asset */
+.main-window-controls button:active,
+.settings-window-controls button:active {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+.main-window-controls button:active img,
+.settings-window-controls button:active img {
+    display: none;
+}
+
+.main-window-controls button:active::after,
+.settings-window-controls button:active::after {
     display: block;
 }
 
-/* Hub button interaction */
-#hub-btn:hover img {
-    opacity: 0.8;
-}
-
-#hub-btn:active {
-    transform: scale(0.92);
-}
-
-/* Specific sprites per button */
-#minimize-btn:hover::after {
-    background-image: url('../assets/sprites/minimize-btn-hover.png');
-}
-
-#close-btn:hover::after {
-    background-image: url('../assets/sprites/close-btn-hover.png');
-}
-
-#resize-btn:hover::after,
-#decrease-btn:hover::after {
-    background-image: url('../assets/sprites/decrease-btn-hover.png');
-}
-
-#home-btn:hover::after {
-    background-image: url('../assets/sprites/home-btn-hover.png');
+/* Preload click icon assets so they switch with zero latency on first press */
+body::after {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    z-index: -9999;
+    pointer-events: none;
+    content: url('../assets/icons/hub-btn-click.png') 
+             url('../assets/icons/minimize-btn-click.png') 
+             url('../assets/icons/close-btn-click.png') 
+             url('../assets/icons/decrease-btn-click.png') 
+             url('../assets/icons/home-btn-click.png');
 }
 
 /* --- MAIN CONTENT --- */
