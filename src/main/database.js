@@ -83,6 +83,7 @@ function generateAnalytics(weeksAgo = 0) {
             historical_pomodoro: 0,
             favorite_cat: 'None',
             weekly_data: [0, 0, 0, 0, 0, 0, 0], // Sun to Sat
+            weekly_avg_seconds: 0,
             current_streak: 0,
             best_streak: 0,
             avg_daily_seconds: 0,
@@ -257,6 +258,15 @@ function generateAnalytics(weeksAgo = 0) {
                                 
                                 // We now send raw seconds instead of destructively rounding to hours
                                 // to ensure even short sessions (like 2 minutes) are accurately graphed.
+                            }
+
+                            // Calculate daily average for the selected week across active days (> 0 seconds)
+                            const activeWeekDays = analyticData.weekly_data.filter(seconds => seconds > 0);
+                            if (activeWeekDays.length > 0) {
+                                const totalWeekWork = activeWeekDays.reduce((acc, s) => acc + s, 0);
+                                analyticData.weekly_avg_seconds = Math.round(totalWeekWork / activeWeekDays.length);
+                            } else {
+                                analyticData.weekly_avg_seconds = 0;
                             }
 
                             resolve(analyticData);

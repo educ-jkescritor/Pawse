@@ -65,23 +65,18 @@ function getWeekDateRangeString(weeksAgo) {
     const saturday = new Date(sunday);
     saturday.setDate(sunday.getDate() + 6);
     
-    const startMonth = sunday.toLocaleDateString('en-US', { month: 'short' });
-    const endMonth = saturday.toLocaleDateString('en-US', { month: 'short' });
+    const startMonth = sunday.toLocaleDateString('en-US', { month: 'long' });
+    const endMonth = saturday.toLocaleDateString('en-US', { month: 'long' });
     const startDay = sunday.getDate();
     const endDay = saturday.getDate();
     
-    // If spanning across different years (e.g. Dec 27, 2026 – Jan 2, 2027)
-    if (sunday.getFullYear() !== saturday.getFullYear()) {
-        return `${startMonth} ${startDay}, ${sunday.getFullYear()} – ${endMonth} ${endDay}, ${saturday.getFullYear()}`;
-    }
-    
-    // If within the same month (e.g. Oct 4 – 10)
+    // If within the same month (e.g. September 1 - 7)
     if (startMonth === endMonth) {
-        return `${startMonth} ${startDay} – ${endDay}`;
+        return `${startMonth} ${startDay} - ${endDay}`;
     }
     
-    // If crossing month boundary within same year (e.g. Sep 27 – Oct 3)
-    return `${startMonth} ${startDay} – ${endMonth} ${endDay}`;
+    // If crossing month boundary (e.g. September 27 - October 3)
+    return `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
 }
 
 async function loadAnalytics(weeksAgo = 0) {
@@ -128,7 +123,12 @@ async function loadAnalytics(weeksAgo = 0) {
         if (avgSeconds === 0) {
             todayVsAvgEl.textContent = "First day tracking";
             todayVsAvgEl.className = "card-subtext font-inter-10-regular text-gray";
+            todayVsAvgEl.title = "No previous days tracked yet";
         } else {
+            const avgH = Math.floor(avgSeconds / 3600);
+            const avgM = Math.round((avgSeconds % 3600) / 60);
+            const formattedAvg = avgH > 0 ? (avgM > 0 ? `${avgH}h ${avgM}m` : `${avgH}h`) : `${avgM}m`;
+
             const diffSeconds = totalSeconds - avgSeconds;
             const absDiff = Math.abs(diffSeconds);
             const diffHours = Math.floor(absDiff / 3600);
@@ -136,15 +136,16 @@ async function loadAnalytics(weeksAgo = 0) {
             const formattedDiff = diffHours > 0 ? `${diffHours}h ${diffMins}m` : `${diffMins}m`;
 
             if (diffSeconds > 60) {
-                todayVsAvgEl.textContent = `▲ +${formattedDiff} vs avg`;
+                todayVsAvgEl.textContent = `▲ +${formattedDiff} vs. avg ${formattedAvg}`;
                 todayVsAvgEl.className = "card-subtext font-inter-10-regular trend-up";
             } else if (diffSeconds < -60) {
-                todayVsAvgEl.textContent = `▼ -${formattedDiff} vs avg`;
+                todayVsAvgEl.textContent = `▼ -${formattedDiff} vs. avg ${formattedAvg}`;
                 todayVsAvgEl.className = "card-subtext font-inter-10-regular trend-down";
             } else {
-                todayVsAvgEl.textContent = "On par with daily avg";
+                todayVsAvgEl.textContent = `On par with avg (${formattedAvg})`;
                 todayVsAvgEl.className = "card-subtext font-inter-10-regular text-gray";
             }
+            todayVsAvgEl.title = `Today: ${timeString} | Overall Daily Average: ${formattedAvg}`;
         }
     }
 
@@ -232,10 +233,13 @@ async function loadAnalytics(weeksAgo = 0) {
             graphBarsContainer.classList.add("empty-state"); // Disable hover highlights
         }
         
-        // Scale ceiling considers both the tallest bar of the week and daily average so neither overflows
-        const avgSeconds = data.avg_daily_seconds || 0;
+        // Scale ceiling considers both the tallest bar of the week and weekly average so neither overflows
+        const weekAvgSeconds = data.weekly_avg_seconds !== undefined ? data.weekly_avg_seconds : (() => {
+            const activeDays = data.weekly_data.filter(s => s > 0);
+            return activeDays.length > 0 ? Math.round(activeDays.reduce((a, b) => a + b, 0) / activeDays.length) : 0;
+        })();
         const maxBarSeconds = Math.max(...data.weekly_data, 1); 
-        const ceilingSeconds = Math.max(maxBarSeconds, avgSeconds);
+        const ceilingSeconds = Math.max(maxBarSeconds, weekAvgSeconds);
         
         data.weekly_data.forEach((seconds, index) => {
             const heightPercent = (seconds / ceilingSeconds) * 100;
@@ -295,14 +299,14 @@ async function loadAnalytics(weeksAgo = 0) {
             graphBarsContainer.appendChild(barWrapper);
         });
 
-        // Draw Daily Average Benchmark Line if user has focus history and current week has data
-        if (hasData && avgSeconds > 0) {
+        // Draw Daily Average Benchmark Line if current week has data and weekly average > 0
+        if (hasData && weekAvgSeconds > 0) {
             const avgLine = document.createElement("div");
             avgLine.className = "avg-benchmark-line";
 
             // Format average time for badge (e.g. "avg 12m" or "avg 1h 15m")
-            const avgH = Math.floor(avgSeconds / 3600);
-            const avgM = Math.round((avgSeconds % 3600) / 60);
+            const avgH = Math.floor(weekAvgSeconds / 3600);
+            const avgM = Math.round((weekAvgSeconds % 3600) / 60);
             const formattedAvg = avgH > 0 ? (avgM > 0 ? `${avgH}h ${avgM}m` : `${avgH}h`) : `${avgM}m`;
 
             const avgBadge = document.createElement("span");
@@ -314,7 +318,7 @@ async function loadAnalytics(weeksAgo = 0) {
             const containerHeight = graphBarsContainer.clientHeight || 79;
             const baselineBottom = 20; // 12px label + 8px gap
             const maxBarHeight = Math.max(containerHeight - 20 - 16, 10); // 16px padding-top
-            const avgRatio = Math.min(avgSeconds / ceilingSeconds, 1);
+            const avgRatio = Math.min(weekAvgSeconds / ceilingSeconds, 1);
             const lineBottom = baselineBottom + (avgRatio * maxBarHeight);
             
             avgLine.style.bottom = `${lineBottom}px`;
@@ -533,8 +537,8 @@ function updateDashboardDateTime() {
 
     const now = new Date();
     
-    // Format: "Oct 1, 2026"
-    const optionsDate = { year: 'numeric', month: 'short', day: 'numeric' };
+    // Format: "October 5, 2026"
+    const optionsDate = { year: 'numeric', month: 'long', day: 'numeric' };
     
     const dateStr = now.toLocaleDateString('en-US', optionsDate);
 
