@@ -27,7 +27,7 @@ html, body {
 .page-container {
     height: 100%;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     overflow: hidden; /* Prevents global browser scrollbars */
 }
 
@@ -43,29 +43,42 @@ p {
     -webkit-app-region: drag;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     padding: 8px 12px;
     border-bottom: 1px solid var(--stroke-color);
-    background: var(--topbar-fill);
+    background: transparent;
     position: relative;
 }
 /* .settings-window-controls and .main-window-controls are defined in index.css */
 
-/* --- SETTINGS LAYOUT --- */
-.settings-layout {
+/* --- RIGHT PANEL --- */
+.right-panel {
     display: flex;
-    flex: 1; /* Grows to fill all remaining vertical space */
-    overflow: hidden; /* Keeps scroll barscontained inside children */
+    flex-direction: column;
+    flex: 1;
+    background-color: #FFFFFF;
+    overflow: hidden;
 }
 
 /* --- LEFT SIDE BAR --- */
 .side-bar {
-    width: 160px;
+    width: 180px;
     padding: 16px;
     border-right: 1px solid var(--stroke-color);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    -webkit-app-region: drag;
+}
+
+.side-bar .app-title {
+    margin-bottom: 24px; /* Adds space between PAWSE and Dashboard button */
+}
+
+.utilities {
+    margin-top: auto; /* Pushes the About and Settings buttons firmly to the bottom */
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .side-bar button {
@@ -81,6 +94,7 @@ p {
     gap: 4px;
     cursor: pointer;
     transition: background-color 0.15s ease, border-color 0.15s ease;
+    -webkit-app-region: no-drag;
 }
 
 /* Hover style for unselected buttons */
