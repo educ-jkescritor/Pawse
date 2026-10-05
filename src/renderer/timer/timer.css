@@ -41,23 +41,26 @@ body.cat-only-mode .app-wrapper {
     line-height: 1; /* controls the space consumed by the text */
 }
 
+#timer-display {
+    font-variant-numeric: tabular-nums;
+}
+
 .session-counter{
     width: 100%;
     display: flex;
     justify-content: center;
-    gap: 12px;
+    gap: 8px;
 }
 
 .fish-icon {
-    width: 16px;
-    height: 16px;
+    width: 24px;
+    height: 24px;
     display: inline-block;
     background-image: url('../../assets/icons/uncompleted-fish.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
     image-rendering: pixelated;
-    transform: scale(1.5);
 }
 
 /* --- CAT AREA --- */

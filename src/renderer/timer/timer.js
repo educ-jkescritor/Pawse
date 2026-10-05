@@ -568,10 +568,12 @@ if (strictMode) {
     skipButton.disabled = true;
     skipButton.style.opacity = "0.5";
     skipButton.style.cursor = "not-allowed";
+    skipButton.title = "Strict Mode is enabled (skipping disabled)";
 
     playButton.disabled = true;
     playButton.style.opacity = "0.5";
     playButton.style.cursor = "not-allowed";
+    playButton.title = "Strict Mode is enabled (pausing disabled)";
 }
 
 skipButton.addEventListener("click", () => {
