@@ -63,19 +63,36 @@ p {
 /* --- LEFT SIDE BAR --- */
 .side-bar {
     width: 180px;
-    padding: 16px;
+    padding: 8px 16px 8px 16px;
     border-right: 1px solid var(--stroke-color);
     display: flex;
     flex-direction: column;
     -webkit-app-region: drag;
 }
 
-.side-bar .app-title {
-    margin-bottom: 24px; /* Adds space between PAWSE and Dashboard button */
+.sidebar-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.brand-logo {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    image-rendering: pixelated;
 }
 
 .utilities {
-    margin-top: auto; /* Pushes the About and Settings buttons firmly to the bottom */
+    margin-top: auto; /* Pushes the About and Settings buttons to the bottom */
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -85,7 +102,7 @@ p {
     width: 100%;
     height: 32px;
     padding: 8px 12px;
-    border: 1px solid transparent; /* No border by default */
+    border: 1px solid transparent;
     border-radius: 8px;
     background: transparent;
     display: flex;
@@ -95,6 +112,20 @@ p {
     cursor: pointer;
     transition: background-color 0.15s ease, border-color 0.15s ease;
     -webkit-app-region: no-drag;
+}
+
+.side-bar button.sidebar-menu-btn {
+    width: 24px;
+    height: 24px;
+    padding: 2px;
+    border: none;
+    background: transparent;
+    justify-content: center;
+}
+
+.side-bar button.sidebar-menu-btn img {
+    width: 16px;
+    height: 16px;
 }
 
 /* Hover style for unselected buttons */
