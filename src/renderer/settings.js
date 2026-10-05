@@ -8,6 +8,22 @@ closeButton.onclick = function closeWindow() {
     window.mainAPI.close();
 }
 
+const sidebar = document.querySelector(".side-bar");
+const sidebarMenuButton = document.querySelector(".sidebar-menu-btn");
+const brandLogo = document.querySelector(".brand-logo");
+
+if (sidebar && sidebarMenuButton) {
+    sidebarMenuButton.addEventListener("click", () => {
+        sidebar.classList.add("collapsed");
+    });
+}
+
+if (sidebar && brandLogo) {
+    brandLogo.addEventListener("click", () => {
+        sidebar.classList.remove("collapsed");
+    });
+}
+
 function hideAllContents() {
     dashboardContent.classList.add("hidden");
     aboutContent.classList.add("hidden");
