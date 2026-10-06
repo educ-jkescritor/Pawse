@@ -238,7 +238,7 @@ p {
 
 /* Hover style for unselected buttons */
 .side-bar button:hover:not(.active) {
-    background: rgba(0, 0, 0, 0.04);
+    background: rgba(0, 0, 0, 0.03);
 }
 
 /* Selected button styling: border and darker fill background */
