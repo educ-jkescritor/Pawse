@@ -33,7 +33,7 @@
     --font-pixel: 'Pixelify Sans', sans-serif;
     /* --- TEXT COLORS --- */
     --text-black: #141414;
-    --text-gray: #5F5F5F;
+    --text-gray: #52525B;
 
     /* --- UI LAYOUT COLORS --- */
     --bg-main: #F6F8F7;
@@ -111,6 +111,7 @@ input, textarea {
     font-family: var(--font-pixel);
     font-size: 36px;
     font-weight: 700;
+    font-variant-numeric: tabular-nums;
 }
 
 .font-pixel-16-bold {
@@ -129,6 +130,7 @@ input, textarea {
     font-family: var(--font-pixel);
     font-size: 64px;
     font-weight: 700;
+    font-variant-numeric: tabular-nums;
 }
 
 .font-inter-10-regular {

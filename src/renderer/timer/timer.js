@@ -42,6 +42,7 @@ let actualBreak = 0;
 let workCount = 0;
 let breakCount = 0;
 let isAlarmPlaying = false;
+let pendingModal = null;
 let sessionDate = new Date();
 
 // --- DURABLE EXECUTION ENGINE (Local Persistence) ---
@@ -393,79 +394,54 @@ function startTimer() {
 
         if(remainingTime === 0) {
             setTimeout(() => {    
-                skipTimer(true);
+                handleSessionComplete();
             }, 10)
         }
     }, 1000)
 }
 
-function skipTimer(completedCycle) {
+function handleSessionComplete() {
     pauseTimer();
 
-    if (completedCycle == true) {
-        if (workingTime == true) {
-            workCount++;
-        } else {
-            breakCount++;
-        }
-    }
-
-    if (workingTime == true) {
+    if (workingTime === true) {
+        workCount++;
         workingTime = false;
         updateCatState();
-        const autoStartBreaks = localStorage.getItem('autoStartBreaks') === 'true';
+
         if (cycleCount === 3) {
-            if (autoStartBreaks) {
-                remainingTime = catConfig.longBreakTime;
-                document.getElementById("timer-display").textContent = formatTime(remainingTime);
-                startTimer();
-                triggerWelcomeBubble();
-            } else {
-                showModal (
-                    "Time for a Catnap!",
-                    "Amazing work! You've earned a long, cozy rest. Step away from the screen and recharge.",
-                    "Start Long Break",
-                    function () {
-                        remainingTime = catConfig.longBreakTime;
-                        document.getElementById("timer-display").textContent = formatTime(remainingTime);
-                        startTimer();
-                        triggerWelcomeBubble();
-                    }
-                );
-            }
+            showModal(
+                "Time for a Catnap!",
+                "Amazing work! You've earned a long, cozy rest. Step away from the screen and recharge.",
+                "Start Long Break",
+                function () {
+                    remainingTime = catConfig.longBreakTime;
+                    document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                    startTimer();
+                    triggerWelcomeBubble();
+                }
+            );
         } else {
-            if (autoStartBreaks) {
-                remainingTime = catConfig.shortBreakTime;
-                document.getElementById("timer-display").textContent = formatTime(remainingTime);
-                startTimer();
-                triggerWelcomeBubble();
-            } else {
-                showModal (
-                    "Stretch Your Paws!",
-                    "Great focus! Your companion is ready for a quick stretch and a treat.",
-                    "Start Break",
-                    function () {
-                        remainingTime = catConfig.shortBreakTime;
-                        document.getElementById("timer-display").textContent = formatTime(remainingTime);
-                        startTimer();
-                        triggerWelcomeBubble();
-                    }
-                );
-            }
+            showModal(
+                "Stretch Your Paws!",
+                "Great focus! Your companion is ready for a quick stretch and a treat.",
+                "Start Break",
+                function () {
+                    remainingTime = catConfig.shortBreakTime;
+                    document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                    startTimer();
+                    triggerWelcomeBubble();
+                }
+            );
         }
     } else {     
-        workingTime = true;
-        updateCatState();
-        remainingTime = catConfig.workTime;
+        breakCount++;
         cycleCount++;
-        
         updateSessionCounter();
 
         if (cycleCount === 4) {
-
             flushSessionData(true);
 
-            showModal (
+            showModal(
                 "Paws-itively Brilliant!",
                 `You successfully completed a full set of ${cycleCount} cycles! Your progress is logged safely. Take a bow!`,
                 "Return to Menu",
@@ -473,27 +449,62 @@ function skipTimer(completedCycle) {
                     localStorage.removeItem('pawseDurableState');
                     window.location.replace("../index.html");
                 }
-            )
+            );
             return;
         } else {
-            const autoStartPomodoros = localStorage.getItem('autoStartPomodoros') === 'true';
-            if (autoStartPomodoros) {
-                remainingTime = catConfig.workTime;
-                document.getElementById("timer-display").textContent = formatTime(remainingTime);
-                startTimer();
-            } else {
-                showModal (
-                    "Ready to Focus?",
-                    `You’ve completed ${cycleCount} cycle(s) so far! Let's keep the momentum going.`,
-                    "Start Work",
-                    function () {
-                        remainingTime = catConfig.workTime;
-                        document.getElementById("timer-display").textContent = formatTime(remainingTime);
-                        startTimer();
-                    }
-                ); 
-            }
+            showModal(
+                "Ready to Focus?",
+                `You’ve completed ${cycleCount} cycle(s) so far! Let's keep the momentum going.`,
+                "Start Work",
+                function () {
+                    workingTime = true;
+                    updateCatState();
+                    remainingTime = catConfig.workTime;
+                    document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                    startTimer();
+                }
+            ); 
         }
+    }
+}
+
+function manualSkipSession() {
+    pauseTimer();
+
+    // Play companion sound feedback if click sound is enabled
+    const meowAudio = meowAudios[catConfig.dbId];
+    if (meowAudio && soundEnabled && localStorage.getItem('clickSound') !== 'false') {
+        meowAudio.currentTime = 0;
+        meowAudio.play().catch(e => {});
+    }
+
+    if (workingTime === true) {
+        // Skip current Work sprint -> Transition to Break
+        workingTime = false;
+        updateCatState();
+        
+        remainingTime = (cycleCount === 3) ? catConfig.longBreakTime : catConfig.shortBreakTime;
+        document.getElementById("timer-display").textContent = formatTime(remainingTime);
+        triggerWelcomeBubble();
+        startTimer();
+    } else {
+        // Skip current Break -> Transition to Work
+        cycleCount++;
+        updateSessionCounter();
+
+        if (cycleCount === 4) {
+            // Finished 4 cycles with this skipped break -> flush and return to menu
+            flushSessionData(false);
+            localStorage.removeItem('pawseDurableState');
+            window.location.replace("../index.html");
+            return;
+        }
+
+        workingTime = true;
+        updateCatState();
+        remainingTime = catConfig.workTime;
+        document.getElementById("timer-display").textContent = formatTime(remainingTime);
+        startTimer();
     }
 }
 
@@ -524,6 +535,7 @@ let playButton = document.getElementById("play-btn");
 let skipButton = document.getElementById("skip-btn");
 
 soundButton.addEventListener("click", () => {
+    soundButton.blur();
     // 1. Toggle master sound on/off
     soundEnabled = !soundEnabled;
 
@@ -542,7 +554,8 @@ soundButton.addEventListener("click", () => {
 });
 
 playButton.addEventListener("click", () => {
-    if (strictMode) return;
+    playButton.blur();
+    if (strictMode || isAlarmPlaying) return;
     if(isRunning) {
         pauseTimer();
     } else {
@@ -555,16 +568,29 @@ if (strictMode) {
     skipButton.disabled = true;
     skipButton.style.opacity = "0.5";
     skipButton.style.cursor = "not-allowed";
+    skipButton.title = "Strict Mode is enabled (skipping disabled)";
 
     playButton.disabled = true;
     playButton.style.opacity = "0.5";
     playButton.style.cursor = "not-allowed";
+    playButton.title = "Strict Mode is enabled (pausing disabled)";
 }
 
 skipButton.addEventListener("click", () => {
-    if (strictMode) return;
-    skipTimer(false);
+    skipButton.blur();
+    if (strictMode || isAlarmPlaying) return;
+    manualSkipSession();
 });
+
+// Ensure any lingering focus is released as soon as the mouse leaves the controls
+const timerControlsEl = document.querySelector('.timer-controls');
+if (timerControlsEl) {
+    timerControlsEl.addEventListener('mouseleave', () => {
+        if (document.activeElement && document.activeElement.blur) {
+            document.activeElement.blur();
+        }
+    });
+}
 
 function updateSessionCounter() {
     const fishIcons = document.querySelectorAll(".fish-icon");
@@ -595,19 +621,6 @@ function hideModal(modalElement, onComplete) {
 }
 
 function showModal(title, message, btnText, nextAction) {
-    const isMiniMode = document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode");
-
-    if (isMiniMode) {
-        // If the session completes or a full Pomodoro cycle finishes, restore the window size
-        if (title === "Session Complete!" || title === "Paws-itively Brilliant!") {
-            document.body.classList.remove("timer-only-mode", "cat-only-mode");
-            window.mainAPI.resize('default');
-        } else {
-            nextAction();
-            return;
-        }
-    }
-
     dialogTitle.innerText = title;
     dialogMessage.innerText = message;
     dialogBtn.innerText = btnText;   
@@ -615,8 +628,6 @@ function showModal(title, message, btnText, nextAction) {
     let alrVol = parseInt(localStorage.getItem('alarmVolume'));
     if(isNaN(alrVol)) alrVol = 50;
 
-    modalOverlay.classList.remove("closing");
-    modalOverlay.classList.remove("hidden");
     isAlarmPlaying = true;
     // Start playing the alarm on a loop if the user has it enabled in Settings AND master sound is ON
     if (alrVol > 0 && soundEnabled) {
@@ -625,13 +636,37 @@ function showModal(title, message, btnText, nextAction) {
         alarmAudio.play().catch(e => {});
     }
 
+    // Flash taskbar icon to attract user attention if window is minimized or behind another window
+    if (window.mainAPI && window.mainAPI.flashFrame) {
+        window.mainAPI.flashFrame(true);
+    }
+
+    const isMiniMode = document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode");
+
+    if (isMiniMode) {
+        // Mini mode: keep widget compact at 00:00 with sound running.
+        // Stage the modal callback and state so it pops up once user restores to default screen.
+        pendingModal = { title, message, btnText, nextAction };
+        modalOverlay.classList.add("hidden");
+    } else {
+        pendingModal = null;
+        modalOverlay.classList.remove("closing");
+        modalOverlay.classList.remove("hidden");
+    }
+
     dialogBtn.onclick = function() {
         // Stop the alarm when the user proceeds
         isAlarmPlaying = false;
         alarmAudio.pause();
         alarmAudio.currentTime = 0;
         
+        // Clear taskbar notification glow
+        if (window.mainAPI && window.mainAPI.flashFrame) {
+            window.mainAPI.flashFrame(false);
+        }
+
         hideModal(modalOverlay, () => {
+            pendingModal = null;
             nextAction();
         });
     }
@@ -671,10 +706,23 @@ if (timerOnlyButton !== null) {
 let restoreBtn = document.getElementById("restore-btn");
 if (restoreBtn) {
     restoreBtn.addEventListener('click', () => {
+        restoreBtn.blur();
         document.body.classList.remove("timer-only-mode", "cat-only-mode");
         window.mainAPI.resize('default');
+
+        if (pendingModal) {
+            modalOverlay.classList.remove("closing");
+            modalOverlay.classList.remove("hidden");
+        }
     });
 }
+
+// Clear taskbar notification glow whenever window gains focus
+window.addEventListener('focus', () => {
+    if (window.mainAPI && window.mainAPI.flashFrame) {
+        window.mainAPI.flashFrame(false);
+    }
+});
 
 // --- EXIT MODAL HANDLERS ---
 let exitModalEl = document.getElementById('exit-modal-overlay');
