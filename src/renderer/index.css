@@ -382,6 +382,10 @@ ease;
     background-image: url('../assets/icons/home-btn-click.png');
 }
 
+#dock-btn::after {
+    background-image: url('../assets/icons/dock-btn-click.png');
+}
+
 /* On click press (:active), swap seamlessly to the depressed asset */
 .main-window-controls button:active,
 .settings-window-controls button:active {
@@ -410,7 +414,8 @@ body::after {
              url('../assets/icons/minimize-btn-click.png') 
              url('../assets/icons/close-btn-click.png') 
              url('../assets/icons/decrease-btn-click.png') 
-             url('../assets/icons/home-btn-click.png');
+             url('../assets/icons/home-btn-click.png')
+             url('../assets/icons/dock-btn-click.png');
 }
 
 /* --- MAIN CONTENT --- */
