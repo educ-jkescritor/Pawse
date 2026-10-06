@@ -12,40 +12,46 @@
 <body>
     <div class="app-wrapper">
     <div class="page-container">
-        <!-- TOP BAR -->
-        <header class="settings-titlebar">
-            <div class="app-title font-pixel-16-bold">PAWSE</div>
-            <div class="main-window-controls">
-                <button id="minimize-btn" title="Minimize">
-                    <img src="../assets/icons/minimize-btn.png" alt="minimize">
-                </button>
-                <button id="close-btn" title="Close">
-                    <img src="../assets/icons/close-btn.png" alt="close">
+        <!-- LEFT SIDE BAR -->
+        <div class="side-bar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <img class="brand-logo" src="../assets/logos/logo.png" alt="PAWSE logo">
+                    <div class="app-title font-pixel-16-bold">PAWSE</div>
+                </div>
+                <button class="sidebar-menu-btn" type="button" aria-label="Open sidebar menu">
+                    <img src="../assets/icons/menu-btn.png" alt="menu">
                 </button>
             </div>
-        </header>
+            <button id="dashboard-btn" class="active">
+                <img src="../assets/icons/dashboard.png" alt="dashboard">
+                <p class="font-inter-12-medium">Dashboard</p>
+            </button>
 
-        <!-- SETTINGS LAYOUT -->
-        <div class="settings-layout">
-
-            <!-- LEFT SIDE BAR -->
-            <div class="side-bar">
-                <button id="dashboard-btn" class="active">
-                    <img src="../assets/icons/menu.png" alt="dashboard">
-                    <p class="font-inter-12-medium">Dashboard</p>
+            <div class="utilities">
+                <button id="settings-btn">
+                    <img src="../assets/icons/settings.png" alt="settings">
+                    <p class="font-inter-12-medium">Settings</p>
                 </button>
+                <button id="about-btn">
+                    <img src="../assets/icons/info.png" alt="about">
+                    <p class="font-inter-12-medium">About</p>
+                </button>
+            </div>
+        </div>
 
-                <div class="utilities">
-                    <button id="about-btn">
-                        <img src="../assets/icons/info.png" alt="about">
-                        <p class="font-inter-12-medium">About</p>
+        <div class="right-panel">
+            <!-- TOP BAR -->
+            <header class="settings-titlebar">
+                <div class="main-window-controls">
+                    <button id="minimize-btn" title="Minimize">
+                        <img src="../assets/icons/minimize-btn.png" alt="minimize">
                     </button>
-                    <button id="settings-btn">
-                        <img src="../assets/icons/settings.png" alt="settings">
-                        <p class="font-inter-12-medium">Settings</p>
+                    <button id="close-btn" title="Close">
+                        <img src="../assets/icons/close-btn.png" alt="close">
                     </button>
                 </div>
-            </div>
+            </header>
 
             <!-- RIGHT CONTENT AREA -->
             <div class="main-bar">

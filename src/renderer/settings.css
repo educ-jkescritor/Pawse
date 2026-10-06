@@ -27,7 +27,7 @@ html, body {
 .page-container {
     height: 100%;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     overflow: hidden; /* Prevents global browser scrollbars */
 }
 
@@ -43,36 +43,104 @@ p {
     -webkit-app-region: drag;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     padding: 8px 12px;
     border-bottom: 1px solid var(--stroke-color);
-    background: var(--topbar-fill);
+    background: transparent;
     position: relative;
 }
 /* .settings-window-controls and .main-window-controls are defined in index.css */
 
-/* --- SETTINGS LAYOUT --- */
-.settings-layout {
+/* --- RIGHT PANEL --- */
+.right-panel {
     display: flex;
-    flex: 1; /* Grows to fill all remaining vertical space */
-    overflow: hidden; /* Keeps scroll barscontained inside children */
+    flex-direction: column;
+    flex: 1;
+    background-color: #FFFFFF;
+    overflow: hidden;
 }
 
 /* --- LEFT SIDE BAR --- */
 .side-bar {
-    width: 160px;
-    padding: 16px;
+    width: 180px;
+    padding: 8px 16px 8px 16px;
     border-right: 1px solid var(--stroke-color);
     display: flex;
     flex-direction: column;
+    -webkit-app-region: drag;
+    transition: width 0.3s ease, padding 0.3s ease;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.side-bar.collapsed {
+    width: 52px;
+    padding: 8px;
+}
+
+.side-bar.collapsed .app-title,
+.side-bar.collapsed p,
+.side-bar.collapsed .sidebar-menu-btn {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.side-bar.collapsed .sidebar-header {
+    margin-bottom: 16px;
+}
+
+.side-bar .app-title,
+.side-bar p,
+.side-bar .sidebar-menu-btn {
+    transition: opacity 0.15s ease;
+}
+
+.sidebar-header {
+    display: flex;
+    flex-direction: row;
     justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.brand-logo {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    image-rendering: pixelated;
+    cursor: pointer;
+    -webkit-app-region: no-drag;
+    transition: transform 0.3s ease;
+}
+
+.side-bar.collapsed .brand-logo {
+    transform: translateX(6px);
+}
+
+.side-bar.collapsed .brand-logo:hover {
+    content: url('../assets/icons/menu-btn.png');
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+.utilities {
+    margin-top: auto; /* Pushes the About and Settings buttons to the bottom */
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .side-bar button {
     width: 100%;
-    height: 32px;
-    padding: 8px 12px;
-    border: 1px solid transparent; /* No border by default */
+    height: 36px;
+    padding: 8px 10px;
+    border: 1px solid transparent;
     border-radius: 8px;
     background: transparent;
     display: flex;
@@ -81,6 +149,21 @@ p {
     gap: 4px;
     cursor: pointer;
     transition: background-color 0.15s ease, border-color 0.15s ease;
+    -webkit-app-region: no-drag;
+}
+
+.side-bar button.sidebar-menu-btn {
+    width: 24px;
+    height: 24px;
+    padding: 2px;
+    border: none;
+    background: transparent;
+    justify-content: center;
+}
+
+.side-bar button.sidebar-menu-btn img {
+    width: 16px;
+    height: 16px;
 }
 
 /* Hover style for unselected buttons */
