@@ -9,18 +9,30 @@ closeButton.onclick = function closeWindow() {
 }
 
 const sidebar = document.querySelector(".side-bar");
-const sidebarMenuButton = document.querySelector(".sidebar-menu-btn");
+const dockButton = document.getElementById("dock-btn") || document.querySelector(".sidebar-dock-btn") || document.querySelector(".sidebar-menu-btn");
 const brandLogo = document.querySelector(".brand-logo");
 
-if (sidebar && sidebarMenuButton) {
-    sidebarMenuButton.addEventListener("click", () => {
+if (sidebar && dockButton) {
+    dockButton.addEventListener("click", () => {
         sidebar.classList.add("collapsed");
+        if (brandLogo) brandLogo.title = "Dock";
     });
 }
 
 if (sidebar && brandLogo) {
+    brandLogo.addEventListener("mouseenter", () => {
+        if (sidebar.classList.contains("collapsed")) {
+            brandLogo.title = "Dock";
+        } else {
+            brandLogo.removeAttribute("title");
+        }
+    });
+
     brandLogo.addEventListener("click", () => {
-        sidebar.classList.remove("collapsed");
+        if (sidebar.classList.contains("collapsed")) {
+            sidebar.classList.remove("collapsed");
+            brandLogo.removeAttribute("title");
+        }
     });
 }
 

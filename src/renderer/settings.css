@@ -80,7 +80,9 @@ p {
 
 .side-bar.collapsed .app-title,
 .side-bar.collapsed p,
-.side-bar.collapsed .sidebar-menu-btn {
+.side-bar.collapsed .sidebar-menu-btn,
+.side-bar.collapsed .sidebar-dock-btn,
+.side-bar.collapsed #dock-btn {
     opacity: 0;
     pointer-events: none;
 }
@@ -91,7 +93,9 @@ p {
 
 .side-bar .app-title,
 .side-bar p,
-.side-bar .sidebar-menu-btn {
+.side-bar .sidebar-menu-btn,
+.side-bar .sidebar-dock-btn,
+.side-bar #dock-btn {
     transition: opacity 0.15s ease;
 }
 
@@ -116,7 +120,9 @@ p {
     image-rendering: pixelated;
     cursor: pointer;
     -webkit-app-region: no-drag;
-    transition: transform 0.3s ease;
+    border-radius: 4px;
+    box-sizing: border-box;
+    transition: transform 0.3s ease, background-color 0.15s ease;
 }
 
 .side-bar.collapsed .brand-logo {
@@ -124,9 +130,13 @@ p {
 }
 
 .side-bar.collapsed .brand-logo:hover {
-    content: url('../assets/icons/menu-btn.png');
-    padding: 4px;
-    box-sizing: border-box;
+    content: url('../assets/icons/dock-btn.png');
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.side-bar.collapsed .brand-logo:active {
+    content: url('../assets/icons/dock-btn-click.png');
+    background-color: rgba(0, 0, 0, 0.08);
 }
 
 .utilities {
@@ -152,18 +162,77 @@ p {
     -webkit-app-region: no-drag;
 }
 
-.side-bar button.sidebar-menu-btn {
+.side-bar button.sidebar-dock-btn,
+.side-bar button.sidebar-menu-btn,
+#dock-btn {
     width: 24px;
     height: 24px;
-    padding: 2px;
+    padding: 0;
     border: none;
+    border-radius: 4px;
     background: transparent;
+    display: flex;
+    align-items: center;
     justify-content: center;
+    position: relative;
+    cursor: pointer;
+    box-sizing: border-box;
+    -webkit-app-region: no-drag;
+    transition: background-color 0.15s ease;
 }
 
-.side-bar button.sidebar-menu-btn img {
-    width: 16px;
-    height: 16px;
+.side-bar button.sidebar-dock-btn img,
+.side-bar button.sidebar-menu-btn img,
+#dock-btn img {
+    image-rendering: pixelated;
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    pointer-events: none;
+    -webkit-user-drag: none;
+}
+
+.side-bar button.sidebar-dock-btn:hover,
+.side-bar button.sidebar-menu-btn:hover,
+#dock-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.side-bar button.sidebar-dock-btn::after,
+.side-bar button.sidebar-menu-btn::after,
+#dock-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 24px;
+    background-repeat: no-repeat;
+    background-size: 24px 24px;
+    background-position: center;
+    background-image: url('../assets/icons/dock-btn-click.png');
+    image-rendering: pixelated;
+    pointer-events: none;
+    display: none;
+}
+
+.side-bar button.sidebar-dock-btn:active,
+.side-bar button.sidebar-menu-btn:active,
+#dock-btn:active {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
+.side-bar button.sidebar-dock-btn:active img,
+.side-bar button.sidebar-menu-btn:active img,
+#dock-btn:active img {
+    display: none;
+}
+
+.side-bar button.sidebar-dock-btn:active::after,
+.side-bar button.sidebar-menu-btn:active::after,
+#dock-btn:active::after {
+    display: block;
 }
 
 /* Hover style for unselected buttons */
