@@ -358,6 +358,13 @@ ease;
     display: none;
 }
 
+.button-divider {
+    width: 2px;
+    height: 24px;
+    background-color: var(--stroke-color);
+    margin: 0 4px;
+}
+
 /* Pre-assigned clicked asset per button */
 #hub-btn::after {
     background-image: url('../assets/icons/hub-btn-click.png');
