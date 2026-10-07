@@ -1083,9 +1083,10 @@ p {
 }
 
 #update-btn:hover {
-    border-color: #288BD0;
+    border-color: #35A6F1;
     background-color: rgba(40, 139, 208, 0.1); /* #288BD0 at 10% opacity */
-    color: #288BD0;
+    stroke: #35A6F1;
+    color: #35A6F1;
 }
 
 #update-btn:active {
