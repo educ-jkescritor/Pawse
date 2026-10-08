@@ -23,14 +23,14 @@
 }
 
 @font-face {
-    font-family: 'Pixelify Sans';
-    src: url('../assets/fonts/PixelifySans-Bold.ttf') format('truetype');
+    font-family: 'Pixeloid Sans';
+    src: url('../assets/fonts/PixeloidSans-Bold.ttf') format('truetype');
     font-weight: 700;
 }
 
 :root {
     --font-inter: 'Inter', sans-serif;
-    --font-pixel: 'Pixelify Sans', sans-serif;
+    --font-pixel: 'Pixeloid Sans', sans-serif;
     /* --- TEXT COLORS --- */
     --text-black: #141414;
     --text-gray: #52525B;
@@ -114,16 +114,40 @@ input, textarea {
     font-variant-numeric: tabular-nums;
 }
 
+.font-pixel-14-bold {
+    font-family: var(--font-pixel);
+    font-size: 14px;
+    font-weight: 500;
+}
+
 .font-pixel-16-bold {
     font-family: var(--font-pixel);
     font-size: 16px;
     font-weight: 700;
 }
 
+.font-pixel-18-bold {
+    font-family: var(--font-pixel);
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.font-pixel-20-bold {
+    font-family: var(--font-pixel);
+    font-size: 20px;
+    font-weight: 500;
+}
+
 .font-pixel-24-bold {
     font-family: var(--font-pixel);
     font-size: 24px;
-    font-weight: 700;
+    font-weight: 500;
+}
+
+.font-pixel-48-bold {
+    font-family: var(--font-pixel);
+    font-size: 48px;
+    font-weight: 500;
 }
 
 .font-pixel-64-bold {
@@ -438,6 +462,7 @@ body::after {
 
 .main-text {
     text-align: center;
+    padding-bottom: 4px;
 }
 
 .main-text p {
@@ -542,6 +567,7 @@ body::after {
     display: flex;
     flex-direction: column;
     text-align: left;
+    gap: 3px;
     width: 65%;
 }
 
