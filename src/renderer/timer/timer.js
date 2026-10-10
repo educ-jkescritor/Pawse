@@ -44,6 +44,7 @@ let breakCount = 0;
 let isAlarmPlaying = false;
 let alarmTimeoutId = null;
 let pendingModal = null;
+let preSkipState = null;
 let sessionDate = new Date();
 
 // --- DURABLE EXECUTION ENGINE (Local Persistence) ---
@@ -401,61 +402,91 @@ function startTimer() {
     }, 1000)
 }
 
-function handleSessionComplete() {
+function handleSessionComplete(isManualSkip = false) {
+    if (!isManualSkip) {
+        preSkipState = null;
+    }
     pauseTimer();
 
     if (workingTime === true) {
-        workCount++;
+        if (!isManualSkip) {
+            workCount++;
+        }
         workingTime = false;
         updateCatState();
 
         if (cycleCount === 3) {
+            const title = isManualSkip ? "Ready for a Catnap?" : "Time for a Catnap!";
+            const message = isManualSkip
+                ? "Skipping ahead to your long rest. Step away from the screen and recharge!"
+                : "Amazing work! You've earned a long, cozy rest. Step away from the screen and recharge.";
+
             showModal(
-                "Time for a Catnap!",
-                "Amazing work! You've earned a long, cozy rest. Step away from the screen and recharge.",
+                title,
+                message,
                 "Start Long Break",
                 function () {
                     remainingTime = catConfig.longBreakTime;
                     document.getElementById("timer-display").textContent = formatTime(remainingTime);
                     startTimer();
                     triggerWelcomeBubble();
-                }
+                },
+                !isManualSkip
             );
         } else {
+            const title = isManualSkip ? "Take an Early Break?" : "Stretch Your Paws!";
+            const message = isManualSkip
+                ? "Skipping ahead to your break time. Ready to step back and stretch your paws?"
+                : "Great focus! Your companion is ready for a quick stretch and a treat.";
+
             showModal(
-                "Stretch Your Paws!",
-                "Great focus! Your companion is ready for a quick stretch and a treat.",
+                title,
+                message,
                 "Start Break",
                 function () {
                     remainingTime = catConfig.shortBreakTime;
                     document.getElementById("timer-display").textContent = formatTime(remainingTime);
                     startTimer();
                     triggerWelcomeBubble();
-                }
+                },
+                !isManualSkip
             );
         }
     } else {     
-        breakCount++;
+        if (!isManualSkip) {
+            breakCount++;
+        }
         cycleCount++;
         updateSessionCounter();
 
         if (cycleCount === 4) {
-            flushSessionData(true);
+            flushSessionData(!isManualSkip);
+
+            const title = isManualSkip ? "Session Finished" : "Paws-itively Brilliant!";
+            const message = isManualSkip
+                ? "You wrapped up this Pomodoro session early. Your recorded time has been saved safely!"
+                : `You successfully completed a full set of ${cycleCount} cycles! Your progress is logged safely. Take a bow!`;
 
             showModal(
-                "Paws-itively Brilliant!",
-                `You successfully completed a full set of ${cycleCount} cycles! Your progress is logged safely. Take a bow!`,
+                title,
+                message,
                 "Return to Menu",
                 function () {
                     localStorage.removeItem('pawseDurableState');
                     window.location.replace("../index.html");
-                }
+                },
+                !isManualSkip
             );
             return;
         } else {
+            const title = isManualSkip ? "End Break Early?" : "Ready to Focus?";
+            const message = isManualSkip
+                ? `Cutting your rest short? Ready to jump right back into cycle ${cycleCount + 1}!`
+                : `You’ve completed ${cycleCount} cycle(s) so far! Let's keep the momentum going.`;
+
             showModal(
-                "Ready to Focus?",
-                `You’ve completed ${cycleCount} cycle(s) so far! Let's keep the momentum going.`,
+                title,
+                message,
                 "Start Work",
                 function () {
                     workingTime = true;
@@ -463,14 +494,21 @@ function handleSessionComplete() {
                     remainingTime = catConfig.workTime;
                     document.getElementById("timer-display").textContent = formatTime(remainingTime);
                     startTimer();
-                }
+                },
+                !isManualSkip
             ); 
         }
     }
 }
 
 function manualSkipSession() {
-    pauseTimer();
+    // Snapshot state so accidental skip can be canceled via backdrop or Escape
+    preSkipState = {
+        remainingTime,
+        workingTime,
+        cycleCount,
+        wasRunning: isRunning
+    };
 
     // Play companion sound feedback if click sound is enabled
     const meowAudio = meowAudios[catConfig.dbId];
@@ -479,34 +517,31 @@ function manualSkipSession() {
         meowAudio.play().catch(e => {});
     }
 
-    if (workingTime === true) {
-        // Skip current Work sprint -> Transition to Break
-        workingTime = false;
-        updateCatState();
-        
-        remainingTime = (cycleCount === 3) ? catConfig.longBreakTime : catConfig.shortBreakTime;
+    handleSessionComplete(true);
+}
+
+function cancelSkip() {
+    if (!preSkipState) return;
+
+    const restored = preSkipState;
+    preSkipState = null;
+
+    hideModal(modalOverlay, () => {
+        pendingModal = null;
+        remainingTime = restored.remainingTime;
+        workingTime = restored.workingTime;
+        cycleCount = restored.cycleCount;
         document.getElementById("timer-display").textContent = formatTime(remainingTime);
-        triggerWelcomeBubble();
-        startTimer();
-    } else {
-        // Skip current Break -> Transition to Work
-        cycleCount++;
         updateSessionCounter();
-
-        if (cycleCount === 4) {
-            // Finished 4 cycles with this skipped break -> flush and return to menu
-            flushSessionData(false);
-            localStorage.removeItem('pawseDurableState');
-            window.location.replace("../index.html");
-            return;
-        }
-
-        workingTime = true;
         updateCatState();
-        remainingTime = catConfig.workTime;
-        document.getElementById("timer-display").textContent = formatTime(remainingTime);
-        startTimer();
-    }
+        updateAudioSettings();
+
+        if (restored.wasRunning) {
+            startTimer();
+        } else {
+            pauseTimer();
+        }
+    });
 }
 
 function pauseTimer() {
@@ -621,7 +656,7 @@ function hideModal(modalElement, onComplete) {
     }, 200);
 }
 
-function showModal(title, message, btnText, nextAction) {
+function showModal(title, message, btnText, nextAction, playAlarm = true) {
     dialogTitle.innerText = title;
     dialogMessage.innerText = message;
     dialogBtn.innerText = btnText;   
@@ -629,36 +664,55 @@ function showModal(title, message, btnText, nextAction) {
     let alrVol = parseInt(localStorage.getItem('alarmVolume'));
     if(isNaN(alrVol)) alrVol = 50;
 
-    isAlarmPlaying = true;
-    if (alarmTimeoutId) {
-        clearTimeout(alarmTimeoutId);
-        alarmTimeoutId = null;
-    }
-
-    // Start playing the alarm on a loop if the user has it enabled in Settings AND master sound is ON
-    if (alrVol > 0 && soundEnabled) {
-        ambientAudio.pause();
-        purrAudio.pause();
-        alarmAudio.play().catch(e => {});
-
-        // Industry Standard Auto-Silence: Cap continuous alarm ringing at 20 seconds
-        alarmTimeoutId = setTimeout(() => {
-            alarmAudio.pause();
-            alarmAudio.currentTime = 0;
-            isAlarmPlaying = false;
+    if (playAlarm) {
+        isAlarmPlaying = true;
+        if (alarmTimeoutId) {
+            clearTimeout(alarmTimeoutId);
             alarmTimeoutId = null;
-        }, 20000);
-    }
+        }
 
-    // Flash taskbar icon to attract user attention if window is minimized or behind another window
-    if (window.mainAPI && window.mainAPI.flashFrame) {
-        window.mainAPI.flashFrame(true);
+        // Start playing the alarm on a loop if the user has it enabled in Settings AND master sound is ON
+        if (alrVol > 0 && soundEnabled) {
+            ambientAudio.pause();
+            purrAudio.pause();
+            alarmAudio.play().catch(e => {});
+
+            // Industry Standard Auto-Silence: Cap continuous alarm ringing at 20 seconds
+            alarmTimeoutId = setTimeout(() => {
+                alarmAudio.pause();
+                alarmAudio.currentTime = 0;
+                isAlarmPlaying = false;
+                alarmTimeoutId = null;
+            }, 20000);
+        }
+
+        // Flash taskbar icon to attract user attention if window is minimized or behind another window
+        if (window.mainAPI && window.mainAPI.flashFrame) {
+            window.mainAPI.flashFrame(true);
+        }
+    } else {
+        isAlarmPlaying = false;
+        if (alarmTimeoutId) {
+            clearTimeout(alarmTimeoutId);
+            alarmTimeoutId = null;
+        }
+        alarmAudio.pause();
+        alarmAudio.currentTime = 0;
     }
 
     const isMiniMode = document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode");
 
-    if (isMiniMode) {
-        // Mini mode: keep widget compact at 00:00 with sound running.
+    if (isMiniMode && !playAlarm) {
+        // When manually skipping in mini mode, expand to default size so modal is immediately accessible
+        document.body.classList.remove("timer-only-mode", "cat-only-mode");
+        if (window.mainAPI && window.mainAPI.resize) {
+            window.mainAPI.resize('default');
+        }
+        pendingModal = null;
+        modalOverlay.classList.remove("closing");
+        modalOverlay.classList.remove("hidden");
+    } else if (isMiniMode) {
+        // Natural completion in mini mode: keep widget compact at 00:00 with sound running.
         // Stage the modal callback and state so it pops up once user restores to default screen.
         pendingModal = { title, message, btnText, nextAction };
         modalOverlay.classList.add("hidden");
@@ -669,6 +723,9 @@ function showModal(title, message, btnText, nextAction) {
     }
 
     dialogBtn.onclick = function() {
+        // Clear pending pre-skip snapshot since skip was confirmed
+        preSkipState = null;
+
         // Stop the alarm when the user proceeds
         if (alarmTimeoutId) {
             clearTimeout(alarmTimeoutId);
@@ -688,6 +745,16 @@ function showModal(title, message, btnText, nextAction) {
             nextAction();
         });
     }
+}
+
+if (modalOverlay !== null) {
+    modalOverlay.addEventListener("click", function(event) {
+        if (event.target === modalOverlay) {
+            if (preSkipState) {
+                cancelSkip();
+            }
+        }
+    });
 }
 
 let resizeModal = document.getElementById("resize-modal-overlay");
@@ -797,8 +864,12 @@ window.addEventListener('keydown', (e) => {
         }
         if (isModalOpen) {
             e.preventDefault();
-            const dialogBtn = document.getElementById("dialog-btn");
-            if (dialogBtn) dialogBtn.click();
+            if (preSkipState) {
+                cancelSkip();
+            } else {
+                const dialogBtn = document.getElementById("dialog-btn");
+                if (dialogBtn) dialogBtn.click();
+            }
             return;
         }
         // If in mini-mode and Escape pressed, restore to default size
