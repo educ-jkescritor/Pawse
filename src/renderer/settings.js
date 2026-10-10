@@ -513,6 +513,30 @@ if (topToggle) {
     });
 }
 
+const startupToggle = document.querySelector('.startup-toggle');
+if (startupToggle) {
+    // 1. Initialize state from true OS login items, falling back to localStorage
+    if (window.mainAPI && window.mainAPI.getLaunchOnStartup) {
+        window.mainAPI.getLaunchOnStartup().then((isEnabled) => {
+            startupToggle.checked = Boolean(isEnabled);
+            localStorage.setItem('launchOnStartup', isEnabled);
+        }).catch(() => {
+            startupToggle.checked = localStorage.getItem('launchOnStartup') === 'true';
+        });
+    } else {
+        startupToggle.checked = localStorage.getItem('launchOnStartup') === 'true';
+    }
+
+    // 2. Persist state to OS and localStorage on change
+    startupToggle.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        localStorage.setItem('launchOnStartup', isChecked);
+        if (window.mainAPI && window.mainAPI.setLaunchOnStartup) {
+            window.mainAPI.setLaunchOnStartup(isChecked);
+        }
+    });
+}
+
 // Dynamically update UI if localStorage changes from another window (like the Timer screen)
 window.addEventListener('storage', (e) => {
     if (e.key === 'ambientVolume') {

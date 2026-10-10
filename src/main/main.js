@@ -577,6 +577,27 @@ ipcMain.handle('get-version', () => {
   return app.getVersion();
 });
 
+ipcMain.handle('get-launch-on-startup', () => {
+  try {
+    const loginItemSettings = app.getLoginItemSettings();
+    return loginItemSettings.openAtLogin;
+  } catch (err) {
+    console.error('[LaunchOnStartup] Failed to get login item settings:', err);
+    return false;
+  }
+});
+
+ipcMain.on('set-launch-on-startup', (event, isEnabled) => {
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: Boolean(isEnabled),
+      path: app.isPackaged ? app.getPath('exe') : process.execPath
+    });
+  } catch (err) {
+    console.error('[LaunchOnStartup] Failed to set login item settings:', err);
+  }
+});
+
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
