@@ -52,11 +52,11 @@ function createWindow() {
       win.webContents.setVisualZoomLevelLimits(1, 1);
       win.webContents.setZoomLevel(0);
       win.show();
-      win.setAlwaysOnTop(true);
+      win.setAlwaysOnTop(true, 'screen-saver');
       win.focus();
       setTimeout(() => {
         if (!win.isDestroyed()) {
-          win.setAlwaysOnTop(globalAlwaysOnTop);
+          win.setAlwaysOnTop(globalAlwaysOnTop, 'screen-saver');
         }
       }, 300);
     }
@@ -293,7 +293,7 @@ ipcMain.on('resize-window', (event, mode) => {
   senderWindow.webContents.setZoomLevel(0);
 
   // 8. Apply always on top state
-  senderWindow.setAlwaysOnTop(alwaysOnTop);
+  senderWindow.setAlwaysOnTop(alwaysOnTop, 'screen-saver');
 });
 
 ipcMain.on('close-window', (event) => {
@@ -368,7 +368,7 @@ ipcMain.on('set-always-on-top', (event, isAlwaysOnTop) => {
   const activeWindow = BrowserWindow.fromWebContents(event.sender);
   
   if (win && !win.isDestroyed()) {
-    win.setAlwaysOnTop(isAlwaysOnTop);
+    win.setAlwaysOnTop(isAlwaysOnTop, 'screen-saver');
     
     // Fix Windows Z-order caching bug: when demoting 'win' from the topmost group,
     // Windows leaves it at the top of the normal group (above the settings window).
@@ -396,12 +396,12 @@ ipcMain.on('restore-window', (event) => {
   if (targetWin.isMinimized()) {
     targetWin.restore();
   }
-  targetWin.setAlwaysOnTop(true);
+  targetWin.setAlwaysOnTop(true, 'screen-saver');
   targetWin.show();
   targetWin.focus();
 
   setTimeout(() => {
-    targetWin.setAlwaysOnTop(globalAlwaysOnTop);
+    targetWin.setAlwaysOnTop(globalAlwaysOnTop, 'screen-saver');
   }, 500);
 });
 
