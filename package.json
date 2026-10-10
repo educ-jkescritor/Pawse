@@ -5,7 +5,8 @@
   "main": "src/main/main.js",
   "scripts": {
     "start": "node start.js",
-    "build": "electron-builder --win"
+    "build": "electron-builder --win",
+    "test": "jest"
   },
   "keywords": [
     "pomodoro",
@@ -18,7 +19,8 @@
   "type": "commonjs",
   "devDependencies": {
     "electron": "^42.4.0",
-    "electron-builder": "^26.15.3"
+    "electron-builder": "^26.15.3",
+    "jest": "^30.5.2"
   },
   "dependencies": {
     "electron-updater": "^6.8.9",
