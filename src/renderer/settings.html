@@ -100,14 +100,13 @@
                             <div class="week-selection">
                                 <div class="chart-header-text">
                                     <p class="font-inter-14-medium chart-header-title" id="chart-header-title">Weekly Flow</p>
-                                    <p class="font-inter-10-regular text-gray chart-header-subtitle" id="chart-header-subtitle">Calculating...</p>
                                 </div>
-                                <div class="week-segmented-control" id="week-segmented-control" role="tablist" aria-label="Select week range">
-                                    <button class="segment-btn active font-inter-10-medium" data-value="0" role="tab" aria-selected="true">This Week</button>
-                                    <button class="segment-btn font-inter-10-medium" data-value="1" role="tab" aria-selected="false">Last Week</button>
-                                    <button class="segment-btn font-inter-10-medium" data-value="2" role="tab" aria-selected="false">2 Weeks Ago</button>
-                                    <button class="segment-btn font-inter-10-medium" data-value="3" role="tab" aria-selected="false">3 Weeks Ago</button>
+                                <div class="week-picker-control" id="week-picker-control" role="group" aria-label="Select week range">
+                                    <button type="button" class="nav-arrow" id="prev-week-btn" aria-label="Previous week">&#8249;</button>
+                                    <button type="button" class="date-range-btn font-inter-10-medium" id="date-range-btn" aria-label="Toggle calendar">Date</button>
+                                    <button type="button" class="nav-arrow" id="next-week-btn" aria-label="Next week">&#8250;</button>
                                 </div>
+                                <div class="calendar-popup hidden" id="calendar-popup" aria-hidden="true"></div>
                             </div>
                             <div class="graph-bars">
                                 <!-- insert graph bars here w/ day labels -->

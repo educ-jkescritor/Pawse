@@ -492,48 +492,69 @@ p {
     line-height: 1.2;
 }
 
-/* Week Segmented Control */
-.week-segmented-control {
-    display: inline-flex;
+.week-selection {
+    position: relative;
+}
+
+.week-picker-control {
+    display: flex;
     align-items: center;
-    background-color: var(--bg-main);
-    border: 1px solid var(--stroke-color);
-    border-radius: 6px;
-    padding: 2px;
     gap: 2px;
 }
 
-.segment-btn {
+.date-range-btn {
     border: none;
-    background: transparent;
+    background-color: transparent;
+    color: var(--text-black);
+    border-radius: 999px;
+    padding: 2px 6px;
+    cursor: pointer;
     font-family: var(--font-inter);
     font-size: 10px;
-    font-weight: 500;
-    color: var(--text-gray);
-    padding: 3px 8px;
-    border-radius: 4px;
-    cursor: pointer;
+    line-height: 1.2;
     white-space: nowrap;
-    outline: none;
-    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
-    user-select: none;
+    transition: background-color 0.15s ease, transform 0.15s ease;
 }
 
-.segment-btn:hover:not(.active) {
+.date-range-btn:hover {
+    background-color: #E7E7E8;
+}
+
+.nav-arrow {
+    border: none;
+    background: transparent;
+    color: var(--text-gray);
+    padding: 4px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.nav-arrow:hover {
     color: var(--text-black);
-    background-color: rgba(0, 0, 0, 0.04);
 }
 
-.segment-btn.active {
-    background-color: #FFFFFF;
-    color: var(--text-black);
-    font-weight: 600;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+.nav-arrow:disabled {
+    color: #E4E4E7;
+    cursor: default;
+    pointer-events: none;
 }
 
-.segment-btn:focus-visible {
-    outline: 2px solid var(--sys-blue-solid) !important;
-    outline-offset: -1px !important;
+.calendar-popup {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 220px;
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    z-index: 15;
 }
 
 .graph-bars {

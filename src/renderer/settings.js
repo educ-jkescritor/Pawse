@@ -36,6 +36,8 @@ if (sidebar && brandLogo) {
     });
 }
 
+let currentWeeksAgo = 0;
+
 function hideAllContents() {
     dashboardContent.classList.add("hidden");
     aboutContent.classList.add("hidden");
@@ -93,8 +95,8 @@ function getWeekDateRangeString(weeksAgo) {
     const saturday = new Date(sunday);
     saturday.setDate(sunday.getDate() + 6);
     
-    const startMonth = sunday.toLocaleDateString('en-US', { month: 'long' });
-    const endMonth = saturday.toLocaleDateString('en-US', { month: 'long' });
+    const startMonth = sunday.toLocaleDateString('en-US', { month: 'short' });
+    const endMonth = saturday.toLocaleDateString('en-US', { month: 'short' });
     const startDay = sunday.getDate();
     const endDay = saturday.getDate();
     
@@ -108,12 +110,19 @@ function getWeekDateRangeString(weeksAgo) {
 }
 
 async function loadAnalytics(weeksAgo = 0) {
+    currentWeeksAgo = weeksAgo;
     const data = await window.mainAPI.loadanalytics(weeksAgo);
 
-    // Update dynamic subtitle date range
-    const chartSubtitle = document.getElementById("chart-header-subtitle");
-    if (chartSubtitle) {
-        chartSubtitle.textContent = getWeekDateRangeString(weeksAgo);
+    // Update dynamic week pill date range
+    const dateRangeButton = document.getElementById("date-range-btn");
+    if (dateRangeButton) {
+        dateRangeButton.textContent = getWeekDateRangeString(weeksAgo);
+    }
+
+    // Disable the right arrow if user is on current week
+    const nextBtn = document.getElementById("next-week-btn");
+    if (nextBtn) {
+        nextBtn.disabled = (weeksAgo === 0);
     }
 
     // 1. Focus Streak Card
@@ -470,42 +479,29 @@ if (tickToggle) {
     tickToggle.addEventListener('change', (e) => localStorage.setItem('tickSound', e.target.checked));
 }
 
-// Custom Graph Week Segmented Control Logic
-const segmentButtons = document.querySelectorAll('.segment-btn');
+// Custom Graph Week Picker Logic
+const prevWeekButton = document.getElementById('prev-week-btn');
+const nextWeekButton = document.getElementById('next-week-btn');
+const dateRangeButton = document.getElementById('date-range-btn');
+const calendarPopup = document.getElementById('calendar-popup');
 
-if (segmentButtons.length > 0) {
-    const selectSegment = (btn) => {
-        if (btn.classList.contains('active')) return;
-        
-        segmentButtons.forEach(b => {
-            b.classList.remove('active');
-            b.setAttribute('aria-selected', 'false');
-        });
-        
-        btn.classList.add('active');
-        btn.setAttribute('aria-selected', 'true');
-        
-        const val = btn.getAttribute('data-value');
-        loadAnalytics(parseInt(val, 10));
-    };
+if (prevWeekButton) {
+    prevWeekButton.addEventListener('click', () => {
+        currentWeeksAgo += 1;
+        loadAnalytics(currentWeeksAgo);
+    });
+}
 
-    segmentButtons.forEach((btn, idx) => {
-        btn.addEventListener('click', () => selectSegment(btn));
-        
-        // Arrow key navigation across segments
-        btn.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-                e.preventDefault();
-                const nextIdx = (idx + 1) % segmentButtons.length;
-                segmentButtons[nextIdx].focus();
-                selectSegment(segmentButtons[nextIdx]);
-            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-                e.preventDefault();
-                const prevIdx = (idx - 1 + segmentButtons.length) % segmentButtons.length;
-                segmentButtons[prevIdx].focus();
-                selectSegment(segmentButtons[prevIdx]);
-            }
-        });
+if (nextWeekButton) {
+    nextWeekButton.addEventListener('click', () => {
+        currentWeeksAgo = Math.max(0, currentWeeksAgo - 1);
+        loadAnalytics(currentWeeksAgo);
+    });
+}
+
+if (dateRangeButton && calendarPopup) {
+    dateRangeButton.addEventListener('click', () => {
+        calendarPopup.classList.toggle('hidden');
     });
 }
 
