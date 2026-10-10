@@ -42,6 +42,7 @@ let actualBreak = 0;
 let workCount = 0;
 let breakCount = 0;
 let isAlarmPlaying = false;
+let alarmTimeoutId = null;
 let pendingModal = null;
 let sessionDate = new Date();
 
@@ -629,11 +630,24 @@ function showModal(title, message, btnText, nextAction) {
     if(isNaN(alrVol)) alrVol = 50;
 
     isAlarmPlaying = true;
+    if (alarmTimeoutId) {
+        clearTimeout(alarmTimeoutId);
+        alarmTimeoutId = null;
+    }
+
     // Start playing the alarm on a loop if the user has it enabled in Settings AND master sound is ON
     if (alrVol > 0 && soundEnabled) {
         ambientAudio.pause();
         purrAudio.pause();
         alarmAudio.play().catch(e => {});
+
+        // Industry Standard Auto-Silence: Cap continuous alarm ringing at 20 seconds
+        alarmTimeoutId = setTimeout(() => {
+            alarmAudio.pause();
+            alarmAudio.currentTime = 0;
+            isAlarmPlaying = false;
+            alarmTimeoutId = null;
+        }, 20000);
     }
 
     // Flash taskbar icon to attract user attention if window is minimized or behind another window
@@ -656,6 +670,10 @@ function showModal(title, message, btnText, nextAction) {
 
     dialogBtn.onclick = function() {
         // Stop the alarm when the user proceeds
+        if (alarmTimeoutId) {
+            clearTimeout(alarmTimeoutId);
+            alarmTimeoutId = null;
+        }
         isAlarmPlaying = false;
         alarmAudio.pause();
         alarmAudio.currentTime = 0;
