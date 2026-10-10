@@ -157,6 +157,12 @@ input, textarea {
     font-variant-numeric: tabular-nums;
 }
 
+.font-inter-8-regular {
+    font-family: var(--font-inter);
+    font-size: 8px;
+    font-weight: 400;
+}
+
 .font-inter-10-regular {
     font-family: var(--font-inter);
     font-size: 10px;

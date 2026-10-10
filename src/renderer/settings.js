@@ -37,6 +37,7 @@ if (sidebar && brandLogo) {
 }
 
 let currentWeeksAgo = 0;
+let calendarBaseDate = new Date();
 
 function hideAllContents() {
     dashboardContent.classList.add("hidden");
@@ -109,6 +110,115 @@ function getWeekDateRangeString(weeksAgo) {
     return `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
 }
 
+function getStartOfWeek(date) {
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+    const dayIndex = (start.getDay() + 7) % 7;
+    start.setDate(start.getDate() - dayIndex);
+    return start;
+}
+
+function renderCalendar() {
+    const popup = document.getElementById('calendar-popup');
+    if (!popup) return;
+
+    const today = new Date();
+    const monthDate = new Date(calendarBaseDate.getFullYear(), calendarBaseDate.getMonth(), 1);
+    const monthLabel = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const isCurrentMonth = monthDate.getFullYear() === today.getFullYear() && monthDate.getMonth() === today.getMonth();
+
+    const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+    const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+    const calendarStart = getStartOfWeek(new Date(monthDate.getFullYear(), monthDate.getMonth(), 1));
+    const calendarEnd = getStartOfWeek(new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0));
+    const totalDays = Math.ceil((calendarEnd - calendarStart) / (1000 * 60 * 60 * 24)) + 7;
+
+    const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    const weekdayMarkup = weekdays.map(day => `<span>${day}</span>`).join('');
+
+    let calendarRows = '';
+    const currentRealWeekStart = getStartOfWeek(today);
+
+    for (let i = 0; i < totalDays; i += 7) {
+        const rowStart = new Date(calendarStart);
+        rowStart.setDate(calendarStart.getDate() + i);
+
+        let rowHtml = '';
+        let rowWeeksAgo = null;
+
+        for (let j = 0; j < 7; j++) {
+            const cellDate = new Date(rowStart);
+            cellDate.setDate(rowStart.getDate() + j);
+
+            const isCurrentMonthDay = cellDate.getMonth() === monthDate.getMonth();
+            const isFutureDay = cellDate > today;
+            const isTodayDay = cellDate.toDateString() === today.toDateString();
+
+            const dayClasses = ['cal-day'];
+            if (isTodayDay) dayClasses.push('today');
+            if (!isCurrentMonthDay || isFutureDay) dayClasses.push('disabled-day');
+
+            const cellMarkup = `<span class="${dayClasses.join(' ')}">${cellDate.getDate()}</span>`;
+            rowHtml += cellMarkup;
+
+            if (j === 0) {
+                const rowWeekStart = getStartOfWeek(cellDate);
+                const diffDays = Math.round((currentRealWeekStart - rowWeekStart) / (1000 * 60 * 60 * 24));
+                rowWeeksAgo = Math.floor(diffDays / 7);
+            }
+        }
+
+        const classes = ['calendar-week'];
+        if (rowWeeksAgo === currentWeeksAgo) classes.push('selected-week');
+        if (rowWeeksAgo < 0) classes.push('future-week');
+
+        calendarRows += `<div class="${classes.join(' ')}" data-weeks-ago="${rowWeeksAgo}">${rowHtml}</div>`;
+    }
+
+    popup.innerHTML = `
+        <div class="calendar-header">
+            <button type="button" class="nav-arrow calendar-prev" aria-label="Previous month">&#8249;</button>
+            <span class="font-inter-8-medium">${monthLabel}</span>
+            <button type="button" class="nav-arrow calendar-next" aria-label="Next month" ${isCurrentMonth ? 'disabled' : ''}>&#8250;</button>
+        </div>
+        <div class="calendar-weekdays">${weekdayMarkup}</div>
+        <div class="calendar-days">${calendarRows}</div>
+    `;
+
+    const prevMonthButton = popup.querySelector('.calendar-prev');
+    const nextMonthButton = popup.querySelector('.calendar-next');
+
+    if (prevMonthButton) {
+        prevMonthButton.addEventListener('click', () => {
+            const adjustedDate = new Date(calendarBaseDate);
+            adjustedDate.setMonth(adjustedDate.getMonth() - 1);
+            calendarBaseDate = adjustedDate;
+            renderCalendar();
+        });
+    }
+
+    if (nextMonthButton && !nextMonthButton.disabled) {
+        nextMonthButton.addEventListener('click', () => {
+            const adjustedDate = new Date(calendarBaseDate);
+            adjustedDate.setMonth(adjustedDate.getMonth() + 1);
+            calendarBaseDate = adjustedDate;
+            renderCalendar();
+        });
+    }
+
+    const weekRows = popup.querySelectorAll('.calendar-week');
+    weekRows.forEach((row) => {
+        const wAgo = Number(row.dataset.weeksAgo || 0);
+        if (row.classList.contains('future-week')) return;
+
+        row.addEventListener('click', () => {
+            if (wAgo < 0) return;
+            loadAnalytics(wAgo);
+            calendarPopup.classList.add('hidden');
+        });
+    });
+}
+
 async function loadAnalytics(weeksAgo = 0) {
     currentWeeksAgo = weeksAgo;
     const data = await window.mainAPI.loadanalytics(weeksAgo);
@@ -118,6 +228,8 @@ async function loadAnalytics(weeksAgo = 0) {
     if (dateRangeButton) {
         dateRangeButton.textContent = getWeekDateRangeString(weeksAgo);
     }
+
+    renderCalendar();
 
     // Disable the right arrow if user is on current week
     const nextBtn = document.getElementById("next-week-btn");
@@ -501,6 +613,8 @@ if (nextWeekButton) {
 
 if (dateRangeButton && calendarPopup) {
     dateRangeButton.addEventListener('click', () => {
+        calendarBaseDate = new Date();
+        renderCalendar();
         calendarPopup.classList.toggle('hidden');
     });
 }
