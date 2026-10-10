@@ -411,7 +411,6 @@ volumeSliders.forEach(slider => {
 
 // Workflow Settings Logic
 const strictToggle = document.querySelector('.strict-toggle');
-// const breakToggle = document.querySelector('.break-toggle'); unused since auto-start focus and breaks are now combined
 const pomodoroToggle = document.querySelector('.timer-toggle');
 
 if (strictToggle) {
@@ -438,14 +437,7 @@ function updateStrictLock() {
 }
 updateStrictLock();
 
-// Auto-start focus and breaks combined into one; code block can be deleted. Please check po @jude
-/* if (breakToggle) {
-    breakToggle.checked = localStorage.getItem('autoStartBreaks') === 'true';
-    breakToggle.addEventListener('change', (e) => localStorage.setItem('autoStartBreaks', e.target.checked));
-}
-*/
-
-// Updated logic for combined auto-start focus and breaks toggle. Please check po @jude
+// Combined auto-start focus and breaks toggle logic
 if (pomodoroToggle) {
     pomodoroToggle.checked = localStorage.getItem('autoStartPomodoros') === 'true';
     
@@ -456,7 +448,6 @@ if (pomodoroToggle) {
     });
 }
 
-// Audio Settings Logic
 // Audio Settings Logic
 const clickToggle = document.querySelector('.click-toggle');
 if (clickToggle) {
