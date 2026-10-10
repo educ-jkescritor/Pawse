@@ -50,28 +50,57 @@ const db = new sqlite3.Database(dbPath, (err) => {
         db.run(createTableQuery, (err) => {
             if (err) {
                 console.log("Error creating session table:", err.message);
-            } else {
-                db.run("ALTER TABLE session ADD COLUMN uuid TEXT", () => {
-                    db.run("ALTER TABLE session ADD COLUMN is_synced INTEGER DEFAULT 0", () => {
-                        db.run("ALTER TABLE session ADD COLUMN email TEXT DEFAULT 'guest'", () => {
-                            db.run("UPDATE session SET email = 'guest' WHERE email IS NULL OR email = ''", () => {
-                                // Find any past sessions with NULL UUIDs
-                                db.all("SELECT id FROM session WHERE uuid IS NULL OR uuid = ''", (err, rows) => {
-                                    if (!err && rows && rows.length > 0) {
-                                        // Give each past session its unique UUID and mark as not synced yet
-                                        rows.forEach((row) => {
-                                            const newUuid = crypto.randomUUID();
-                                            db.run("UPDATE session SET uuid = ?, is_synced = 0 WHERE id = ?", [newUuid, row.id]);
-                                        });
-                                        console.log(`Successfully assigned UUIDs to ${rows.length} past sessions.`);
-                                    }
+                return;
+            }
+
+            // Inspect existing table structure to apply only missing column deltas (idempotent migration)
+            db.all("PRAGMA table_info(session)", (pragmaErr, columns) => {
+                if (pragmaErr) {
+                    console.log("Error reading table schema:", pragmaErr.message);
+                    return;
+                }
+
+                const existingColumnNames = new Set(columns.map((c) => c.name));
+                const requiredColumns = [
+                    { name: "uuid", ddl: "ALTER TABLE session ADD COLUMN uuid TEXT" },
+                    { name: "is_synced", ddl: "ALTER TABLE session ADD COLUMN is_synced INTEGER DEFAULT 0" },
+                    { name: "email", ddl: "ALTER TABLE session ADD COLUMN email TEXT DEFAULT 'guest'" }
+                ];
+
+                const missingColumns = requiredColumns.filter((c) => !existingColumnNames.has(c.name));
+
+                const runMigrations = (index, onComplete) => {
+                    if (index >= missingColumns.length) {
+                        onComplete();
+                        return;
+                    }
+                    const col = missingColumns[index];
+                    db.run(col.ddl, (alterErr) => {
+                        if (alterErr) {
+                            console.log(`Error adding column ${col.name}:`, alterErr.message);
+                        } else {
+                            console.log(`Migrated column: added ${col.name} to session table.`);
+                        }
+                        runMigrations(index + 1, onComplete);
+                    });
+                };
+
+                runMigrations(0, () => {
+                    // Backfill data hygiene: ensure 'guest' default and assign UUIDs to any legacy rows
+                    db.run("UPDATE session SET email = 'guest' WHERE email IS NULL OR email = ''", () => {
+                        db.all("SELECT id FROM session WHERE uuid IS NULL OR uuid = ''", (selectErr, rows) => {
+                            if (!selectErr && rows && rows.length > 0) {
+                                rows.forEach((row) => {
+                                    const newUuid = crypto.randomUUID();
+                                    db.run("UPDATE session SET uuid = ?, is_synced = 0 WHERE id = ?", [newUuid, row.id]);
                                 });
-                            });
+                                console.log(`Successfully assigned UUIDs to ${rows.length} legacy sessions.`);
+                            }
                         });
                     });
+                    console.log("Session database is ready.");
                 });
-                console.log("Session database is ready.");
-            }
+            });
         });
     }
 });
