@@ -134,78 +134,96 @@ function settingsWindow() {
 
 app.setAppUserModelId("com.pawse.app");
 
-app.whenReady().then(() => {
-  createWindow();
+const gotTheLock = app.requestSingleInstanceLock();
 
-  // SECURITY: Lock down navigation and new windows
-  app.on('web-contents-created', (event, contents) => {
-    // Intercept safe external links and pipe them to the OS default browser
-    contents.setWindowOpenHandler(({ url }) => {
-      if (url.startsWith('https://github.com/') || url.startsWith('https://www.linkedin.com/')) {
-        shell.openExternal(url);
-      }
-      return { action: 'deny' };
-    });
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (win && !win.isDestroyed()) {
+      if (win.isMinimized()) win.restore();
+      win.show();
+      win.focus();
+    } else if (set && !set.isDestroyed()) {
+      if (set.isMinimized()) set.restore();
+      set.show();
+      set.focus();
+    }
+  });
 
-    // Disable navigation to external URLs
-    contents.on('will-navigate', (event, navigationUrl) => {
-      event.preventDefault();
-    });
+  app.whenReady().then(() => {
+    createWindow();
 
-    // SECURITY: Block inspection shortcuts in packaged/production builds
-    if (app.isPackaged) {
-      contents.on('before-input-event', (event, input) => {
-        const isDevToolsShortcut = (input.control || input.meta) && input.shift && input.key.toLowerCase() === 'i';
-        const isF12 = input.key === 'F12';
-        if (isDevToolsShortcut || isF12) {
-          event.preventDefault();
+    // SECURITY: Lock down navigation and new windows
+    app.on('web-contents-created', (event, contents) => {
+      // Intercept safe external links and pipe them to the OS default browser
+      contents.setWindowOpenHandler(({ url }) => {
+        if (url.startsWith('https://github.com/') || url.startsWith('https://www.linkedin.com/')) {
+          shell.openExternal(url);
         }
+        return { action: 'deny' };
       });
-    }
-  });
-  
-  // Automatically re-evaluate frameless window bounds when display scale/orientation/resolution changes
-  screen.on('display-metrics-changed', () => {
-    if (win && !win.isDestroyed() && !win.isMinimized()) {
-      // Determine the correct target dimensions based on the active mode
-      let targetWidth = 310;
-      let targetHeight = 430;
-      if (currentMode === 'timer-only') {
-        targetWidth = 240;
-        targetHeight = 100;
-      } else if (currentMode === 'cat-only') {
-        targetWidth = 240;
-        targetHeight = 240;
-      }
 
-      // Temporarily unlock resizing, re-apply bounds, then lock again
-      win.setResizable(true);
-      win.setMinimumSize(0, 0);
-      win.setMaximumSize(targetWidth, targetHeight);
-      win.setSize(targetWidth, targetHeight);
-      const b = win.getBounds();
-      win.setBounds({ x: b.x, y: b.y, width: targetWidth, height: targetHeight });
-      win.setMinimumSize(targetWidth, targetHeight);
-      win.setMaximumSize(targetWidth, targetHeight);
-      win.setResizable(false);
-      win.webContents.setVisualZoomLevelLimits(1, 1);
-      win.webContents.setZoomLevel(0);
-    }
-    if (set && !set.isDestroyed() && !set.isMinimized()) {
-      set.setResizable(true);
-      set.setMinimumSize(0, 0);
-      set.setMaximumSize(720, 430);
-      set.setSize(720, 430);
-      const b = set.getBounds();
-      set.setBounds({ x: b.x, y: b.y, width: 720, height: 430 });
-      set.setMinimumSize(720, 430);
-      set.setMaximumSize(720, 430);
-      set.setResizable(false);
-      set.webContents.setVisualZoomLevelLimits(1, 1);
-      set.webContents.setZoomLevel(0);
-    }
+      // Disable navigation to external URLs
+      contents.on('will-navigate', (event, navigationUrl) => {
+        event.preventDefault();
+      });
+
+      // SECURITY: Block inspection shortcuts in packaged/production builds
+      if (app.isPackaged) {
+        contents.on('before-input-event', (event, input) => {
+          const isDevToolsShortcut = (input.control || input.meta) && input.shift && input.key.toLowerCase() === 'i';
+          const isF12 = input.key === 'F12';
+          if (isDevToolsShortcut || isF12) {
+            event.preventDefault();
+          }
+        });
+      }
+    });
+    
+    // Automatically re-evaluate frameless window bounds when display scale/orientation/resolution changes
+    screen.on('display-metrics-changed', () => {
+      if (win && !win.isDestroyed() && !win.isMinimized()) {
+        // Determine the correct target dimensions based on the active mode
+        let targetWidth = 310;
+        let targetHeight = 430;
+        if (currentMode === 'timer-only') {
+          targetWidth = 240;
+          targetHeight = 100;
+        } else if (currentMode === 'cat-only') {
+          targetWidth = 240;
+          targetHeight = 240;
+        }
+
+        // Temporarily unlock resizing, re-apply bounds, then lock again
+        win.setResizable(true);
+        win.setMinimumSize(0, 0);
+        win.setMaximumSize(targetWidth, targetHeight);
+        win.setSize(targetWidth, targetHeight);
+        const b = win.getBounds();
+        win.setBounds({ x: b.x, y: b.y, width: targetWidth, height: targetHeight });
+        win.setMinimumSize(targetWidth, targetHeight);
+        win.setMaximumSize(targetWidth, targetHeight);
+        win.setResizable(false);
+        win.webContents.setVisualZoomLevelLimits(1, 1);
+        win.webContents.setZoomLevel(0);
+      }
+      if (set && !set.isDestroyed() && !set.isMinimized()) {
+        set.setResizable(true);
+        set.setMinimumSize(0, 0);
+        set.setMaximumSize(720, 430);
+        set.setSize(720, 430);
+        const b = set.getBounds();
+        set.setBounds({ x: b.x, y: b.y, width: 720, height: 430 });
+        set.setMinimumSize(720, 430);
+        set.setMaximumSize(720, 430);
+        set.setResizable(false);
+        set.webContents.setVisualZoomLevelLimits(1, 1);
+        set.webContents.setZoomLevel(0);
+      }
+    });
   });
-});
+}
 
 ipcMain.on('minimize-window', (event) => {
   const senderWindow = BrowserWindow.fromWebContents(event.sender);
