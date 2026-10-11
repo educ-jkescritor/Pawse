@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, nativeTheme, screen} = require("electron");
+const { app, BrowserWindow, ipcMain, shell, nativeTheme, screen, Notification } = require("electron");
 const path = require("path");
 const iconPath = path.join(__dirname, "../assets/logos/logo.png");
 const { db, generateAnalytics } = require("./database.js");
@@ -415,6 +415,95 @@ ipcMain.on('flash-frame', (event, flag) => {
     } else {
       senderWindow.flashFrame(false);
     }
+  }
+});
+
+let activeNotification = null;
+
+ipcMain.on('show-notification', (event, { title, body }) => {
+  if (Notification && Notification.isSupported()) {
+    if (activeNotification) {
+      try {
+        activeNotification.close();
+      } catch (e) {}
+      activeNotification = null;
+    }
+
+    const notificationOptions = {
+      title: title || 'Pawse',
+      body: body || '',
+      icon: iconPath,
+      silent: true
+    };
+
+    // On Windows, use toastXml with scenario="alarm" so the notification breaks through
+    // Focus Assist / full-screen mode (e.g. YouTube, media players) just like Windows Clock,
+    // and stays visible until dismissed or auto-closed after 20s
+    if (process.platform === 'win32') {
+      const escapeXml = (str) => String(str).replace(/[<>&'"]/g, (c) => {
+        switch (c) {
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '&': return '&amp;';
+          case '\'': return '&apos;';
+          case '"': return '&quot;';
+          default: return c;
+        }
+      });
+      notificationOptions.toastXml = `
+        <toast scenario="alarm">
+          <visual>
+            <binding template="ToastGeneric">
+              <text>${escapeXml(title || 'Pawse')}</text>
+              <text>${escapeXml(body || '')}</text>
+            </binding>
+          </visual>
+          <audio silent="true"/>
+        </toast>
+      `.trim();
+    }
+
+    const notification = new Notification(notificationOptions);
+    activeNotification = notification;
+
+    notification.on('click', () => {
+      const senderWindow = BrowserWindow.fromWebContents(event.sender);
+      const targetWin = senderWindow || win;
+      if (targetWin && !targetWin.isDestroyed()) {
+        if (targetWin.isMinimized()) {
+          targetWin.restore();
+        }
+        targetWin.setAlwaysOnTop(true, 'screen-saver');
+        targetWin.show();
+        targetWin.focus();
+
+        setTimeout(() => {
+          if (!targetWin.isDestroyed()) {
+            targetWin.setAlwaysOnTop(globalAlwaysOnTop, 'screen-saver');
+          }
+        }, 500);
+
+        // Notify renderer so it can restore from mini-mode if active
+        targetWin.webContents.send('notification-clicked');
+      }
+    });
+
+    notification.on('close', () => {
+      if (activeNotification === notification) {
+        activeNotification = null;
+      }
+    });
+
+    notification.show();
+  }
+});
+
+ipcMain.on('close-notification', () => {
+  if (activeNotification) {
+    try {
+      activeNotification.close();
+    } catch (e) {}
+    activeNotification = null;
   }
 });
 

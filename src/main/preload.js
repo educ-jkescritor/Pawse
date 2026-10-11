@@ -19,5 +19,8 @@ contextBridge.exposeInMainWorld('mainAPI', {
     getUpdateStatus: () => ipcRenderer.invoke('get-update-status'),
     getVersion: () => ipcRenderer.invoke('get-version'),
     getLaunchOnStartup: () => ipcRenderer.invoke('get-launch-on-startup'),
-    setLaunchOnStartup: (isEnabled) => ipcRenderer.send('set-launch-on-startup', isEnabled)
+    setLaunchOnStartup: (isEnabled) => ipcRenderer.send('set-launch-on-startup', isEnabled),
+    showNotification: (options) => ipcRenderer.send('show-notification', options),
+    closeNotification: () => ipcRenderer.send('close-notification'),
+    onNotificationClicked: (callback) => ipcRenderer.on('notification-clicked', () => callback())
 });

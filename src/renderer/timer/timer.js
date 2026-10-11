@@ -676,19 +676,30 @@ function showModal(title, message, btnText, nextAction, playAlarm = true) {
             ambientAudio.pause();
             purrAudio.pause();
             alarmAudio.play().catch(e => {});
-
-            // Industry Standard Auto-Silence: Cap continuous alarm ringing at 20 seconds
-            alarmTimeoutId = setTimeout(() => {
-                alarmAudio.pause();
-                alarmAudio.currentTime = 0;
-                isAlarmPlaying = false;
-                alarmTimeoutId = null;
-            }, 20000);
         }
+
+        // Industry Standard Auto-Silence: Cap continuous alarm ringing at 20 seconds and dismiss notification
+        alarmTimeoutId = setTimeout(() => {
+            alarmAudio.pause();
+            alarmAudio.currentTime = 0;
+            isAlarmPlaying = false;
+            alarmTimeoutId = null;
+            if (window.mainAPI && window.mainAPI.closeNotification) {
+                window.mainAPI.closeNotification();
+            }
+        }, 20000);
 
         // Flash taskbar icon to attract user attention if window is minimized or behind another window
         if (window.mainAPI && window.mainAPI.flashFrame) {
             window.mainAPI.flashFrame(true);
+        }
+
+        // Trigger native desktop notification on natural completion
+        if (window.mainAPI && window.mainAPI.showNotification) {
+            window.mainAPI.showNotification({
+                title: `Pawse • ${title}`,
+                body: message
+            });
         }
     } else {
         isAlarmPlaying = false;
@@ -738,6 +749,11 @@ function showModal(title, message, btnText, nextAction, playAlarm = true) {
         // Clear taskbar notification glow
         if (window.mainAPI && window.mainAPI.flashFrame) {
             window.mainAPI.flashFrame(false);
+        }
+
+        // Dismiss active desktop notification if still showing
+        if (window.mainAPI && window.mainAPI.closeNotification) {
+            window.mainAPI.closeNotification();
         }
 
         hideModal(modalOverlay, () => {
@@ -808,6 +824,26 @@ window.addEventListener('focus', () => {
         window.mainAPI.flashFrame(false);
     }
 });
+
+// Handle notification banner clicks from OS Action Center
+if (window.mainAPI && window.mainAPI.onNotificationClicked) {
+    window.mainAPI.onNotificationClicked(() => {
+        if (window.mainAPI.closeNotification) {
+            window.mainAPI.closeNotification();
+        }
+        // If in mini mode, restore to default size
+        if (document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode")) {
+            document.body.classList.remove("timer-only-mode", "cat-only-mode");
+            if (window.mainAPI.resize) {
+                window.mainAPI.resize('default');
+            }
+        }
+        if (pendingModal) {
+            modalOverlay.classList.remove("closing");
+            modalOverlay.classList.remove("hidden");
+        }
+    });
+}
 
 // --- EXIT MODAL HANDLERS ---
 let exitModalEl = document.getElementById('exit-modal-overlay');
