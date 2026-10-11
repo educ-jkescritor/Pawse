@@ -419,14 +419,17 @@ ipcMain.on('flash-frame', (event, flag) => {
 });
 
 let activeNotification = null;
+let isProgrammaticClose = false;
 
 ipcMain.on('show-notification', (event, { title, body }) => {
   if (Notification && Notification.isSupported()) {
     if (activeNotification) {
+      isProgrammaticClose = true;
       try {
         activeNotification.close();
       } catch (e) {}
       activeNotification = null;
+      isProgrammaticClose = false;
     }
 
     const notificationOptions = {
@@ -467,6 +470,7 @@ ipcMain.on('show-notification', (event, { title, body }) => {
     activeNotification = notification;
 
     notification.on('click', () => {
+      isProgrammaticClose = true;
       const senderWindow = BrowserWindow.fromWebContents(event.sender);
       const targetWin = senderWindow || win;
       if (targetWin && !targetWin.isDestroyed()) {
@@ -489,8 +493,16 @@ ipcMain.on('show-notification', (event, { title, body }) => {
     });
 
     notification.on('close', () => {
+      const wasProgrammatic = isProgrammaticClose;
       if (activeNotification === notification) {
         activeNotification = null;
+      }
+      if (!wasProgrammatic) {
+        const senderWindow = BrowserWindow.fromWebContents(event.sender);
+        const targetWin = senderWindow || win;
+        if (targetWin && !targetWin.isDestroyed()) {
+          targetWin.webContents.send('notification-closed');
+        }
       }
     });
 
@@ -500,10 +512,12 @@ ipcMain.on('show-notification', (event, { title, body }) => {
 
 ipcMain.on('close-notification', () => {
   if (activeNotification) {
+    isProgrammaticClose = true;
     try {
       activeNotification.close();
     } catch (e) {}
     activeNotification = null;
+    isProgrammaticClose = false;
   }
 });
 

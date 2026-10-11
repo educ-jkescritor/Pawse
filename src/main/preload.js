@@ -22,5 +22,6 @@ contextBridge.exposeInMainWorld('mainAPI', {
     setLaunchOnStartup: (isEnabled) => ipcRenderer.send('set-launch-on-startup', isEnabled),
     showNotification: (options) => ipcRenderer.send('show-notification', options),
     closeNotification: () => ipcRenderer.send('close-notification'),
-    onNotificationClicked: (callback) => ipcRenderer.on('notification-clicked', () => callback())
+    onNotificationClicked: (callback) => ipcRenderer.on('notification-clicked', () => callback()),
+    onNotificationClosed: (callback) => ipcRenderer.on('notification-closed', () => callback())
 });

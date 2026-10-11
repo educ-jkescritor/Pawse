@@ -204,6 +204,7 @@ let dialogMessage = document.getElementById("dialog-message");
 let dialogBtn = document.getElementById("dialog-btn");
 
 function formatTime(remainingTime) {
+    if (remainingTime < 0) remainingTime = 0;
     let minutes = Math.floor(remainingTime / 60);
     let secs = remainingTime % 60;
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -366,6 +367,7 @@ function updateCatState() {
 }
 
 function startTimer() {
+    clearInterval(timerId);
     document.getElementById("play-icon").src = "../../assets/icons/pause-btn.png";
     isRunning = true;
     updateCatState();
@@ -376,6 +378,13 @@ function startTimer() {
         if (today !== sessionDate.getDate()) {
             flushSessionData(false, true); // forceYesterday = true
             sessionDate = new Date();
+        }
+
+        if (remainingTime <= 0) {
+            remainingTime = 0;
+            pauseTimer();
+            handleSessionComplete();
+            return;
         }
 
         remainingTime--;
@@ -394,12 +403,13 @@ function startTimer() {
 
         document.getElementById("timer-display").textContent = formatTime(remainingTime);     
 
-        if(remainingTime === 0) {
+        if(remainingTime <= 0) {
+            remainingTime = 0;
             setTimeout(() => {    
                 handleSessionComplete();
-            }, 10)
+            }, 10);
         }
-    }, 1000)
+    }, 1000);
 }
 
 function handleSessionComplete(isManualSkip = false) {
@@ -591,7 +601,48 @@ soundButton.addEventListener("click", () => {
 
 playButton.addEventListener("click", () => {
     playButton.blur();
-    if (strictMode || isAlarmPlaying) return;
+    if (strictMode) return;
+
+    // If an alarm is ringing, clicking play silences it and closes notification
+    if (isAlarmPlaying) {
+        stopAlarmSound();
+        if (window.mainAPI && window.mainAPI.closeNotification) {
+            window.mainAPI.closeNotification();
+        }
+        if (window.mainAPI && window.mainAPI.flashFrame) {
+            window.mainAPI.flashFrame(false);
+        }
+    }
+
+    // If a session has completed and pendingModal is staged (common in mini-mode):
+    if (pendingModal) {
+        stopAlarmSound();
+        if (window.mainAPI && window.mainAPI.closeNotification) {
+            window.mainAPI.closeNotification();
+        }
+        if (window.mainAPI && window.mainAPI.flashFrame) {
+            window.mainAPI.flashFrame(false);
+        }
+
+        // Cycle 4 complete (Final session of the full set): expand to default view to show celebration modal
+        if (cycleCount === 4 && !workingTime) {
+            document.body.classList.remove("timer-only-mode", "cat-only-mode");
+            if (window.mainAPI && window.mainAPI.resize) {
+                window.mainAPI.resize('default');
+            }
+            modalOverlay.classList.remove("closing");
+            modalOverlay.classList.remove("hidden");
+            return;
+        }
+
+        // Regular session transition (Work -> Break or Break -> Work):
+        // Seamlessly advance to the next session directly in mini-mode!
+        const next = pendingModal.nextAction;
+        pendingModal = null;
+        next();
+        return;
+    }
+
     if(isRunning) {
         pauseTimer();
     } else {
@@ -656,6 +707,16 @@ function hideModal(modalElement, onComplete) {
     }, 200);
 }
 
+function stopAlarmSound() {
+    if (alarmTimeoutId) {
+        clearTimeout(alarmTimeoutId);
+        alarmTimeoutId = null;
+    }
+    isAlarmPlaying = false;
+    alarmAudio.pause();
+    alarmAudio.currentTime = 0;
+}
+
 function showModal(title, message, btnText, nextAction, playAlarm = true) {
     dialogTitle.innerText = title;
     dialogMessage.innerText = message;
@@ -680,10 +741,7 @@ function showModal(title, message, btnText, nextAction, playAlarm = true) {
 
         // Industry Standard Auto-Silence: Cap continuous alarm ringing at 20 seconds and dismiss notification
         alarmTimeoutId = setTimeout(() => {
-            alarmAudio.pause();
-            alarmAudio.currentTime = 0;
-            isAlarmPlaying = false;
-            alarmTimeoutId = null;
+            stopAlarmSound();
             if (window.mainAPI && window.mainAPI.closeNotification) {
                 window.mainAPI.closeNotification();
             }
@@ -702,13 +760,7 @@ function showModal(title, message, btnText, nextAction, playAlarm = true) {
             });
         }
     } else {
-        isAlarmPlaying = false;
-        if (alarmTimeoutId) {
-            clearTimeout(alarmTimeoutId);
-            alarmTimeoutId = null;
-        }
-        alarmAudio.pause();
-        alarmAudio.currentTime = 0;
+        stopAlarmSound();
     }
 
     const isMiniMode = document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode");
@@ -738,13 +790,7 @@ function showModal(title, message, btnText, nextAction, playAlarm = true) {
         preSkipState = null;
 
         // Stop the alarm when the user proceeds
-        if (alarmTimeoutId) {
-            clearTimeout(alarmTimeoutId);
-            alarmTimeoutId = null;
-        }
-        isAlarmPlaying = false;
-        alarmAudio.pause();
-        alarmAudio.currentTime = 0;
+        stopAlarmSound();
         
         // Clear taskbar notification glow
         if (window.mainAPI && window.mainAPI.flashFrame) {
@@ -818,10 +864,13 @@ if (restoreBtn) {
     });
 }
 
-// Clear taskbar notification glow whenever window gains focus
+// Clear taskbar notification glow and dismiss active desktop notification toast whenever window gains focus
 window.addEventListener('focus', () => {
     if (window.mainAPI && window.mainAPI.flashFrame) {
         window.mainAPI.flashFrame(false);
+    }
+    if (window.mainAPI && window.mainAPI.closeNotification) {
+        window.mainAPI.closeNotification();
     }
 });
 
@@ -831,6 +880,9 @@ if (window.mainAPI && window.mainAPI.onNotificationClicked) {
         if (window.mainAPI.closeNotification) {
             window.mainAPI.closeNotification();
         }
+        // Silence alarm audio immediately upon interacting with the notification banner
+        stopAlarmSound();
+
         // If in mini mode, restore to default size
         if (document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode")) {
             document.body.classList.remove("timer-only-mode", "cat-only-mode");
@@ -842,6 +894,14 @@ if (window.mainAPI && window.mainAPI.onNotificationClicked) {
             modalOverlay.classList.remove("closing");
             modalOverlay.classList.remove("hidden");
         }
+    });
+}
+
+// Handle notification dismissal from OS (swiped away or closed via 'X')
+if (window.mainAPI && window.mainAPI.onNotificationClosed) {
+    window.mainAPI.onNotificationClosed(() => {
+        // User explicitly acknowledged and dismissed the alert from OS; silence the alarm sound immediately
+        stopAlarmSound();
     });
 }
 
