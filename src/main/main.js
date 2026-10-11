@@ -15,6 +15,37 @@ let set = null;
 let globalAlwaysOnTop = false;
 let currentMode = 'default'; // Tracks the active window mode: 'default', 'timer-only', or 'cat-only'
 
+function clampBoundsToWorkArea(bounds, targetWidth, targetHeight) {
+  const display = screen.getDisplayMatching(bounds);
+  const workArea = display.workArea;
+
+  let newX = bounds.x;
+  let newY = bounds.y;
+
+  // Clamp horizontally (Right boundary first, then Left boundary)
+  if (newX + targetWidth > workArea.x + workArea.width) {
+    newX = workArea.x + workArea.width - targetWidth;
+  }
+  if (newX < workArea.x) {
+    newX = workArea.x;
+  }
+
+  // Clamp vertically (Bottom boundary first, then Top boundary)
+  if (newY + targetHeight > workArea.y + workArea.height) {
+    newY = workArea.y + workArea.height - targetHeight;
+  }
+  if (newY < workArea.y) {
+    newY = workArea.y;
+  }
+
+  return {
+    x: Math.round(newX),
+    y: Math.round(newY),
+    width: targetWidth,
+    height: targetHeight
+  };
+}
+
 function createWindow() {
   win = new BrowserWindow({
     icon: iconPath,
@@ -48,7 +79,7 @@ function createWindow() {
       isShown = true;
       win.setSize(310, 430);
       const b = win.getBounds();
-      win.setBounds({ x: b.x, y: b.y, width: 310, height: 430 });
+      win.setBounds(clampBoundsToWorkArea(b, 310, 430));
       win.webContents.setVisualZoomLevelLimits(1, 1);
       win.webContents.setZoomLevel(0);
       win.show();
@@ -114,7 +145,7 @@ function settingsWindow() {
       isSettingsShown = true;
       set.setSize(720, 430);
       const b = set.getBounds();
-      set.setBounds({ x: b.x, y: b.y, width: 720, height: 430 });
+      set.setBounds(clampBoundsToWorkArea(b, 720, 430));
       set.webContents.setVisualZoomLevelLimits(1, 1);
       set.webContents.setZoomLevel(0);
       set.show();
@@ -201,7 +232,7 @@ if (!gotTheLock) {
         win.setMaximumSize(targetWidth, targetHeight);
         win.setSize(targetWidth, targetHeight);
         const b = win.getBounds();
-        win.setBounds({ x: b.x, y: b.y, width: targetWidth, height: targetHeight });
+        win.setBounds(clampBoundsToWorkArea(b, targetWidth, targetHeight));
         win.setMinimumSize(targetWidth, targetHeight);
         win.setMaximumSize(targetWidth, targetHeight);
         win.setResizable(false);
@@ -214,7 +245,7 @@ if (!gotTheLock) {
         set.setMaximumSize(720, 430);
         set.setSize(720, 430);
         const b = set.getBounds();
-        set.setBounds({ x: b.x, y: b.y, width: 720, height: 430 });
+        set.setBounds(clampBoundsToWorkArea(b, 720, 430));
         set.setMinimumSize(720, 430);
         set.setMaximumSize(720, 430);
         set.setResizable(false);
@@ -272,14 +303,9 @@ ipcMain.on('resize-window', (event, mode) => {
   // 3. Set the window size using setSize (consistent with outer bounds WS_THICKFRAME geometry)
   senderWindow.setSize(targetWidth, targetHeight);
 
-  // 4. Immediately re-evaluate bounds to force the OS and Chromium compositor to conform synchronously
+  // 4. Immediately clamp and re-evaluate bounds to ensure window stays fully inside screen workArea
   const currentBounds = senderWindow.getBounds();
-  senderWindow.setBounds({
-    x: currentBounds.x,
-    y: currentBounds.y,
-    width: targetWidth,
-    height: targetHeight
-  });
+  senderWindow.setBounds(clampBoundsToWorkArea(currentBounds, targetWidth, targetHeight));
 
   // 5. Lock min and max to the target dimensions to maintain fixed sizing
   senderWindow.setMinimumSize(targetWidth, targetHeight);
