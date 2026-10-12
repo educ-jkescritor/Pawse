@@ -446,8 +446,9 @@ async function loadAnalytics(weeksAgo = 0) {
             const formattedAvg = avgH > 0 ? (avgM > 0 ? `${avgH}h ${avgM}m` : `${avgH}h`) : `${avgM}m`;
 
             const avgBadge = document.createElement("span");
-            avgBadge.className = "avg-benchmark-label font-inter-10-medium";
-            avgBadge.textContent = `avg ${formattedAvg}`;
+            avgBadge.className = "avg-benchmark-label font-inter-10-regular";
+            // Reverses the order and wraps the time in a strong tag for bolding
+            avgBadge.innerHTML = `<strong>${formattedAvg}</strong> avg`;
             avgLine.appendChild(avgBadge);
 
             // Compute bottom offset accurately: baseline of bars is 20px, max bar area is (containerHeight - 36px)
