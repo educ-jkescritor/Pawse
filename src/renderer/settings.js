@@ -101,12 +101,7 @@ function getWeekDateRangeString(weeksAgo) {
     const startDay = sunday.getDate();
     const endDay = saturday.getDate();
     
-    // If within the same month (e.g. September 1 - 7)
-    if (startMonth === endMonth) {
-        return `${startMonth} ${startDay} - ${endDay}`;
-    }
-    
-    // If crossing month boundary (e.g. September 27 - October 3)
+    // Always display the month for both start and end dates (e.g., "Oct 4 - Oct 10")
     return `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
 }
 
