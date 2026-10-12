@@ -354,15 +354,14 @@ p {
 }
 
 .analytics-card {
-    padding: 10px 12px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     flex: 1;
-    height: 102px;
+    height: 90px;
     border-radius: 8px;
-    background: linear-gradient(180deg, #FFF 0%, var(--sys-blue-grad) 100%);
-    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--stroke-color);
+    background: linear-gradient(180deg, #FFFFFF 0%, #B3B3B3 100%);
     transition: background 0.3s ease;
     overflow: hidden;
 }
@@ -370,31 +369,17 @@ p {
 .analytics-card .card-titles {
     display: flex;
     flex-direction: column;
-}
-
-.analytics-card .card-titles span {
-    line-height: 1.15;
+    padding-bottom: 4px;
 }
 
 .analytics-card .card-value-row {
     display: flex;
     align-items: baseline;
     gap: 4px;
-    margin: 1px 0;
-}
-
-.analytics-card .card-value-row .card-data {
-    line-height: 1;
-}
-
-.analytics-card .card-value-row .card-unit {
-    line-height: 1;
 }
 
 .analytics-card .card-subtext {
-    line-height: 1.2;
     white-space: nowrap;
-    overflow: hidden;
     text-overflow: ellipsis;
     font-size: 10px;
 }
@@ -409,36 +394,47 @@ p {
     font-weight: 400;
 }
 
-/* Warm orange/amber gradient for active streak */
 #streak-card.active-streak {
-    background: linear-gradient(180deg, #FFF 0%, var(--theme-sprint-light) 100%);
+    background: linear-gradient(180deg, #FFF 0%, #FFBE8A 100%);
 }
 
-/* Celebratory warm highlight when personal best is achieved/tied */
-#personal-best-card.highlight-record {
-    background: linear-gradient(180deg, #FFF 0%, var(--theme-sprint-light) 100%);
+#today-focus-card.active-focus {
+    background: linear-gradient(180deg, #FFF 0%, #A8DCFF 100%);
 }
 
-#favorite-cat-card {
-    background: linear-gradient(180deg, #FFF 0%, var(--sys-blue-grad) 100%); /* Default blue gradient */
-    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
-    transition: background 0.3s ease;
-}
-
-/* Green gradient for Tux (Classic) */
-#favorite-cat-card.tuxedo_cat {
+#top-companion-card.tuxedo_cat {
     background: linear-gradient(180deg, #FFF 0%, var(--theme-classic-light) 100%);
 }
 
-/* Orange gradient for Ginger (Sprint) */
-#favorite-cat-card.orange_cat {
+#top-companion-card.orange_cat {
     background: linear-gradient(180deg, #FFF 0%, var(--theme-sprint-light) 100%);
 }
 
-/* Purple gradient for Void (Focused) */
-#favorite-cat-card.black_cat {
+#top-companion-card.black_cat {
     background: linear-gradient(180deg, #FFF 0%, var(--theme-focused-light) 100%);
 }
+
+/* ACTIVE STATE TEXT COLORS */
+
+/* Focus Time (Blue) */
+#today-focus-card.active-focus .card-titles span { color: var(--text-focus-time); }
+#today-focus-card.active-focus .card-subtext { color: var(--subtext-focus-time); }
+
+/* Active Streak (Orange) */
+#streak-card.active-streak .card-titles span { color: var(--text-active-streak); }
+#streak-card.active-streak .card-subtext { color: var(--subtext-active-streak); }
+
+/* Top Companion - Classic (Green) */
+#top-companion-card.tuxedo_cat .card-titles span { color: var(--text-green-companion); }
+#top-companion-card.tuxedo_cat .card-subtext { color: var(--subtext-green); }
+
+/* Top Companion - Sprint (Orange) */
+#top-companion-card.orange_cat .card-titles span { color: var(--text-orange-companion); }
+#top-companion-card.orange_cat .card-subtext { color: var(--subtext-orange); }
+
+/* Top Companion - Focused (Purple) */
+#top-companion-card.black_cat .card-titles span { color: var(--text-purple-companion); }
+#top-companion-card.black_cat .card-subtext { color: var(--subtext-purple); }
 
 .favorite-cat-img {
     height: 42px;
@@ -461,15 +457,14 @@ p {
     flex: 1; /* Stretch to exactly fill the remaining height instead of a fixed height */
     padding: 12px 16px 16px 16px; /* 12px top offsets the 4px header padding, 16px bottom ensures equal breathing room */
     border-radius: 8px;
+    border: 1px solid var(--stroke-color);
     background: #FFFFFF;
-    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
     display: flex;
     flex-direction: column;
 }
 
 .week-selection {
     width: 100%;
-    padding: 4px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -547,7 +542,7 @@ p {
 
 .calendar-popup {
     position: absolute;
-    top: calc(100% + 2px);
+    top: calc(100%);
     right: 0;
     width: 120px;
     background: #FFFFFF;
@@ -727,7 +722,7 @@ p {
     color: var(--sys-blue-solid);
     background-color: #FFFFFF;
     padding: 1px 6px;
-    border-radius: 4px 4px 0 0; /* [top-left] [top-right] [bottom-right] [bottom-left] */
+    border-radius: 4px 4px 0 0;
     border: 1.5px solid rgba(53, 166, 241, 0.75);
     box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.04);
     white-space: nowrap;

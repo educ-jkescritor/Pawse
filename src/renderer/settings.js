@@ -248,9 +248,9 @@ async function loadAnalytics(weeksAgo = 0) {
 
     if (currentStreakEl) currentStreakEl.textContent = streak;
     if (streakUnitEl) streakUnitEl.textContent = streak === 1 ? 'day' : 'days';
-    if (bestStreakEl) bestStreakEl.textContent = `Best: ${bestStreak} ${bestStreak === 1 ? 'day' : 'days'}`;
+    if (bestStreakEl) bestStreakEl.textContent = `Your best is ${bestStreak} days!`;
     if (streakCard) {
-        if (streak >= 3) {
+        if (streak > 0) {
             streakCard.classList.add('active-streak');
         } else {
             streakCard.classList.remove('active-streak');
@@ -260,6 +260,7 @@ async function loadAnalytics(weeksAgo = 0) {
     // 2. Today's Focus Card & Trend vs Average
     const todayWorkSecondsElement = document.getElementById("today_work_seconds");
     const todayVsAvgEl = document.getElementById("today_vs_avg");
+    const todayFocusCard = document.getElementById("today-focus-card");
 
     const totalSeconds = data.today_work_seconds || 0;
     const hours = Math.floor(totalSeconds / 3600);
@@ -274,59 +275,62 @@ async function loadAnalytics(weeksAgo = 0) {
             todayVsAvgEl.className = "card-subtext font-inter-10-regular text-gray";
             todayVsAvgEl.title = "No previous days tracked yet";
         } else {
+            const diffSeconds = totalSeconds - avgSeconds;
             const avgH = Math.floor(avgSeconds / 3600);
             const avgM = Math.round((avgSeconds % 3600) / 60);
             const formattedAvg = avgH > 0 ? (avgM > 0 ? `${avgH}h ${avgM}m` : `${avgH}h`) : `${avgM}m`;
 
-            const diffSeconds = totalSeconds - avgSeconds;
-            const absDiff = Math.abs(diffSeconds);
-            const diffHours = Math.floor(absDiff / 3600);
-            const diffMins = Math.round((absDiff % 3600) / 60);
-            const formattedDiff = diffHours > 0 ? `${diffHours}h ${diffMins}m` : `${diffMins}m`;
-
-            if (diffSeconds > 60) {
-                todayVsAvgEl.textContent = `▲ +${formattedDiff} vs. avg ${formattedAvg}`;
-                todayVsAvgEl.className = "card-subtext font-inter-10-regular trend-up";
-            } else if (diffSeconds < -60) {
-                todayVsAvgEl.textContent = `▼ -${formattedDiff} vs. avg ${formattedAvg}`;
-                todayVsAvgEl.className = "card-subtext font-inter-10-regular trend-down";
-            } else {
-                todayVsAvgEl.textContent = `On par with avg (${formattedAvg})`;
-                todayVsAvgEl.className = "card-subtext font-inter-10-regular text-gray";
-            }
+            todayVsAvgEl.textContent = diffSeconds > 60
+                ? "Above your usual pace"
+                : diffSeconds < -60
+                    ? "Below your usual pace"
+                    : "Right on your usual pace";
+            todayVsAvgEl.className = "card-subtext font-inter-10-regular text-gray";
             todayVsAvgEl.title = `Today: ${timeString} | Overall Daily Average: ${formattedAvg}`;
         }
     }
-
-    // 3. Personal Best Card
-    const personalBestEl = document.getElementById("personal_best_time");
-    const personalBestDateEl = document.getElementById("personal_best_date");
-    const personalBestCard = document.getElementById("personal-best-card");
-
-    const pbSeconds = data.personal_best_seconds || 0;
-    const pbHours = Math.floor(pbSeconds / 3600);
-    const pbMinutes = Math.floor((pbSeconds % 3600) / 60);
-    const pbTimeString = `${pbHours}h ${pbMinutes}m`;
-    if (personalBestEl) personalBestEl.textContent = pbTimeString;
-
-    if (personalBestDateEl) {
-        if (pbSeconds === 0 || !data.personal_best_date) {
-            personalBestDateEl.textContent = "No record yet";
-            if (personalBestCard) personalBestCard.classList.remove('highlight-record');
+    if (todayFocusCard) {
+        if (totalSeconds > 0) {
+            todayFocusCard.classList.add('active-focus');
         } else {
-            const now = new Date();
-            const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-            
-            if (data.personal_best_date === todayKey && pbSeconds > 0) {
-                personalBestDateEl.textContent = "Achieved today! 🏆";
-                if (personalBestCard) personalBestCard.classList.add('highlight-record');
+            todayFocusCard.classList.remove('active-focus');
+        }
+    }
+
+    // 3. Top Companion Card
+    const topCompanionCard = document.getElementById("top-companion-card");
+    const topCompanionNameEl = document.getElementById("top_companion_name");
+    const topCompanionRateEl = document.getElementById("top_companion_rate");
+    const companionNames = {
+        tuxedo_cat: "Tux",
+        orange_cat: "Ginger",
+        black_cat: "Void"
+    };
+
+    if (topCompanionCard) {
+        topCompanionCard.classList.remove('orange_cat', 'tuxedo_cat', 'black_cat');
+    }
+
+    if (data.favorite_cat && companionNames[data.favorite_cat]) {
+        if (topCompanionCard) {
+            topCompanionCard.classList.add(data.favorite_cat);
+        }
+        if (topCompanionNameEl) {
+            topCompanionNameEl.textContent = companionNames[data.favorite_cat];
+        }
+        if (topCompanionRateEl) {
+            if (data.favorite_cat_percentage !== undefined && data.favorite_cat_percentage !== null && data.favorite_cat_percentage !== "") {
+                topCompanionRateEl.textContent = `Chosen ${data.favorite_cat_percentage}% of the time`;
             } else {
-                const [y, m, d] = data.personal_best_date.split('-').map(Number);
-                const pbDate = new Date(y, m - 1, d);
-                const dateOptions = { month: 'short', day: 'numeric', year: 'numeric' };
-                personalBestDateEl.textContent = pbDate.toLocaleDateString('en-US', dateOptions);
-                if (personalBestCard) personalBestCard.classList.remove('highlight-record');
+                topCompanionRateEl.textContent = "Your top choice!";
             }
+        }
+    } else {
+        if (topCompanionNameEl) {
+            topCompanionNameEl.textContent = "None";
+        }
+        if (topCompanionRateEl) {
+            topCompanionRateEl.textContent = "No sessions yet";
         }
     }
 
@@ -334,29 +338,6 @@ async function loadAnalytics(weeksAgo = 0) {
     const historicalPomodoroElement = document.getElementById("historical_pomodoro");
     if (historicalPomodoroElement) {
         historicalPomodoroElement.textContent = data.historical_pomodoro || 0;
-    }
-
-    const favoriteCatElement = document.getElementById("favorite_cat");
-    if (favoriteCatElement) {
-        const catFaceImages = {
-            'orange_cat': './../assets/photos/orange-cat-face.png',
-            'tuxedo_cat': './../assets/photos/tuxedo-cat-face.png',
-            'black_cat': './../assets/photos/black-cat-face.png'
-        };
-        
-        if (data.favorite_cat && catFaceImages[data.favorite_cat]) {
-            favoriteCatElement.innerHTML = `<img src="${catFaceImages[data.favorite_cat]}" alt="${data.favorite_cat}" class="favorite-cat-img">`;
-        } else {
-            favoriteCatElement.textContent = 'None';
-        }
-    }
-
-    const favoriteCatCard = document.getElementById("favorite-cat-card");
-    if (favoriteCatCard) {
-        favoriteCatCard.classList.remove('orange_cat', 'tuxedo_cat', 'black_cat');
-        if (data.favorite_cat) {
-            favoriteCatCard.classList.add(data.favorite_cat);
-        }
     }
 
     // Graph Generation
