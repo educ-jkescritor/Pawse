@@ -229,6 +229,12 @@ async function loadAnalytics(weeksAgo = 0) {
         dateRangeButton.textContent = getWeekDateRangeString(weeksAgo);
     }
 
+    // Sync the calendar popup to the selected week before rendering.
+    const today = new Date();
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() - (weeksAgo * 7));
+    calendarBaseDate = targetDate;
+
     renderCalendar();
 
     // Disable the right arrow if user is on current week
@@ -594,7 +600,6 @@ if (nextWeekButton) {
 
 if (dateRangeButton && calendarPopup) {
     dateRangeButton.addEventListener('click', () => {
-        calendarBaseDate = new Date();
         renderCalendar();
         calendarPopup.classList.toggle('hidden');
     });
