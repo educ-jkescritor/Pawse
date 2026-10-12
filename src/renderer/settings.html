@@ -92,22 +92,36 @@
                         </div>
                     </div>
 
-                    <div class="graph-container">
-                        <div class="graph">
-                            <div class="week-selection">
-                                <div class="chart-header-text">
-                                    <p class="font-inter-14-medium chart-header-title" id="chart-header-title">Weekly Flow</p>
-                                </div>
-                                <div class="week-picker-control" id="week-picker-control" role="group" aria-label="Select week range">
-                                    <button type="button" class="nav-arrow" id="prev-week-btn" aria-label="Previous week">&#8249;</button>
-                                    <button type="button" class="date-range-btn font-inter-10-medium" id="date-range-btn" aria-label="Toggle calendar">Date</button>
-                                    <button type="button" class="nav-arrow" id="next-week-btn" aria-label="Next week">&#8250;</button>
-                                </div>
-                                <div class="calendar-popup hidden" id="calendar-popup" aria-hidden="true"></div>
+                <div class="graph-container">
+                <div class="graph">
+                    <div class="week-selection">
+                            <div class="chart-header-text">
+                                <p class="font-inter-14-medium chart-header-title" id="chart-header-title">Weekly Flow</p>
                             </div>
-                            <div class="graph-bars">
-                                <!-- insert graph bars here w/ day labels -->
+                            <div class="week-picker-control" id="week-picker-control" role="group" aria-label="Select week range">
+                                <button type="button" class="nav-arrow" id="prev-week-btn" aria-label="Previous week">&#8249;</button>
+                                <button type="button" class="date-range-btn font-inter-10-medium" id="date-range-btn" aria-label="Toggle calendar">Date</button>
+                                <button type="button" class="nav-arrow" id="next-week-btn" aria-label="Next week">&#8250;</button>
                             </div>
+                            <div class="calendar-popup hidden" id="calendar-popup" aria-hidden="true"></div>
+                        </div>
+                        
+                        <!-- Legend -->
+                        <div class="chart-legend">
+                            <div class="legend-item">
+                                <span class="legend-color completed-color"></span>
+                                <span class="font-inter-8-regular text-gray">Completed</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color today-color"></span>
+                                <span class="font-inter-8-regular text-gray">Today</span>
+                            </div>
+                        </div>
+
+                    <div class="graph-bars">
+                        <!-- insert graph bars here w/ day labels -->
+                    </div>
+                </div>
                         </div>
                     </div>
                 </div>

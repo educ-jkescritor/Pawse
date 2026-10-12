@@ -343,13 +343,18 @@ async function loadAnalytics(weeksAgo = 0) {
 
     // Graph Generation
     const graphBarsContainer = document.querySelector(".graph-bars");
+    const graphContainer = document.querySelector(".graph"); // Target parent for legend sync
     if (graphBarsContainer && data.weekly_data) {
         graphBarsContainer.innerHTML = ''; // Clear existing
         
-        // Dynamic hover support: style bars according to user's favorite companion
+        // Dynamic hover & legend support: style according to user's favorite companion
         graphBarsContainer.classList.remove('orange_cat', 'tuxedo_cat', 'black_cat', 'empty-state');
+        if (graphContainer) {
+            graphContainer.classList.remove('orange_cat', 'tuxedo_cat', 'black_cat');
+        }
         if (data.favorite_cat) {
             graphBarsContainer.classList.add(data.favorite_cat);
+            if (graphContainer) graphContainer.classList.add(data.favorite_cat);
         }
         
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

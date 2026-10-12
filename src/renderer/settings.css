@@ -481,12 +481,6 @@ p {
 .chart-header-title {
     margin: 0;
     color: var(--text-black);
-    line-height: 1.2;
-}
-
-.chart-header-subtitle {
-    margin: 2px 0 0 0;
-    line-height: 1.2;
 }
 
 .week-selection {
@@ -496,7 +490,6 @@ p {
 .week-picker-control {
     display: flex;
     align-items: center;
-    gap: 2px;
 }
 
 .date-range-btn {
@@ -1225,6 +1218,60 @@ p {
 /* HIDDEN */
 .hidden{
     display: none;
+}
+
+/* --- WEEKLY FLOW LEGEND --- */
+.chart-legend {
+    display: flex;
+    gap: 10px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.legend-color {
+    width: 6px;
+    height: 6px;
+    border-radius: 1px;
+}
+
+.completed-color {
+    background-color: var(--sys-blue-grad);
+}
+
+.today-color {
+    background-color: var(--sys-blue-grad); /* Default Fallback */
+}
+
+/* --- DYNAMIC TODAY BAR & LEGEND COLORS --- */
+/* Classic / Tuxedo */
+.graph.tuxedo_cat .today-color,
+.graph.tuxedo_cat .bar-wrapper.today .bar {
+    background-color: var(--theme-classic-light);
+}
+.graph.tuxedo_cat .bar-wrapper.today:hover .bar {
+    background-color: var(--theme-classic-solid) !important;
+}
+
+/* Sprint / Ginger */
+.graph.orange_cat .today-color,
+.graph.orange_cat .bar-wrapper.today .bar {
+    background-color: var(--theme-sprint-light);
+}
+.graph.orange_cat .bar-wrapper.today:hover .bar {
+    background-color: var(--theme-sprint-solid) !important;
+}
+
+/* Focused / Void */
+.graph.black_cat .today-color,
+.graph.black_cat .bar-wrapper.today .bar {
+    background-color: var(--theme-focused-light);
+}
+.graph.black_cat .bar-wrapper.today:hover .bar {
+    background-color: var(--theme-focused-solid) !important;
 }
 
 /* --- ACCESSIBILITY / KEYBOARD FOCUS --- */
