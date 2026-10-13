@@ -354,7 +354,7 @@ p {
 }
 
 .analytics-card {
-    padding: 12px;
+    padding: 8px 8px 12px 12px;
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -366,10 +366,17 @@ p {
     overflow: hidden;
 }
 
+.card-icon {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+
 .analytics-card .card-titles {
     display: flex;
-    flex-direction: column;
-    padding-bottom: 4px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .analytics-card .card-value-row {
