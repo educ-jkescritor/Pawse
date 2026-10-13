@@ -663,7 +663,7 @@ function updateDashboardDateTime() {
     const now = new Date();
     
     // Format: "October 5, 2026"
-    const optionsDate = { year: 'numeric', month: 'long', day: 'numeric' };
+    const optionsDate = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     
     const dateStr = now.toLocaleDateString('en-US', optionsDate);
 
