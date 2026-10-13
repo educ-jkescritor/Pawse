@@ -28,9 +28,16 @@
     font-weight: 700;
 }
 
+@font-face {
+    font-family: 'Pixeloid Sans';
+    src: url('../assets/fonts/PixeloidSans-Bold.ttf') format('truetype');
+    font-weight: 500;
+}
+
 :root {
     --font-inter: 'Inter', sans-serif;
     --font-pixel: 'Pixelify Sans', sans-serif;
+    --font-pixel-num: 'Pixeloid Sans', sans-serif;
     /* --- TEXT COLORS --- */
     --text-black: #141414;
     --text-gray: #52525B;
@@ -218,6 +225,18 @@ input, textarea {
     font-family: var(--font-inter);
     font-size: 20px;
     font-weight: 600;
+}
+
+.font-pixel-num-24-bold {
+    font-family: var(--font-pixel-num);
+    font-size: 24px;
+    font-weight: 500;
+}
+
+.font-pixel-num-48-bold {
+    font-family: var(--font-pixel-num);
+    font-size: 48px;
+    font-weight: 500;
 }
 
 .text-black {

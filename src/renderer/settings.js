@@ -266,8 +266,9 @@ async function loadAnalytics(weeksAgo = 0) {
     const totalSeconds = data.today_work_seconds || 0;
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const timeString = `${hours}h ${minutes}m`;
-    if (todayWorkSecondsElement) todayWorkSecondsElement.textContent = timeString;
+    const plainTimeString = `${hours}h ${minutes}m`;
+    const htmlTimeString = `<span class="font-pixel-num-24-bold">${hours}</span>h <span class="font-pixel-num-24-bold">${minutes}</span>m`;
+    if (todayWorkSecondsElement) todayWorkSecondsElement.innerHTML = htmlTimeString;
 
     if (todayVsAvgEl) {
         const avgSeconds = data.avg_daily_seconds || 0;
@@ -287,7 +288,7 @@ async function loadAnalytics(weeksAgo = 0) {
                     ? "Below your usual pace"
                     : "Right on your usual pace";
             todayVsAvgEl.className = "card-subtext font-inter-10-regular text-gray";
-            todayVsAvgEl.title = `Today: ${timeString} | Overall Daily Average: ${formattedAvg}`;
+            todayVsAvgEl.title = `Today: ${plainTimeString} | Overall Daily Average: ${formattedAvg}`;
         }
     }
     if (todayFocusCard) {
