@@ -27,6 +27,28 @@ function restoreDurableState(savedState, currentTimestamp, activeCatType) {
     };
 }
 
+function createDurableSnapshot(state, nextPhaseState = null, timestamp = Date.now()) {
+    let durableRemaining = state.remainingTime;
+    let durableWorking = state.workingTime;
+    if (nextPhaseState && state.remainingTime <= 0) {
+        durableRemaining = nextPhaseState.remainingTime;
+        durableWorking = nextPhaseState.workingTime;
+    }
+
+    return {
+        catType: state.catType,
+        remainingTime: durableRemaining,
+        workingTime: durableWorking,
+        cycleCount: state.cycleCount,
+        isRunning: state.isRunning,
+        actualWork: state.actualWork || 0,
+        actualBreak: state.actualBreak || 0,
+        workCount: state.workCount || 0,
+        breakCount: state.breakCount || 0,
+        timestamp
+    };
+}
+
 describe("Local Durable Execution Engine", () => {
     test("deducts exact offline elapsed time when timer was running", () => {
         const snapshotTime = 1000000000000;
@@ -100,5 +122,56 @@ describe("Local Durable Execution Engine", () => {
         // User booted into "orange" cat instead of "tuxedo"
         const restored = restoreDurableState(savedState, Date.now() + 5000, "orange");
         expect(restored).toBeNull();
+    });
+
+    test("captures staged nextPhaseState in durable snapshot when session reaches 00:00", () => {
+        const activeState = {
+            catType: "tuxedo",
+            remainingTime: 0,
+            workingTime: true,
+            cycleCount: 0,
+            isRunning: false,
+            actualWork: 1500,
+            actualBreak: 0
+        };
+
+        const nextPhaseState = {
+            remainingTime: 300, // 5 min short break
+            workingTime: false
+        };
+
+        const snapshot = createDurableSnapshot(activeState, nextPhaseState, 1000000000000);
+
+        expect(snapshot.remainingTime).toBe(300); // Saved the upcoming break time instead of 0
+        expect(snapshot.workingTime).toBe(false);  // Saved next phase (break)
+        expect(snapshot.cycleCount).toBe(0);
+    });
+
+    test("recovers cleanly into the next phase after crash or window reload at 00:00", () => {
+        const snapshotTime = 1000000000000;
+        const activeState = {
+            catType: "black",
+            remainingTime: 0,
+            workingTime: true,
+            cycleCount: 3,
+            isRunning: false
+        };
+
+        // At 00:00 on cycle 3, next phase is long break (2400s / 40m)
+        const nextPhaseState = {
+            remainingTime: 2400,
+            workingTime: false
+        };
+
+        const savedSnapshot = createDurableSnapshot(activeState, nextPhaseState, snapshotTime);
+
+        // App crashes and reboots 10 seconds later
+        const wakeTime = snapshotTime + 10000;
+        const restored = restoreDurableState(savedSnapshot, wakeTime, "black");
+
+        expect(restored).not.toBeNull();
+        expect(restored.remainingTime).toBe(2400); // Successfully staged for long break!
+        expect(restored.workingTime).toBe(false);
+        expect(restored.isCompleted).toBe(false);
     });
 });
