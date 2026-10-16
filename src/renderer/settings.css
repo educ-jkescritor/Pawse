@@ -330,7 +330,7 @@ p {
 .tab-panel {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 16px;
 }
 
 #dashboard-content {
@@ -629,16 +629,16 @@ p {
 }
 
 .graph-bars {
-    position: relative; /* Enable absolute positioning context for empty state overlay */
+    position: relative;
     flex: 1;
     display: flex;
     flex-direction: row;
-    align-items: stretch; /* Stretch column wrappers to full height so track underlays consume the full canvas height */
+    align-items: stretch;
     justify-content: space-between;
+    gap: 16px; /* Fixed gap between the dynamic columns */
     padding-top: 16px;
-    padding-left: 12px;
-    padding-right: 68px; /* Dedicated right gutter for the average benchmark badge */
-    height: 0; /* Fixes browser percentage height calculation bug inside flex items */
+    padding-right: 68px;
+    height: 0;
 }
 
 /* Disable hovers when graph is empty */
@@ -667,8 +667,8 @@ p {
     gap: 8px;
     height: 100%;
     justify-content: flex-end;
-    flex: 1;
     cursor: pointer;
+    flex: 1; /* Allows the wrapper to expand/shrink dynamically */
 }
 
 /* Vertical Column Track Underlay (Idea 2) */
@@ -676,30 +676,27 @@ p {
     content: '';
     position: absolute;
     top: -6px;
-    bottom: -6px; /* Expand negative 6px below label for balanced padding */
-    width: 48px; /* Slightly wider than the 40px bar */
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%; /* Stretches to fill the wrapper */
     background-color: transparent;
-    border-radius: 8px; /* Rounder corners to match padded layout */
+    border-radius: 8px;
     z-index: 1;
     transition: background-color 0.2s ease;
     pointer-events: none;
 }
 
-.bar-wrapper:hover::before {
-    background-color: rgba(0, 0, 0, 0.03); /* Fades in on hover */
-}
-
 /* --- STATE 1: Unhovered Bar - Soft Pastel Blue (#A8DCFF) --- */
 .bar {
     position: relative;
-    width: 40px;
+    width: 100%; /* Stretches to fill the wrapper */
     border-radius: 6px;
     border: none;
-    background-color: var(--sys-blue-grad); /* Soft pastel blue (#A8DCFF) */
+    background-color: var(--sys-blue-grad);
     z-index: 2;
     transition: height 1.0s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.25s ease, transform 0.25s ease;
 }
-
 /* --- STATE 2: Hovered Bar - Darker Blue (#35A6F1) + Lift --- */
 .bar-wrapper:hover .bar {
     background-color: var(--sys-blue-solid) !important; /* Vibrant darker system blue (#35A6F1) */
@@ -709,7 +706,7 @@ p {
 /* Daily Average Benchmark Line */
 .avg-benchmark-line {
     position: absolute;
-    left: 8px;
+    left: 0;
     right: 12px;
     height: 0;
     border-top: 1.5px dashed rgba(53, 166, 241, 0.75);
