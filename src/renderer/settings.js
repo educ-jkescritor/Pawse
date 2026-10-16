@@ -243,18 +243,34 @@ async function loadAnalytics(weeksAgo = 0) {
     const streakUnitEl = document.getElementById("streak_unit");
     const bestStreakEl = document.getElementById("best_streak");
     const streakCard = document.getElementById("streak-card");
+    const streakIconEl = document.querySelector("#streak-card .card-icon");
 
     const streak = data.current_streak || 0;
-    const bestStreak = data.best_streak || streak;
+    const bestStreak = data.best_streak || 0; // Fallback to 0 for logic checks
 
     if (currentStreakEl) currentStreakEl.textContent = streak;
-    if (streakUnitEl) streakUnitEl.textContent = streak === 1 ? 'day' : 'days';
-    if (bestStreakEl) bestStreakEl.textContent = `Your top record is ${bestStreak} days`;
-    if (streakCard) {
-        if (streak > 0) {
-            streakCard.classList.add('active-streak');
+    if (streakUnitEl) streakUnitEl.textContent = streak <= 1 ? 'day' : 'days';
+
+    if (streakCard && bestStreakEl) {
+        // Reset classes
+        streakCard.classList.remove('active-streak', 'best-streak');
+        
+        if (streak === 0) {
+            // State 1: Inactive (0 days)
+            bestStreakEl.textContent = "Ready to purr-ceed?";
+            if (streakIconEl) streakIconEl.src = "../assets/icons/visual-streak-inactive.png";
+        } else if (streak >= bestStreak) {
+            // State 2: Matched or beaten best streak
+            streakCard.classList.add('best-streak');
+            bestStreakEl.textContent = "Purr-fect new best!";
+            // TODO: Update src to your orange active streak asset
+            if (streakIconEl) streakIconEl.src = "../assets/icons/visual-streak-best.png"; 
         } else {
-            streakCard.classList.remove('active-streak');
+            // State 3: Active streak, but hasn't beaten best yet
+            streakCard.classList.add('active-streak');
+            bestStreakEl.textContent = `Purr-suing ${bestStreak} days.`;
+            // TODO: Update src to your yellow active streak asset
+            if (streakIconEl) streakIconEl.src = "../assets/icons/visual-streak-active.png"; 
         }
     }
 

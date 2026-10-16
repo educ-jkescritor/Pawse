@@ -428,14 +428,22 @@ p {
     font-weight: 400;
 }
 
-#streak-card.active-streak {
-    background: linear-gradient(180deg, #FFF 0%, #FFBE8A 100%);
-}
-
+/* CARD STYLING */
+/* Focus Time Card */
 #today-focus-card.active-focus {
     background: linear-gradient(180deg, #FFF 0%, #A8DCFF 100%);
 }
 
+/* Streak Card */
+#streak-card.active-streak {
+    background: linear-gradient(180deg, #FFF 0%, #FFBE8A 100%); /* Orangish */
+}
+
+#streak-card.best-streak {
+    background: linear-gradient(180deg, #FFF 0%, #FFD670 100%); /* Yellowish */
+}
+
+/* Top Companion Card */
 #top-companion-card.tuxedo_cat {
     background: linear-gradient(180deg, #FFF 0%, var(--theme-classic-light) 100%);
 }
@@ -448,17 +456,38 @@ p {
     background: linear-gradient(180deg, #FFF 0%, var(--theme-focused-light) 100%);
 }
 
-/* Dynamic Icon Container Backgrounds */
+/* ICON CONTAINER BACKGROUNDS */
+/* Inactive Icon */
+.icon-container,
+#streak-card .icon-container,
+#today-focus-card .icon-container {
+    border-radius: 6px;
+    background: radial-gradient(circle 22px at center, #5F5F5F 0%, #D9D9D9 35%, #ECECEC 60%, #F5F5F5 80%, #FFFFFF 100%);
+    box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Streak Icon */
+#streak-card.active-streak .icon-container {
+    background: radial-gradient(circle 22px at center, #F28936 0%, #F4984F 35%, #F5A768 60%, #F9C49A 80%, #FFFFFF 100%);
+    box-shadow: 0 1px 4px 0 rgba(158, 95, 46, 0.25);
+}
+
+#streak-card.best-streak .icon-container {
+    background: radial-gradient(circle 22px at center, #F1B337 0%, #F8D99B 35%, #FBECCD 60%, #FDF5E6 80%, #FFFFFF 100%);
+    box-shadow: 0 1px 4px 0 rgba(153, 119, 51, 0.25)
+}
+
+/* Top Companion Icon */
 #top-companion-card.tuxedo_cat .icon-container {
     border-radius: 6px;
     background: radial-gradient(circle 22px at center, #B7E510 0%, #E4F89B 35%, #F2FCCD 60%, #F8FDE6 80%, #FFFFFF 100%);
-    box-shadow: 0 1px 4px 0 rgba(131, 153, 51, 0.25);
+    box-shadow: 0 1px 4px 0 rgba(143, 76, 179, 0.25); /* Optional: update to a green rgba shadow */
 }
 
 #top-companion-card.orange_cat .icon-container {
     border-radius: 6px;
     background: radial-gradient(circle 22px at center, #F1B137 0%, #F8D89B 35%, #FBEBCD 60%, #FDF5E6 80%, #FFFFFF 100%);
-    box-shadow: 0 1px 4px 0 rgba(150, 121, 64, 0.25);
+    box-shadow: 0 1px 4px 0 rgba(143, 76, 179, 0.25); /* Optional: update to an orange rgba shadow */
 }
 
 #top-companion-card.black_cat .icon-container {
@@ -466,25 +495,26 @@ p {
     background: radial-gradient(circle 22px at center, #AF37F1 0%, #D79BF8 35%, #EBCDFC 60%, #F5E6FD 80%, #FFFFFF 100%);
     box-shadow: 0 1px 4px 0 rgba(143, 76, 179, 0.25);
 }
-/* ACTIVE STATE TEXT COLORS */
 
-/* Focus Time (Blue) */
+/* ACTIVE STATE TEXT COLORS */
+/* Focus Time */
 #today-focus-card.active-focus .card-titles span { color: var(--text-focus-time); }
 #today-focus-card.active-focus .card-subtext { color: var(--subtext-focus-time); }
 
-/* Active Streak (Orange) */
+/* Streak */
 #streak-card.active-streak .card-titles span { color: var(--text-active-streak); }
 #streak-card.active-streak .card-subtext { color: var(--subtext-active-streak); }
 
-/* Top Companion - Classic (Green) */
+#streak-card.best-streak .card-titles span { color: var(--text-best-streak); }
+#streak-card.best-streak .card-subtext { color: var(--subtext-best-streak); }
+
+/* Top Companion */
 #top-companion-card.tuxedo_cat .card-titles span { color: var(--text-green-companion); }
 #top-companion-card.tuxedo_cat .card-subtext { color: var(--subtext-green); }
 
-/* Top Companion - Sprint (Orange) */
 #top-companion-card.orange_cat .card-titles span { color: var(--text-orange-companion); }
 #top-companion-card.orange_cat .card-subtext { color: var(--subtext-orange); }
 
-/* Top Companion - Focused (Purple) */
 #top-companion-card.black_cat .card-titles span { color: var(--text-purple-companion); }
 #top-companion-card.black_cat .card-subtext { color: var(--subtext-purple); }
 
