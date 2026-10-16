@@ -354,35 +354,62 @@ p {
 }
 
 .analytics-card {
-    padding: 8px 8px 12px 12px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
-    flex: 1;
-    height: 90px;
+    gap: 8px;
+    flex: 1 0 0;
+    height: 86px;
     border-radius: 8px;
     border: 1px solid var(--stroke-color);
     background: linear-gradient(180deg, #FFFFFF 0%, #B3B3B3 100%);
     transition: background 0.3s ease;
     overflow: hidden;
+    position: relative;
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px; /* 8px gap between metric value and subtext */
+    align-self: stretch;
+    line-height: 1;
+}
+
+.icon-container {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 4px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.1);
 }
 
 .card-icon {
-    width: 22px;
-    height: 22px;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
+    flex-shrink: 0;
 }
 
 .analytics-card .card-titles {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    width: calc(100% - 30px); /* Leaves breathing room for the absolute icon */
 }
 
 .analytics-card .card-value-row {
     display: flex;
     align-items: baseline;
-    gap: 4px;
+    gap: 8px;
 }
 
 .analytics-card .card-subtext {
@@ -421,6 +448,24 @@ p {
     background: linear-gradient(180deg, #FFF 0%, var(--theme-focused-light) 100%);
 }
 
+/* Dynamic Icon Container Backgrounds */
+#top-companion-card.tuxedo_cat .icon-container {
+    border-radius: 6px;
+    background: radial-gradient(circle 22px at center, #B7E510 0%, #E4F89B 35%, #F2FCCD 60%, #F8FDE6 80%, #FFFFFF 100%);
+    box-shadow: 0 1px 4px 0 rgba(131, 153, 51, 0.25);
+}
+
+#top-companion-card.orange_cat .icon-container {
+    border-radius: 6px;
+    background: radial-gradient(circle 22px at center, #F1B137 0%, #F8D89B 35%, #FBEBCD 60%, #FDF5E6 80%, #FFFFFF 100%);
+    box-shadow: 0 1px 4px 0 rgba(150, 121, 64, 0.25);
+}
+
+#top-companion-card.black_cat .icon-container {
+    border-radius: 6px;
+    background: radial-gradient(circle 22px at center, #AF37F1 0%, #D79BF8 35%, #EBCDFC 60%, #F5E6FD 80%, #FFFFFF 100%);
+    box-shadow: 0 1px 4px 0 rgba(143, 76, 179, 0.25);
+}
 /* ACTIVE STATE TEXT COLORS */
 
 /* Focus Time (Blue) */

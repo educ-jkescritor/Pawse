@@ -249,7 +249,7 @@ async function loadAnalytics(weeksAgo = 0) {
 
     if (currentStreakEl) currentStreakEl.textContent = streak;
     if (streakUnitEl) streakUnitEl.textContent = streak === 1 ? 'day' : 'days';
-    if (bestStreakEl) bestStreakEl.textContent = `Your best is ${bestStreak} days!`;
+    if (bestStreakEl) bestStreakEl.textContent = `Your top record is ${bestStreak} days`;
     if (streakCard) {
         if (streak > 0) {
             streakCard.classList.add('active-streak');
@@ -267,7 +267,7 @@ async function loadAnalytics(weeksAgo = 0) {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const plainTimeString = `${hours}h ${minutes}m`;
-    const htmlTimeString = `<span class="font-pixel-num-24-bold">${hours}</span>h <span class="font-pixel-num-24-bold">${minutes}</span>m`;
+    const htmlTimeString = `<span class="font-pixel-num-20-bold">${hours}</span>h <span class="font-pixel-num-20-bold">${minutes}</span>m`;
     if (todayWorkSecondsElement) todayWorkSecondsElement.innerHTML = htmlTimeString;
 
     if (todayVsAvgEl) {
@@ -312,9 +312,9 @@ const topCompanionCard = document.getElementById("top-companion-card");
     };
     
     const companionIcons = {
-        tuxedo_cat: "visual-companion-tux.svg",
-        orange_cat: "visual-companion-ginger.svg",
-        black_cat: "visual-companion-void.svg"
+        tuxedo_cat: "../assets/photos/tuxedo-cat-face.png",
+        orange_cat: "../assets/photos/orange-cat-face.png",
+        black_cat: "../assets/photos/black-cat-face.png"
     };
 
     if (topCompanionCard) {
@@ -329,7 +329,7 @@ const topCompanionCard = document.getElementById("top-companion-card");
             topCompanionNameEl.textContent = companionNames[data.favorite_cat];
         }
         if (topCompanionIconEl) {
-            topCompanionIconEl.src = `../assets/icons/${companionIcons[data.favorite_cat]}`;
+            topCompanionIconEl.src = companionIcons[data.favorite_cat];
         }
         if (topCompanionRateEl) {
             const percentage = data.favorite_cat_percentage || 0;
@@ -342,9 +342,9 @@ const topCompanionCard = document.getElementById("top-companion-card");
         if (topCompanionRateEl) {
             topCompanionRateEl.textContent = "No sessions yet";
         }
-        if (topCompanionIconEl) {
-            topCompanionIconEl.src = "../assets/icons/visual-companion-tux.svg"; 
-        }
+        // if (topCompanionIconEl) {
+        //     topCompanionIconEl.src = "../assets/icons/visual-companion-tux.svg"; 
+        // }
     }
 
     // Legacy fallbacks (in case DOM or tests look for historical elements)

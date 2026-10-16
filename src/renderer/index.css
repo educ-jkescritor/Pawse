@@ -177,6 +177,12 @@ input, textarea {
     font-weight: 400;
 }
 
+.font-inter-11-regular {
+    font-family: var(--font-inter);
+    font-size: 11px;
+    font-weight: 400;
+}
+
 .font-inter-12-regular {
     font-family: var(--font-inter);
     font-size: 12px;
@@ -227,9 +233,9 @@ input, textarea {
     font-weight: 600;
 }
 
-.font-pixel-num-24-bold {
+.font-pixel-num-20-bold {
     font-family: var(--font-pixel-num);
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 500;
     text-shadow: 0 0 1px currentColor;
 }
