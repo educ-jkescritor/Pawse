@@ -38,6 +38,7 @@ body.cat-only-mode .app-wrapper {
 #timer-container{
     width: 100%;
     text-align: center;
+    padding-top: 8px;
     line-height: 1; /* controls the space consumed by the text */
 }
 

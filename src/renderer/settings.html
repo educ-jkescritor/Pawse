@@ -62,59 +62,71 @@
                     </div>
 
                     <div class="analytics-container">
-                        <div class="analytics-card" id="streak-card">
-                            <div class="card-titles">
-                                <span class="font-inter-10-medium">FOCUS</span>
-                                <span class="font-inter-16-medium">STREAK</span>
-                            </div>
-                            <div class="card-value-row">
-                                <span class="card-data font-pixel-36-medium" id="current_streak">0</span>
-                                <span class="card-unit font-inter-12-medium text-gray" id="streak_unit">days</span>
-                            </div>
-                            <span class="card-subtext font-inter-10-regular text-gray" id="best_streak">Best: 0 days</span>
-                        </div>
                         <div class="analytics-card" id="today-focus-card">
                             <div class="card-titles">
-                                <span class="font-inter-10-medium">TOTAL FOCUS TIME</span>
-                                <span class="font-inter-16-medium">TODAY</span>
+                                <span class="font-inter-12-medium">Focus Time</span>
+                                <img class="card-icon" src="../assets/icons/visual-hourglass.svg" alt="hourglass">
                             </div>
                             <div class="card-value-row">
-                                <span class="card-data font-pixel-36-medium" id="today_work_seconds">0h 0m</span>
+                                <span class="card-data font-pixel-28-bold" id="today_work_seconds"><span class="font-pixel-num-24-bold">0</span>h <span class="font-pixel-num-24-bold">0</span>m</span>
                             </div>
                             <span class="card-subtext font-inter-10-regular text-gray" id="today_vs_avg">vs daily avg</span>
                         </div>
-                        <div class="analytics-card" id="personal-best-card">
+                        <div class="analytics-card" id="streak-card">
                             <div class="card-titles">
-                                <span class="font-inter-10-medium">PERSONAL</span>
-                                <span class="font-inter-16-medium">BEST</span>
+                                <span class="font-inter-12-medium">Active Streak</span>
+                                <img class="card-icon" src="../assets/icons/visual-streak.svg" alt="streak">
                             </div>
                             <div class="card-value-row">
-                                <span class="card-data font-pixel-36-medium" id="personal_best_time">0h 0m</span>
+                                <span class="card-data font-pixel-num-24-bold" id="current_streak">0</span>
+                                <span class="card-unit font-pixel-28-bold" id="streak_unit">days</span>
                             </div>
-                            <span class="card-subtext font-inter-10-regular text-gray" id="personal_best_date">No record yet</span>
+                            <span class="card-subtext font-inter-10-regular text-gray" id="best_streak">Best: 0 days</span>
+                        </div>
+                        <div class="analytics-card" id="top-companion-card">
+                            <div class="card-titles">
+                                <span class="font-inter-12-medium">Top Companion</span>
+                                <img class="card-icon" src="../assets/icons/visual-companion.svg" alt="companion">
+                            </div>
+                            <div class="card-value-row">
+                                <span class="card-data font-pixel-28-bold" id="top_companion_name">None</span>                 
+                            </div>
+                            <span class="card-subtext font-inter-10-regular text-gray" id="top_companion_rate">No sessions yet</span>                            
                         </div>
                     </div>
 
-                    <div class="graph-container">
-                        <div class="graph">
-                            <div class="week-selection">
-                                <div class="chart-header-text">
-                                    <p class="font-inter-14-medium chart-header-title" id="chart-header-title">Weekly Flow</p>
-                                    <p class="font-inter-10-regular text-gray chart-header-subtitle" id="chart-header-subtitle">Calculating...</p>
-                                </div>
-                                <div class="week-segmented-control" id="week-segmented-control" role="tablist" aria-label="Select week range">
-                                    <button class="segment-btn active font-inter-10-medium" data-value="0" role="tab" aria-selected="true">This Week</button>
-                                    <button class="segment-btn font-inter-10-medium" data-value="1" role="tab" aria-selected="false">Last Week</button>
-                                    <button class="segment-btn font-inter-10-medium" data-value="2" role="tab" aria-selected="false">2 Weeks Ago</button>
-                                    <button class="segment-btn font-inter-10-medium" data-value="3" role="tab" aria-selected="false">3 Weeks Ago</button>
-                                </div>
+                <div class="graph-container">
+                <div class="graph">
+                    <div class="week-selection">
+                            <div class="chart-header-text">
+                                <p class="font-inter-14-medium chart-header-title" id="chart-header-title">Weekly Flow</p>
                             </div>
-                            <div class="graph-bars">
-                                <!-- insert graph bars here w/ day labels -->
+                            <div class="week-picker-control" id="week-picker-control" role="group" aria-label="Select week range">
+                                <button type="button" class="nav-arrow" id="prev-week-btn" aria-label="Previous week">&#8249;</button>
+                                <button type="button" class="date-range-btn font-inter-10-medium" id="date-range-btn" aria-label="Toggle calendar">Date</button>
+                                <button type="button" class="nav-arrow" id="next-week-btn" aria-label="Next week">&#8250;</button>
+                            </div>
+                            <div class="calendar-popup hidden" id="calendar-popup" aria-hidden="true"></div>
+                        </div>
+                        
+                        <!-- Legend -->
+                        <div class="chart-legend">
+                            <div class="legend-item">
+                                <span class="legend-color completed-color"></span>
+                                <span class="font-inter-8-regular text-gray">Completed</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="legend-color today-color"></span>
+                                <span class="font-inter-8-regular text-gray">Today</span>
                             </div>
                         </div>
+
+                    <div class="graph-bars">
+                        <!-- insert graph bars here w/ day labels -->
                     </div>
                 </div>
+            </div>
+        </div>
 
                 <div id="about-content" class="tab-panel hidden">
                     <div class="about-header">
