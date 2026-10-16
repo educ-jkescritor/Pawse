@@ -286,7 +286,7 @@ async function loadAnalytics(weeksAgo = 0) {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const plainTimeString = `${hours}h ${minutes}m`;
-    const htmlTimeString = `<span class="font-pixel-num-20-bold">${hours}</span>h <span class="font-pixel-num-20-bold">${minutes}</span>m`;
+    const htmlTimeString = `<span><span class="font-pixel-num-20-bold">${hours}</span>h</span><span><span class="font-pixel-num-20-bold">${minutes}</span>m</span>`;
 
     if (todayWorkSecondsElement) todayWorkSecondsElement.innerHTML = htmlTimeString;
 

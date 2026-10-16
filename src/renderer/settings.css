@@ -441,6 +441,12 @@ p {
     background: linear-gradient(180deg, #FFFFFF 0%, #99F6E4 100%);
 }
 
+#today_work_seconds {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+}
+
 /* Streak Card */
 #streak-card.active-streak {
     background: linear-gradient(180deg, #FFF 0%, #FFBE8A 100%);
@@ -492,7 +498,7 @@ p {
 }
 
 #streak-card.best-streak .icon-container {
-    background: radial-gradient(circle 22px at center, #F1B337 0%, #F8D99B 35%, #FBECCD 60%, #FDF5E6 80%, #FFFFFF 100%);
+    background: radial-gradient(circle 22px at center, #F1B337 0%, #F8D99B 55%, #FBECCD 60%, #FDF5E6 80%, #FFFFFF 100%);
     box-shadow: 0 1px 4px 0 rgba(153, 119, 51, 0.25)
 }
 
