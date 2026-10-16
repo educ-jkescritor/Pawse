@@ -608,6 +608,7 @@ p {
 }
 
 .week-picker-control {
+    width: 120px;
     display: flex;
     align-items: center;
 }
