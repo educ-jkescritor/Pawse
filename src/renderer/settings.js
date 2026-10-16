@@ -218,11 +218,6 @@ async function loadAnalytics(weeksAgo = 0) {
     currentWeeksAgo = weeksAgo;
     const data = await window.mainAPI.loadanalytics(weeksAgo);
 
-//     data.today_work_seconds = 0; // 2 hours (exceeds 1h 1m avg)
-// data.avg_daily_seconds = 3660;
-// data.current_streak = 0;   // Greater than 0
-// data.best_streak = 15;
-
     // Update dynamic week pill date range
     const dateRangeButton = document.getElementById("date-range-btn");
     if (dateRangeButton) {

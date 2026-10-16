@@ -46,8 +46,8 @@
     --text-best-streak: #E59D10;
     --text-above-avg-time: #10BCAC;
     --text-below-avg-time: #35A6F1;
-    --text-green-companion: #B7E510;
-    --text-orange-companion: #F1B137;
+    --text-green-companion: #9FC610;
+    --text-orange-companion: #EEA311;
     --text-purple-companion: #AF37F1;
 
     
@@ -56,7 +56,7 @@
     --subtext-above-avg-time: #0C8C80;
     --subtext-below-avg-time: #3D6E8F;
     --subtext-green: #839933;
-    --subtext-orange: #B2904D;
+    --subtext-orange: #967940;
     --subtext-purple: #8F4CB3;
 
     /* --- UI LAYOUT COLORS --- */
@@ -185,7 +185,7 @@ input, textarea {
 .font-inter-11-regular {
     font-family: var(--font-inter);
     font-size: 11px;
-    font-weight: 400;
+    font-weight: 600;
 }
 
 .font-inter-12-regular {
