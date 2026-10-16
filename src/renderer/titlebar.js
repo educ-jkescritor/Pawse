@@ -57,10 +57,18 @@ let resizeButton = document.getElementById("resize-btn");
 if (resizeButton !== null) {
     resizeButton.onclick = function resizeWindow() {
         let resizeModal = document.getElementById("resize-modal-overlay");
+        let sessionModal = document.getElementById("modal-overlay");
         
         if (document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode")) {
             document.body.classList.remove("timer-only-mode", "cat-only-mode");
             window.mainAPI.resize('default');
+            if (sessionModal && typeof pendingModal !== 'undefined' && pendingModal) {
+                sessionModal.classList.remove("closing");
+                sessionModal.classList.remove("hidden");
+            }
+        } else if (sessionModal && !sessionModal.classList.contains("hidden")) {
+            // Do not open the resize modal on top of an active session completion modal
+            return;
         } else if (resizeModal !== null) {
             resizeModal.classList.remove("closing");
             resizeModal.classList.remove("hidden");

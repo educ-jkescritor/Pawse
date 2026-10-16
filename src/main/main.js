@@ -446,6 +446,21 @@ ipcMain.on('flash-frame', (event, flag) => {
 });
 
 let activeNotification = null;
+let activeNotificationActivateHandler = null;
+
+if (process.platform === 'win32' && Notification && typeof Notification.handleActivation === 'function') {
+  Notification.handleActivation((details) => {
+    if (!activeNotificationActivateHandler || !details) return;
+    const isAction =
+      details.type === 'action' ||
+      (typeof details.arguments === 'string' && details.arguments.includes('type=action'));
+    if (isAction) {
+      activeNotificationActivateHandler(true);
+    } else if (details.type === 'click') {
+      activeNotificationActivateHandler(false);
+    }
+  });
+}
 
 ipcMain.on('show-notification', (event, { title, body, actionText }) => {
   if (Notification && Notification.isSupported()) {
@@ -455,6 +470,7 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
         activeNotification.close();
       } catch (e) {}
       activeNotification = null;
+      activeNotificationActivateHandler = null;
     }
 
     const sessionAlertStart = Date.now();
@@ -480,13 +496,17 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
         actions: [{ type: 'button', text: buttonLabel }]
       };
 
+      const notification = new Notification(notificationOptions);
+
       // On Windows, Electron's `timeoutType: 'never'` automatically appends a second system "Close"
       // button (`<action activationType="system" arguments="dismiss" content=""/>`). Using `toastXml`
-      // with `scenario="reminder"` and a single foreground `<action>` keeps the persistent reminder
-      // behavior while displaying ONLY the single primary action button (e.g. "Start Break", "Start Work").
+      // with `scenario="reminder"` and a single structured `type=action` button keeps the persistent
+      // reminder behavior while displaying ONLY the single primary action button (e.g. "Start Break")
+      // and allowing Electron to distinguish body clicks ('click') from button clicks ('action').
       if (process.platform === 'win32') {
         const iconFileUrl = pathToFileURL(iconPath).href;
-        notificationOptions.toastXml = `<toast scenario="reminder">
+        const notifId = escapeXml(notification.id || '');
+        notification.toastXml = `<toast scenario="reminder">
   <visual>
     <binding template="ToastGeneric">
       <text>${escapeXml(title || 'Pawse')}</text>
@@ -495,20 +515,23 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
     </binding>
   </visual>
   <actions>
-    <action content="${escapeXml(buttonLabel)}" arguments="confirm" activationType="foreground" />
+    <action content="${escapeXml(buttonLabel)}" arguments="type=action&amp;actionIndex=0&amp;tag=${notifId}&amp;id=${notifId}" activationType="foreground" />
   </actions>
   <audio silent="true" />
 </toast>`;
       }
 
-      const notification = new Notification(notificationOptions);
       notification._isProgrammaticClose = false;
       activeNotification = notification;
 
-      const handleActivate = () => {
+      let hasActivated = false;
+      const handleActivate = (isActionButton = false) => {
+        if (hasActivated) return;
+        hasActivated = true;
         notification._isProgrammaticClose = true;
         if (activeNotification === notification) {
           activeNotification = null;
+          activeNotificationActivateHandler = null;
         }
         try {
           notification.close();
@@ -516,6 +539,7 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
         const senderWindow = BrowserWindow.fromWebContents(event.sender);
         const targetWin = senderWindow || win;
         if (targetWin && !targetWin.isDestroyed()) {
+          targetWin.flashFrame(false);
           if (targetWin.isMinimized()) {
             targetWin.restore();
           }
@@ -525,17 +549,25 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
 
           setTimeout(() => {
             if (!targetWin.isDestroyed()) {
-              targetWin.setAlwaysOnTop(globalAlwaysOnTop, 'screen-saver');
+              const shouldStayOnTop =
+                currentMode === 'timer-only' || currentMode === 'cat-only'
+                  ? true
+                  : globalAlwaysOnTop;
+              targetWin.setAlwaysOnTop(shouldStayOnTop, 'screen-saver');
             }
           }, 500);
 
-          // Notify renderer so it can trigger the next session action and silence the alarm
-          targetWin.webContents.send('notification-clicked');
+          // Notify renderer whether the user clicked the action button or the toast body
+          targetWin.webContents.send('notification-clicked', {
+            isActionButton: Boolean(isActionButton)
+          });
         }
       };
 
-      notification.on('click', handleActivate);
-      notification.on('action', handleActivate);
+      activeNotificationActivateHandler = handleActivate;
+
+      notification.on('click', () => handleActivate(false));
+      notification.on('action', () => handleActivate(true));
 
       // Note: Electron emits 'close' as (event, reason) where `reason` is the 2nd argument on Windows
       // ('timedOut', 'userCanceled', or 'applicationHidden'), or `event.reason` in details objects.
@@ -550,6 +582,7 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
         if (wasProgrammatic || closeReason === 'applicationHidden') {
           if (activeNotification === notification) {
             activeNotification = null;
+            activeNotificationActivateHandler = null;
           }
           return;
         }
@@ -575,6 +608,7 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
 
         if (activeNotification === notification) {
           activeNotification = null;
+          activeNotificationActivateHandler = null;
         }
 
         // User explicitly dismissed the notification ('userCanceled' on Windows, or manual close on other OS)
@@ -582,6 +616,7 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
           const senderWindow = BrowserWindow.fromWebContents(event.sender);
           const targetWin = senderWindow || win;
           if (targetWin && !targetWin.isDestroyed()) {
+            targetWin.flashFrame(false);
             targetWin.webContents.send('notification-closed');
           }
         }
@@ -599,6 +634,7 @@ ipcMain.on('close-notification', () => {
     const notifToClose = activeNotification;
     notifToClose._isProgrammaticClose = true;
     activeNotification = null;
+    activeNotificationActivateHandler = null;
     try {
       notifToClose.close();
     } catch (e) {}
