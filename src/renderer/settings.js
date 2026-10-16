@@ -218,6 +218,11 @@ async function loadAnalytics(weeksAgo = 0) {
     currentWeeksAgo = weeksAgo;
     const data = await window.mainAPI.loadanalytics(weeksAgo);
 
+//     data.today_work_seconds = 0; // 2 hours (exceeds 1h 1m avg)
+// data.avg_daily_seconds = 3660;
+// data.current_streak = 0;   // Greater than 0
+// data.best_streak = 15;
+
     // Update dynamic week pill date range
     const dateRangeButton = document.getElementById("date-range-btn");
     if (dateRangeButton) {
@@ -278,40 +283,43 @@ async function loadAnalytics(weeksAgo = 0) {
     const todayWorkSecondsElement = document.getElementById("today_work_seconds");
     const todayVsAvgEl = document.getElementById("today_vs_avg");
     const todayFocusCard = document.getElementById("today-focus-card");
+    const focusIconEl = document.querySelector("#today-focus-card .card-icon");
 
     const totalSeconds = data.today_work_seconds || 0;
+    const avgSeconds = data.avg_daily_seconds || 0;
+
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const plainTimeString = `${hours}h ${minutes}m`;
     const htmlTimeString = `<span class="font-pixel-num-20-bold">${hours}</span>h <span class="font-pixel-num-20-bold">${minutes}</span>m`;
+
     if (todayWorkSecondsElement) todayWorkSecondsElement.innerHTML = htmlTimeString;
 
-    if (todayVsAvgEl) {
-        const avgSeconds = data.avg_daily_seconds || 0;
-        if (avgSeconds === 0) {
-            todayVsAvgEl.textContent = "First day tracking";
-            todayVsAvgEl.className = "card-subtext font-inter-10-regular text-gray";
-            todayVsAvgEl.title = "No previous days tracked yet";
-        } else {
-            const diffSeconds = totalSeconds - avgSeconds;
-            const avgH = Math.floor(avgSeconds / 3600);
-            const avgM = Math.round((avgSeconds % 3600) / 60);
-            const formattedAvg = avgH > 0 ? (avgM > 0 ? `${avgH}h ${avgM}m` : `${avgH}h`) : `${avgM}m`;
+    if (todayFocusCard && todayVsAvgEl) {
+        // Reset classes
+        todayFocusCard.classList.remove('below-avg-focus', 'above-avg-focus', 'active-focus');
 
-            todayVsAvgEl.textContent = diffSeconds > 60
-                ? "Above your usual pace"
-                : diffSeconds < -60
-                    ? "Below your usual pace"
-                    : "Right on your usual pace";
-            todayVsAvgEl.className = "card-subtext font-inter-10-regular text-gray";
+        // Always keep visual-hourglass.png across all 3 states
+        if (focusIconEl) focusIconEl.src = "../assets/icons/visual-hourglass.png";
+
+        const avgH = Math.floor(avgSeconds / 3600);
+        const avgM = Math.round((avgSeconds % 3600) / 60);
+        const formattedAvg = avgH > 0 ? (avgM > 0 ? `${avgH}h ${avgM}m` : `${avgH}h`) : `${avgM}m`;
+
+        if (totalSeconds === 0) {
+            // State 1: Inactive (0 seconds tracked)
+            todayVsAvgEl.textContent = avgSeconds > 0 ? `Average pace is ${formattedAvg}` : "First day tracking";
+            todayVsAvgEl.title = avgSeconds > 0 ? `Overall Daily Average: ${formattedAvg}` : "No previous days tracked yet";
+        } else if (avgSeconds > 0 && totalSeconds > avgSeconds) {
+            // State 3: Above Average (Teal)
+            todayFocusCard.classList.add('above-avg-focus');
+            todayVsAvgEl.textContent = "Above daily average!";
             todayVsAvgEl.title = `Today: ${plainTimeString} | Overall Daily Average: ${formattedAvg}`;
-        }
-    }
-    if (todayFocusCard) {
-        if (totalSeconds > 0) {
-            todayFocusCard.classList.add('active-focus');
         } else {
-            todayFocusCard.classList.remove('active-focus');
+            // State 2: Below Average / Pacing (Blue)
+            todayFocusCard.classList.add('below-avg-focus');
+            todayVsAvgEl.textContent = "Pacing your average";
+            todayVsAvgEl.title = `Today: ${plainTimeString} | Overall Daily Average: ${formattedAvg}`;
         }
     }
 

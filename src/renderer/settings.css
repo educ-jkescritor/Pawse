@@ -430,30 +430,35 @@ p {
 
 /* CARD STYLING */
 /* Focus Time Card */
+#today-focus-card.below-avg-focus,
 #today-focus-card.active-focus {
-    background: linear-gradient(180deg, #FFF 0%, #A8DCFF 100%);
+    background: linear-gradient(180deg, #FFFFFF 0%, #A8DCFF 100%);
+}
+
+#today-focus-card.above-avg-focus {
+    background: linear-gradient(180deg, #FFFFFF 0%, #99F6E4 100%);
 }
 
 /* Streak Card */
 #streak-card.active-streak {
-    background: linear-gradient(180deg, #FFF 0%, #FFBE8A 100%); /* Orangish */
+    background: linear-gradient(180deg, #FFF 0%, #FFBE8A 100%);
 }
 
 #streak-card.best-streak {
-    background: linear-gradient(180deg, #FFF 0%, #FFD670 100%); /* Yellowish */
+    background: linear-gradient(180deg, #FFF 0%, #FFD670 100%);
 }
 
 /* Top Companion Card */
 #top-companion-card.tuxedo_cat {
-    background: linear-gradient(180deg, #FFF 0%, var(--theme-classic-light) 100%);
+    background: linear-gradient(180deg, #FFF 0%, #ECFEA9 100%);
 }
 
 #top-companion-card.orange_cat {
-    background: linear-gradient(180deg, #FFF 0%, var(--theme-sprint-light) 100%);
+    background: linear-gradient(180deg, #FFF 0%, #FEE1A9 100%);
 }
 
 #top-companion-card.black_cat {
-    background: linear-gradient(180deg, #FFF 0%, var(--theme-focused-light) 100%);
+    background: linear-gradient(180deg, #FFF 0%, #E0A9FE 100%);
 }
 
 /* ICON CONTAINER BACKGROUNDS */
@@ -464,6 +469,18 @@ p {
     border-radius: 6px;
     background: radial-gradient(circle 22px at center, #5F5F5F 0%, #D9D9D9 35%, #ECECEC 60%, #F5F5F5 80%, #FFFFFF 100%);
     box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Focus Time Icon */
+#today-focus-card.below-avg-focus .icon-container,
+#today-focus-card.active-focus .icon-container {
+    background: radial-gradient(circle 22px at center, #35A6F1 0%, #68BCF5 35%, #9AD2F8 60%, #CDE9FB 80%, #FFFFFF 100%);
+    box-shadow: 0 1px 4px 0 rgba(53, 166, 241, 0.25);
+}
+
+#today-focus-card.above-avg-focus .icon-container {
+    background: radial-gradient(circle 22px at center, #13D3C2 0%, #89E9E1 35%, #C4F4F0 60%, #E1F9F7 80%, #FFFFFF 100%);
+    box-shadow: 0 1px 4px 0 rgba(19, 211, 194, 0.25);
 }
 
 /* Streak Icon */
@@ -498,8 +515,21 @@ p {
 
 /* ACTIVE STATE TEXT COLORS */
 /* Focus Time */
-#today-focus-card.active-focus .card-titles span { color: var(--text-focus-time); }
-#today-focus-card.active-focus .card-subtext { color: var(--subtext-focus-time); }
+#today-focus-card.below-avg-focus .card-titles span,
+#today-focus-card.active-focus .card-titles span { 
+    color: var(--text-below-avg-time);
+}
+#today-focus-card.below-avg-focus .card-subtext,
+#today-focus-card.active-focus .card-subtext { 
+    color: var(--subtext-below-avg-time);
+}
+
+#today-focus-card.above-avg-focus .card-titles span { 
+    color: var(--text-above-avg-time); 
+}
+#today-focus-card.above-avg-focus .card-subtext { 
+    color: var(--subtext-above-avg-time); 
+}
 
 /* Streak */
 #streak-card.active-streak .card-titles span { color: var(--text-active-streak); }
