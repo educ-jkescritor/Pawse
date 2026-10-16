@@ -607,6 +607,25 @@ if (dateRangeButton && calendarPopup) {
     });
 }
 
+// Dismiss calendar popup when clicking outside
+document.addEventListener('click', (event) => {
+    if (calendarPopup && !calendarPopup.classList.contains('hidden')) {
+        // Prevent dismissal when clicking month navigation arrows
+        if (event.target.closest('.calendar-prev') || event.target.closest('.calendar-next')) {
+            return;
+        }
+
+        const isOutside = !calendarPopup.contains(event.target) && 
+                          (!dateRangeButton || !dateRangeButton.contains(event.target)) &&
+                          (!prevWeekButton || !prevWeekButton.contains(event.target)) &&
+                          (!nextWeekButton || !nextWeekButton.contains(event.target));
+        
+        if (isOutside) {
+            calendarPopup.classList.add('hidden');
+        }
+    }
+});
+
 // System Settings Logic
 const topToggle = document.querySelector('.top-toggle');
 if (topToggle) {
