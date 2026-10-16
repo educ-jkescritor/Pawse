@@ -42,10 +42,12 @@ Unlike traditional browser or mobile timers that lose progress upon accidental c
 - **🐾 3 Unique Companion Cadences:** Choose between Tux, Ginger, and Void—each tuned with mathematically balanced work/break cycles, bespoke visual themes, and distinct meow sound effects.
 - **🔄 Local Durable Execution:** Continuous sub-second mathematical state synchronization guarantees that if the application or system abruptly closes, reboots, or sleeps, timer state seamlessly recovers with exact elapsed-time deduction.
 - **🪟 4 Adaptive Window Modes:** Effortlessly switch between Standard, Settings & Analytics, Minimalist Floating Timer, and Companion Desk-Pet widgets via frameless IPC window transforms.
-- **📊 Local Analytics & Lifetime Statistics:** Automatically tracks total focus time, break duration, completed Pomodoro sessions, and companion popularity in a local, zero-leak SQLite database.
+- **📊 Local Analytics & Lifetime Statistics:** Automatically tracks daily focus streaks, 7-day weekly activity distributions, personal best focus records, total work/break sessions, and companion popularity in a local, zero-leak SQLite database.
 - **🐟 Fish-Treat Gamification:** Complete 4 work sessions to earn fish treats for your feline partner and unlock long rejuvenating breaks.
 - **🐱 Interactive Break Petting & Feline Trivia:** Click to pet your companion during breaks to hear soothing purrs and uncover delightful cat facts.
 - **🎵 Automated Ambient Audio Engine:** Smooth transitions between focused background purring, gentle interval ticking, and alert bells with volume controls.
+- **⚡ In-App Seamless Updates:** Built-in update engine powered by `electron-updater` checking GitHub Releases for one-click download and restart installation.
+- **🔒 Enforced Focus (Strict Mode):** Optional workflow lock preventing session skipping to preserve deep focus momentum.
 - **🛡️ DevSecOps-Grade Security:** 100% sandboxed Chromium renderer with zero Node.js process exposure, strict Content Security Policy (CSP), and parameterized SQL operations.
 
 ---
@@ -56,7 +58,7 @@ Every companion in PAWSE brings their own personality, work cadence, and visual 
 
 | Companion | Profile | Cadence (Work / Short / Long) | Target Focus Style | Sound Profile |
 | :--- | :---: | :---: | :--- | :--- |
-| **Tux**<br>*(Tuxedo Cat)* | <img src="src/assets/photos/tuxedo-cat-face.png" alt="Tux" width="56" /> | **20 min** / **5 min** / **20 min** | **Balanced & Methodical**<br>Perfect for general productivity, daily task sprints, and steady pacing. | Crisp bell & balanced meow |
+| **Tux**<br>*(Tuxedo Cat)* | <img src="src/assets/photos/tuxedo-cat-face.png" alt="Tux" width="56" /> | **25 min** / **5 min** / **20 min** | **Balanced & Methodical**<br>Classic Pomodoro cadence perfect for general productivity, daily task sprints, and steady pacing. | Crisp bell & balanced meow |
 | **Ginger**<br>*(Orange Cat)* | <img src="src/assets/photos/orange-cat-face.png" alt="Ginger" width="56" /> | **15 min** / **3 min** / **12 min** | **Rapid Sprints**<br>Ideal for quick bursts of deep work, drafting emails, reading, or fighting fatigue. | Energetic, playful meow |
 | **Void**<br>*(Black Cat)* | <img src="src/assets/photos/black-cat-face.png" alt="Void" width="56" /> | **50 min** / **10 min** / **40 min** | **Deep Research & Flow State**<br>Tailored for software development, technical writing, and immersive problem solving. | Deep, resonant chime & meow |
 
@@ -157,6 +159,7 @@ flowchart TD
 
 ```
 pawse/
+├── documentation/            # Project reports and design documentation
 ├── src/
 │   ├── assets/               # Pixel-art sprites, avatars, icons, fonts, and sound effects
 │   │   ├── fonts/            # Inter & Pixelify Sans TrueType fonts
@@ -167,21 +170,24 @@ pawse/
 │   │   └── sprites/          # Multi-frame animated cat sprites (static, work, click)
 │   ├── main/                 # Electron Main Process (Node.js runtime)
 │   │   ├── database.js       # SQLite3 connection, automated schema migrations, parameterized queries
-│   │   ├── main.js           # Window lifecycle, frameless controls, focus management, IPC routing
+│   │   ├── main.js           # Window lifecycle, auto-updater, frameless controls, IPC routing
 │   │   └── preload.js        # Isolated contextBridge exposing safe window.mainAPI
 │   └── renderer/             # Chromium Presentation Layer (Vanilla HTML5 / CSS3 / JS)
 │       ├── index.css         # Central design token system (CSS variables, themes, typography)
 │       ├── index.html        # Companion selection welcome screen
 │       ├── index.js          # Selection UI logic and companion switching
+│       ├── settings.css      # Modal styling, responsive analytics dashboard, themes
 │       ├── settings.html     # Settings modal & productivity analytics view
 │       ├── settings.js       # Analytics aggregation, audio volume engine, theme updates
+│       ├── titlebar.js       # Frameless custom titlebar window controls & IPC dispatch
 │       └── timer/            # Core Pomodoro execution environment
 │           ├── timer.css     # Timer-specific HUD and widget styles
 │           ├── timer.html    # Timer view markup
 │           └── timer.js      # Pomodoro state machine & local durable execution logic
-├── config.js                 # Global application configuration
 ├── package.json              # Dependencies, build metadata, and npm scripts
-└── README.md                 # Project documentation
+├── pawse.db                  # Local SQLite database (development mode)
+├── README.md                 # Project documentation
+└── start.js                  # Clean environment bootstrapper for Electron development
 ```
 
 ---
@@ -280,8 +286,11 @@ The compiled installer and unpackaged binaries will be located inside the `dist/
 
 **PAWSE** was created and engineered with ❤️ by:
 
-- **Jude Keith Escritor** — [GitHub](https://github.com/educ-jkescritor) • [LinkedIn](https://www.linkedin.com/in/jude-keith-escritor-370a69267/)
-- **Jasmin Joyce Obligado** — [GitHub](https://github.com/jjobligado) • [LinkedIn](https://www.linkedin.com/in/jasmin-joyce-obligado/)
+- **Jasmin Joyce Obligado** — Co-Founder & Team Lead / Frontend Developer / UI/UX Designer / Technical Writer  
+  [GitHub](https://github.com/jjobligado) • [LinkedIn](https://www.linkedin.com/in/jasmin-joyce-obligado/)
+- **Jude Keith Escritor** — Co-Founder / Full-Stack Developer / Pixel Artist / QA Engineer  
+  [GitHub](https://github.com/educ-jkescritor) • [LinkedIn](https://www.linkedin.com/in/jude-keith-escritor-370a69267/)
+- **Ysabel Marie Delos Santos** — Frontend Development Lead
 
 ### Special Thanks
 - Pixel art sprites and audio curated for focus and companion gaming.
