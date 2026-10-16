@@ -354,47 +354,39 @@ p {
 }
 
 .analytics-card {
-    padding: 10px 12px;
+    padding: 8px 8px 12px 12px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     flex: 1;
-    height: 102px;
+    height: 90px;
     border-radius: 8px;
-    background: linear-gradient(180deg, #FFF 0%, var(--sys-blue-grad) 100%);
-    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--stroke-color);
+    background: linear-gradient(180deg, #FFFFFF 0%, #B3B3B3 100%);
     transition: background 0.3s ease;
     overflow: hidden;
 }
 
-.analytics-card .card-titles {
-    display: flex;
-    flex-direction: column;
+.card-icon {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
 }
 
-.analytics-card .card-titles span {
-    line-height: 1.15;
+.analytics-card .card-titles {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .analytics-card .card-value-row {
     display: flex;
     align-items: baseline;
     gap: 4px;
-    margin: 1px 0;
-}
-
-.analytics-card .card-value-row .card-data {
-    line-height: 1;
-}
-
-.analytics-card .card-value-row .card-unit {
-    line-height: 1;
 }
 
 .analytics-card .card-subtext {
-    line-height: 1.2;
     white-space: nowrap;
-    overflow: hidden;
     text-overflow: ellipsis;
     font-size: 10px;
 }
@@ -409,36 +401,47 @@ p {
     font-weight: 400;
 }
 
-/* Warm orange/amber gradient for active streak */
 #streak-card.active-streak {
-    background: linear-gradient(180deg, #FFF 0%, var(--theme-sprint-light) 100%);
+    background: linear-gradient(180deg, #FFF 0%, #FFBE8A 100%);
 }
 
-/* Celebratory warm highlight when personal best is achieved/tied */
-#personal-best-card.highlight-record {
-    background: linear-gradient(180deg, #FFF 0%, var(--theme-sprint-light) 100%);
+#today-focus-card.active-focus {
+    background: linear-gradient(180deg, #FFF 0%, #A8DCFF 100%);
 }
 
-#favorite-cat-card {
-    background: linear-gradient(180deg, #FFF 0%, var(--sys-blue-grad) 100%); /* Default blue gradient */
-    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
-    transition: background 0.3s ease;
-}
-
-/* Green gradient for Tux (Classic) */
-#favorite-cat-card.tuxedo_cat {
+#top-companion-card.tuxedo_cat {
     background: linear-gradient(180deg, #FFF 0%, var(--theme-classic-light) 100%);
 }
 
-/* Orange gradient for Ginger (Sprint) */
-#favorite-cat-card.orange_cat {
+#top-companion-card.orange_cat {
     background: linear-gradient(180deg, #FFF 0%, var(--theme-sprint-light) 100%);
 }
 
-/* Purple gradient for Void (Focused) */
-#favorite-cat-card.black_cat {
+#top-companion-card.black_cat {
     background: linear-gradient(180deg, #FFF 0%, var(--theme-focused-light) 100%);
 }
+
+/* ACTIVE STATE TEXT COLORS */
+
+/* Focus Time (Blue) */
+#today-focus-card.active-focus .card-titles span { color: var(--text-focus-time); }
+#today-focus-card.active-focus .card-subtext { color: var(--subtext-focus-time); }
+
+/* Active Streak (Orange) */
+#streak-card.active-streak .card-titles span { color: var(--text-active-streak); }
+#streak-card.active-streak .card-subtext { color: var(--subtext-active-streak); }
+
+/* Top Companion - Classic (Green) */
+#top-companion-card.tuxedo_cat .card-titles span { color: var(--text-green-companion); }
+#top-companion-card.tuxedo_cat .card-subtext { color: var(--subtext-green); }
+
+/* Top Companion - Sprint (Orange) */
+#top-companion-card.orange_cat .card-titles span { color: var(--text-orange-companion); }
+#top-companion-card.orange_cat .card-subtext { color: var(--subtext-orange); }
+
+/* Top Companion - Focused (Purple) */
+#top-companion-card.black_cat .card-titles span { color: var(--text-purple-companion); }
+#top-companion-card.black_cat .card-subtext { color: var(--subtext-purple); }
 
 .favorite-cat-img {
     height: 42px;
@@ -448,6 +451,8 @@ p {
     align-self: flex-end;
 }
 
+
+/* WEEKLY FLOW */
 .graph-container {
     width: 100%;
     gap: 8px;
@@ -461,15 +466,14 @@ p {
     flex: 1; /* Stretch to exactly fill the remaining height instead of a fixed height */
     padding: 12px 16px 16px 16px; /* 12px top offsets the 4px header padding, 16px bottom ensures equal breathing room */
     border-radius: 8px;
+    border: 1px solid var(--stroke-color);
     background: #FFFFFF;
-    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
     display: flex;
     flex-direction: column;
 }
 
 .week-selection {
     width: 100%;
-    padding: 4px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -484,56 +488,144 @@ p {
 .chart-header-title {
     margin: 0;
     color: var(--text-black);
-    line-height: 1.2;
 }
 
-.chart-header-subtitle {
-    margin: 2px 0 0 0;
-    line-height: 1.2;
+.week-selection {
+    position: relative;
 }
 
-/* Week Segmented Control */
-.week-segmented-control {
-    display: inline-flex;
+.week-picker-control {
+    display: flex;
     align-items: center;
-    background-color: var(--bg-main);
-    border: 1px solid var(--stroke-color);
-    border-radius: 6px;
-    padding: 2px;
-    gap: 2px;
 }
 
-.segment-btn {
+.date-range-btn {
+    width: 100px; /* Fixed width to stop arrows from jumping */
+    text-align: center;
     border: none;
-    background: transparent;
+    background-color: transparent;
+    color: var(--text-black);
+    border-radius: 999px;
+    padding: 2px 6px;
+    cursor: pointer;
     font-family: var(--font-inter);
     font-size: 10px;
-    font-weight: 500;
-    color: var(--text-gray);
-    padding: 3px 8px;
-    border-radius: 4px;
-    cursor: pointer;
+    line-height: 1.2;
     white-space: nowrap;
-    outline: none;
-    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
-    user-select: none;
+    transition: background-color 0.15s ease, transform 0.15s ease;
 }
 
-.segment-btn:hover:not(.active) {
+.date-range-btn:hover {
+    background-color: #E7E7E8;
+}
+
+.nav-arrow {
+    border: none;
+    background: transparent;
+    color: var(--text-gray);
+    padding: 4px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.nav-arrow:hover {
     color: var(--text-black);
+}
+
+.nav-arrow:disabled {
+    color: #E4E4E7;
+    cursor: default;
+    pointer-events: none;
+}
+
+.calendar-popup {
+    position: absolute;
+    top: calc(100%);
+    right: 0;
+    width: 120px;
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--stroke-color);
+    z-index: 15;
+    font-family: var(--font-inter);
+    font-size: 8px;
+}
+
+.calendar-popup {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.calendar-header .nav-arrow {
+    font-size: 14px;
+    padding: 2px 6px;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    color: var(--text-black);
+    font-weight: 600;
+}
+
+.calendar-days {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.calendar-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    border-radius: 999px;
+    padding: 0px 0;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.calendar-week:hover:not(.future-week) {
     background-color: rgba(0, 0, 0, 0.04);
 }
 
-.segment-btn.active {
-    background-color: #FFFFFF;
-    color: var(--text-black);
-    font-weight: 600;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+.calendar-week.selected-week {
+    background-color: #EAF7FF;
 }
 
-.segment-btn:focus-visible {
-    outline: 2px solid var(--sys-blue-solid) !important;
-    outline-offset: -1px !important;
+.calendar-week.future-week {
+    cursor: default;
+}
+
+.cal-day {
+    line-height: 1.5;
+    color: var(--text-black);
+}
+
+.cal-day.today {
+    background-color: var(--sys-blue-solid);
+    color: #FFFFFF;
+    border-radius: 999px;
+}
+
+.cal-day.disabled-day {
+    color: #e0e0e0;
 }
 
 .graph-bars {
@@ -618,7 +710,7 @@ p {
 .avg-benchmark-line {
     position: absolute;
     left: 8px;
-    right: 6px;
+    right: 12px;
     height: 0;
     border-top: 1.5px dashed rgba(53, 166, 241, 0.75);
     z-index: 4;
@@ -628,18 +720,22 @@ p {
 
 .avg-benchmark-label {
     position: absolute;
-    right: 0;
-    bottom: 0;
+    right: -12px; /* Anchor the flat right side slightly past the line */
+    top: 0;
+    transform: translateY(-50%); /* Centers the badge perfectly on the dashed line */
     font-family: var(--font-inter);
     font-size: 10px;
-    font-weight: 500;
-    color: var(--sys-blue-solid);
-    background-color: #FFFFFF;
-    padding: 1px 6px;
-    border-radius: 4px 4px 0 0; /* [top-left] [top-right] [bottom-right] [bottom-left] */
-    border: 1.5px solid rgba(53, 166, 241, 0.75);
-    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.04);
+    color: #FFFFFF;
+    background-color: var(--sys-blue-solid);
+    padding: 2px 6px 2px 10px; /* Extra left padding to make room for the point */
+    border-radius: 0 4px 4px 0; /* Square on the left, rounded on the right */
+    clip-path: polygon(6px 0%, 100% 0%, 100% 100%, 6px 100%, 0% 50%); /* Creates the left-pointing arrow */
     white-space: nowrap;
+}
+
+/* Ensures the strong tag matches the bold design */
+.avg-benchmark-label strong {
+    font-weight: 600;
 }
 
 /* Custom Tooltip Styling */
@@ -1133,6 +1229,60 @@ p {
 /* HIDDEN */
 .hidden{
     display: none;
+}
+
+/* --- WEEKLY FLOW LEGEND --- */
+.chart-legend {
+    display: flex;
+    gap: 10px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.legend-color {
+    width: 6px;
+    height: 6px;
+    border-radius: 1px;
+}
+
+.completed-color {
+    background-color: var(--sys-blue-grad);
+}
+
+.today-color {
+    background-color: var(--sys-blue-grad); /* Default Fallback */
+}
+
+/* --- DYNAMIC TODAY BAR & LEGEND COLORS --- */
+/* Classic / Tuxedo */
+.graph.tuxedo_cat .today-color,
+.graph.tuxedo_cat .bar-wrapper.today .bar {
+    background-color: var(--theme-classic-light);
+}
+.graph.tuxedo_cat .bar-wrapper.today:hover .bar {
+    background-color: var(--theme-classic-solid) !important;
+}
+
+/* Sprint / Ginger */
+.graph.orange_cat .today-color,
+.graph.orange_cat .bar-wrapper.today .bar {
+    background-color: var(--theme-sprint-light);
+}
+.graph.orange_cat .bar-wrapper.today:hover .bar {
+    background-color: var(--theme-sprint-solid) !important;
+}
+
+/* Focused / Void */
+.graph.black_cat .today-color,
+.graph.black_cat .bar-wrapper.today .bar {
+    background-color: var(--theme-focused-light);
+}
+.graph.black_cat .bar-wrapper.today:hover .bar {
+    background-color: var(--theme-focused-solid) !important;
 }
 
 /* --- ACCESSIBILITY / KEYBOARD FOCUS --- */

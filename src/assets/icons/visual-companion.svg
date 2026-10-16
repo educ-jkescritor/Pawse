@@ -1,0 +1,29 @@
+<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g filter="url(#filter0_d_1452_2125)">
+<g clip-path="url(#paint0_diamond_1452_2125_clip_path)" data-figma-skip-parse="true"><g transform="matrix(1.73125e-09 0.066 -0.066 1.73125e-09 15 14)"><rect x="0" y="0" width="181.818" height="181.818" fill="url(#paint0_diamond_1452_2125)" opacity="1" shape-rendering="crispEdges"/><rect x="0" y="0" width="181.818" height="181.818" transform="scale(1 -1)" fill="url(#paint0_diamond_1452_2125)" opacity="1" shape-rendering="crispEdges"/><rect x="0" y="0" width="181.818" height="181.818" transform="scale(-1 1)" fill="url(#paint0_diamond_1452_2125)" opacity="1" shape-rendering="crispEdges"/><rect x="0" y="0" width="181.818" height="181.818" transform="scale(-1)" fill="url(#paint0_diamond_1452_2125)" opacity="1" shape-rendering="crispEdges"/></g></g><rect x="4" y="3" width="22" height="22" rx="6" data-figma-gradient-fill="{&#34;type&#34;:&#34;GRADIENT_DIAMOND&#34;,&#34;stops&#34;:[{&#34;color&#34;:{&#34;r&#34;:0.68747061491012573,&#34;g&#34;:0.21459999680519104,&#34;b&#34;:0.94539999961853027,&#34;a&#34;:1.0},&#34;position&#34;:0.0},{&#34;color&#34;:{&#34;r&#34;:0.84373533725738525,&#34;g&#34;:0.60729998350143433,&#34;b&#34;:0.97269999980926514,&#34;a&#34;:1.0},&#34;position&#34;:0.34999999403953552},{&#34;color&#34;:{&#34;r&#34;:0.92186766862869263,&#34;g&#34;:0.80365002155303955,&#34;b&#34;:0.98634999990463257,&#34;a&#34;:1.0},&#34;position&#34;:0.60000002384185791},{&#34;color&#34;:{&#34;r&#34;:0.96093380451202393,&#34;g&#34;:0.90182501077651978,&#34;b&#34;:0.99317502975463867,&#34;a&#34;:1.0},&#34;position&#34;:0.80000001192092896},{&#34;color&#34;:{&#34;r&#34;:1.0,&#34;g&#34;:1.0,&#34;b&#34;:1.0,&#34;a&#34;:1.0},&#34;position&#34;:1.0}],&#34;transform&#34;:{&#34;m00&#34;:3.4625052194314776e-06,&#34;m01&#34;:-132.00001525878906,&#34;m02&#34;:81.0,&#34;m10&#34;:132.00001525878906,&#34;m11&#34;:3.4624979434738634e-06,&#34;m12&#34;:-52.000007629394531},&#34;opacity&#34;:1.0,&#34;blendMode&#34;:&#34;NORMAL&#34;,&#34;stopsVar&#34;:[{&#34;color&#34;:{&#34;r&#34;:0.68747061491012573,&#34;g&#34;:0.21459999680519104,&#34;b&#34;:0.94539999961853027,&#34;a&#34;:1.0},&#34;position&#34;:0.0},{&#34;color&#34;:{&#34;r&#34;:0.84373533725738525,&#34;g&#34;:0.60729998350143433,&#34;b&#34;:0.97269999980926514,&#34;a&#34;:1.0},&#34;position&#34;:0.34999999403953552},{&#34;color&#34;:{&#34;r&#34;:0.92186766862869263,&#34;g&#34;:0.80365002155303955,&#34;b&#34;:0.98634999990463257,&#34;a&#34;:1.0},&#34;position&#34;:0.60000002384185791},{&#34;color&#34;:{&#34;r&#34;:0.96093380451202393,&#34;g&#34;:0.90182501077651978,&#34;b&#34;:0.99317502975463867,&#34;a&#34;:1.0},&#34;position&#34;:0.80000001192092896},{&#34;color&#34;:{&#34;r&#34;:1.0,&#34;g&#34;:1.0,&#34;b&#34;:1.0,&#34;a&#34;:1.0},&#34;position&#34;:1.0}],&#34;visible&#34;:true}"/>
+<rect x="7" y="8" width="16.3636" height="12" fill="url(#pattern0_1452_2125)"/>
+</g>
+<defs>
+<filter id="filter0_d_1452_2125" x="0" y="0" width="30" height="30" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="1"/>
+<feGaussianBlur stdDeviation="2"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0.560784 0 0 0 0 0.298039 0 0 0 0 0.701961 0 0 0 0.25 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1452_2125"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1452_2125" result="shape"/>
+</filter>
+<clipPath id="paint0_diamond_1452_2125_clip_path"><rect x="4" y="3" width="22" height="22" rx="6"/></clipPath><pattern id="pattern0_1452_2125" patternContentUnits="objectBoundingBox" width="1" height="1">
+<use xlink:href="#image0_1452_2125" transform="scale(0.00416667 0.00568182)"/>
+</pattern>
+<linearGradient id="paint0_diamond_1452_2125" x1="0" y1="0" x2="500" y2="500" gradientUnits="userSpaceOnUse">
+<stop stop-color="#AF37F1"/>
+<stop offset="0.35" stop-color="#D79BF8"/>
+<stop offset="0.6" stop-color="#EBCDFC"/>
+<stop offset="0.8" stop-color="#F5E6FD"/>
+<stop offset="1" stop-color="white"/>
+</linearGradient>
+<image id="image0_1452_2125" width="240" height="176" preserveAspectRatio="none" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAACwCAYAAAAxDeP+AAAAAXNSR0IArs4c6QAAAxdJREFUeJzt3TFuE0AQQFESueAKdCAQDXCDiCqlC45KkTIVyg2ABiUKHVegQMAhxtLky+/167XW/tpqtBfP9v1b3v9ieX9mzvr/c7m5OTAjYAgTMIQJGMIEDGEChjABQ5iAIUzAECZgCBMwhAkYwgQMYQKGMAFD2GH7C0z9+PpttP7th/fTeVLzxDOj8z/B7z9av80NDGEChjABQ5iAIUzAECZgCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCE5eeBp16/eTVa/3D/uP0+bdr0/M+dGxjCBAxhAoYwAUOYgCFMwBAmYAgTMIQJGMIEDGEChjABQ5iAIUzAECZgCHsKb9uO5mm350lfvHy3un/dr5/fV/d/uH+cfsRqQ25gCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCHsMJ3HrTPPu2t6/tvzxNv9uIEhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAgTMIQJGMIEDGEChrDDCd43XX3fdzpP+uXm82j95fPDaP3V9XG0ftvd7c1o/d/ff0brPx4/jdZPbb8v7AaGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAgTMIQJGMIutt833Z4H3jZ933Y6j+r8d89/yg0MYQKGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAgTMIStvw88NZ3nrM+zTud566a//xPgfWA4VwKGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAgTMIQdtr/AVH2et/79t03Prz5P7AaGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAgTMIQJGMKmbwOfwur7wlfXx83t19833t5/6u72ZnX/7YbcwBAmYAgTMIQJGMIEDGEChjABQ5iAIUzAECZgCBMwhAkYwgQMYQKGMAFD2FOYB962Oo/M2Fn/h93AECZgCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUPYf/D9TGGfCEMXAAAAAElFTkSuQmCC"/>
+</defs>
+</svg>

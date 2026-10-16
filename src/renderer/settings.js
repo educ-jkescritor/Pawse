@@ -36,6 +36,9 @@ if (sidebar && brandLogo) {
     });
 }
 
+let currentWeeksAgo = 0;
+let calendarBaseDate = new Date();
+
 function hideAllContents() {
     dashboardContent.classList.add("hidden");
     aboutContent.classList.add("hidden");
@@ -93,27 +96,146 @@ function getWeekDateRangeString(weeksAgo) {
     const saturday = new Date(sunday);
     saturday.setDate(sunday.getDate() + 6);
     
-    const startMonth = sunday.toLocaleDateString('en-US', { month: 'long' });
-    const endMonth = saturday.toLocaleDateString('en-US', { month: 'long' });
+    const startMonth = sunday.toLocaleDateString('en-US', { month: 'short' });
+    const endMonth = saturday.toLocaleDateString('en-US', { month: 'short' });
     const startDay = sunday.getDate();
     const endDay = saturday.getDate();
     
-    // If within the same month (e.g. September 1 - 7)
-    if (startMonth === endMonth) {
-        return `${startMonth} ${startDay} - ${endDay}`;
-    }
-    
-    // If crossing month boundary (e.g. September 27 - October 3)
+    // Always display the month for both start and end dates (e.g., "Oct 4 - Oct 10")
     return `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
 }
 
+function getStartOfWeek(date) {
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+    const dayIndex = (start.getDay() + 7) % 7;
+    start.setDate(start.getDate() - dayIndex);
+    return start;
+}
+
+function renderCalendar() {
+    const popup = document.getElementById('calendar-popup');
+    if (!popup) return;
+
+    const today = new Date();
+    const monthDate = new Date(calendarBaseDate.getFullYear(), calendarBaseDate.getMonth(), 1);
+    const monthLabel = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const isCurrentMonth = monthDate.getFullYear() === today.getFullYear() && monthDate.getMonth() === today.getMonth();
+
+    const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+    const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+    const calendarStart = getStartOfWeek(new Date(monthDate.getFullYear(), monthDate.getMonth(), 1));
+    const calendarEnd = getStartOfWeek(new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0));
+    const totalDays = Math.ceil((calendarEnd - calendarStart) / (1000 * 60 * 60 * 24)) + 7;
+
+    const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    const weekdayMarkup = weekdays.map(day => `<span>${day}</span>`).join('');
+
+    let calendarRows = '';
+    const currentRealWeekStart = getStartOfWeek(today);
+
+    for (let i = 0; i < totalDays; i += 7) {
+        const rowStart = new Date(calendarStart);
+        rowStart.setDate(calendarStart.getDate() + i);
+
+        let rowHtml = '';
+        let rowWeeksAgo = null;
+
+        for (let j = 0; j < 7; j++) {
+            const cellDate = new Date(rowStart);
+            cellDate.setDate(rowStart.getDate() + j);
+
+            const isCurrentMonthDay = cellDate.getMonth() === monthDate.getMonth();
+            const isFutureDay = cellDate > today;
+            const isTodayDay = cellDate.toDateString() === today.toDateString();
+
+            const dayClasses = ['cal-day'];
+            if (isTodayDay) dayClasses.push('today');
+            if (!isCurrentMonthDay || isFutureDay) dayClasses.push('disabled-day');
+
+            const cellMarkup = `<span class="${dayClasses.join(' ')}">${cellDate.getDate()}</span>`;
+            rowHtml += cellMarkup;
+
+            if (j === 0) {
+                const rowWeekStart = getStartOfWeek(cellDate);
+                const diffDays = Math.round((currentRealWeekStart - rowWeekStart) / (1000 * 60 * 60 * 24));
+                rowWeeksAgo = Math.floor(diffDays / 7);
+            }
+        }
+
+        const classes = ['calendar-week'];
+        if (rowWeeksAgo === currentWeeksAgo) classes.push('selected-week');
+        if (rowWeeksAgo < 0) classes.push('future-week');
+
+        calendarRows += `<div class="${classes.join(' ')}" data-weeks-ago="${rowWeeksAgo}">${rowHtml}</div>`;
+    }
+
+    popup.innerHTML = `
+        <div class="calendar-header">
+            <button type="button" class="nav-arrow calendar-prev" aria-label="Previous month">&#8249;</button>
+            <span class="font-inter-8-medium">${monthLabel}</span>
+            <button type="button" class="nav-arrow calendar-next" aria-label="Next month" ${isCurrentMonth ? 'disabled' : ''}>&#8250;</button>
+        </div>
+        <div class="calendar-weekdays">${weekdayMarkup}</div>
+        <div class="calendar-days">${calendarRows}</div>
+    `;
+
+    const prevMonthButton = popup.querySelector('.calendar-prev');
+    const nextMonthButton = popup.querySelector('.calendar-next');
+
+    if (prevMonthButton) {
+        prevMonthButton.addEventListener('click', () => {
+            const adjustedDate = new Date(calendarBaseDate);
+            adjustedDate.setMonth(adjustedDate.getMonth() - 1);
+            calendarBaseDate = adjustedDate;
+            renderCalendar();
+        });
+    }
+
+    if (nextMonthButton && !nextMonthButton.disabled) {
+        nextMonthButton.addEventListener('click', () => {
+            const adjustedDate = new Date(calendarBaseDate);
+            adjustedDate.setMonth(adjustedDate.getMonth() + 1);
+            calendarBaseDate = adjustedDate;
+            renderCalendar();
+        });
+    }
+
+    const weekRows = popup.querySelectorAll('.calendar-week');
+    weekRows.forEach((row) => {
+        const wAgo = Number(row.dataset.weeksAgo || 0);
+        if (row.classList.contains('future-week')) return;
+
+        row.addEventListener('click', () => {
+            if (wAgo < 0) return;
+            loadAnalytics(wAgo);
+            calendarPopup.classList.add('hidden');
+        });
+    });
+}
+
 async function loadAnalytics(weeksAgo = 0) {
+    currentWeeksAgo = weeksAgo;
     const data = await window.mainAPI.loadanalytics(weeksAgo);
 
-    // Update dynamic subtitle date range
-    const chartSubtitle = document.getElementById("chart-header-subtitle");
-    if (chartSubtitle) {
-        chartSubtitle.textContent = getWeekDateRangeString(weeksAgo);
+    // Update dynamic week pill date range
+    const dateRangeButton = document.getElementById("date-range-btn");
+    if (dateRangeButton) {
+        dateRangeButton.textContent = getWeekDateRangeString(weeksAgo);
+    }
+
+    // Sync the calendar popup to the selected week before rendering.
+    const today = new Date();
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() - (weeksAgo * 7));
+    calendarBaseDate = targetDate;
+
+    renderCalendar();
+
+    // Disable the right arrow if user is on current week
+    const nextBtn = document.getElementById("next-week-btn");
+    if (nextBtn) {
+        nextBtn.disabled = (weeksAgo === 0);
     }
 
     // 1. Focus Streak Card
@@ -127,9 +249,9 @@ async function loadAnalytics(weeksAgo = 0) {
 
     if (currentStreakEl) currentStreakEl.textContent = streak;
     if (streakUnitEl) streakUnitEl.textContent = streak === 1 ? 'day' : 'days';
-    if (bestStreakEl) bestStreakEl.textContent = `Best: ${bestStreak} ${bestStreak === 1 ? 'day' : 'days'}`;
+    if (bestStreakEl) bestStreakEl.textContent = `Your best is ${bestStreak} days!`;
     if (streakCard) {
-        if (streak >= 3) {
+        if (streak > 0) {
             streakCard.classList.add('active-streak');
         } else {
             streakCard.classList.remove('active-streak');
@@ -139,12 +261,14 @@ async function loadAnalytics(weeksAgo = 0) {
     // 2. Today's Focus Card & Trend vs Average
     const todayWorkSecondsElement = document.getElementById("today_work_seconds");
     const todayVsAvgEl = document.getElementById("today_vs_avg");
+    const todayFocusCard = document.getElementById("today-focus-card");
 
     const totalSeconds = data.today_work_seconds || 0;
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const timeString = `${hours}h ${minutes}m`;
-    if (todayWorkSecondsElement) todayWorkSecondsElement.textContent = timeString;
+    const plainTimeString = `${hours}h ${minutes}m`;
+    const htmlTimeString = `<span class="font-pixel-num-24-bold">${hours}</span>h <span class="font-pixel-num-24-bold">${minutes}</span>m`;
+    if (todayWorkSecondsElement) todayWorkSecondsElement.innerHTML = htmlTimeString;
 
     if (todayVsAvgEl) {
         const avgSeconds = data.avg_daily_seconds || 0;
@@ -153,59 +277,62 @@ async function loadAnalytics(weeksAgo = 0) {
             todayVsAvgEl.className = "card-subtext font-inter-10-regular text-gray";
             todayVsAvgEl.title = "No previous days tracked yet";
         } else {
+            const diffSeconds = totalSeconds - avgSeconds;
             const avgH = Math.floor(avgSeconds / 3600);
             const avgM = Math.round((avgSeconds % 3600) / 60);
             const formattedAvg = avgH > 0 ? (avgM > 0 ? `${avgH}h ${avgM}m` : `${avgH}h`) : `${avgM}m`;
 
-            const diffSeconds = totalSeconds - avgSeconds;
-            const absDiff = Math.abs(diffSeconds);
-            const diffHours = Math.floor(absDiff / 3600);
-            const diffMins = Math.round((absDiff % 3600) / 60);
-            const formattedDiff = diffHours > 0 ? `${diffHours}h ${diffMins}m` : `${diffMins}m`;
-
-            if (diffSeconds > 60) {
-                todayVsAvgEl.textContent = `▲ +${formattedDiff} vs. avg ${formattedAvg}`;
-                todayVsAvgEl.className = "card-subtext font-inter-10-regular trend-up";
-            } else if (diffSeconds < -60) {
-                todayVsAvgEl.textContent = `▼ -${formattedDiff} vs. avg ${formattedAvg}`;
-                todayVsAvgEl.className = "card-subtext font-inter-10-regular trend-down";
-            } else {
-                todayVsAvgEl.textContent = `On par with avg (${formattedAvg})`;
-                todayVsAvgEl.className = "card-subtext font-inter-10-regular text-gray";
-            }
-            todayVsAvgEl.title = `Today: ${timeString} | Overall Daily Average: ${formattedAvg}`;
+            todayVsAvgEl.textContent = diffSeconds > 60
+                ? "Above your usual pace"
+                : diffSeconds < -60
+                    ? "Below your usual pace"
+                    : "Right on your usual pace";
+            todayVsAvgEl.className = "card-subtext font-inter-10-regular text-gray";
+            todayVsAvgEl.title = `Today: ${plainTimeString} | Overall Daily Average: ${formattedAvg}`;
+        }
+    }
+    if (todayFocusCard) {
+        if (totalSeconds > 0) {
+            todayFocusCard.classList.add('active-focus');
+        } else {
+            todayFocusCard.classList.remove('active-focus');
         }
     }
 
-    // 3. Personal Best Card
-    const personalBestEl = document.getElementById("personal_best_time");
-    const personalBestDateEl = document.getElementById("personal_best_date");
-    const personalBestCard = document.getElementById("personal-best-card");
+    // 3. Top Companion Card
+    const topCompanionCard = document.getElementById("top-companion-card");
+    const topCompanionNameEl = document.getElementById("top_companion_name");
+    const topCompanionRateEl = document.getElementById("top_companion_rate");
+    const companionNames = {
+        tuxedo_cat: "Tux",
+        orange_cat: "Ginger",
+        black_cat: "Void"
+    };
 
-    const pbSeconds = data.personal_best_seconds || 0;
-    const pbHours = Math.floor(pbSeconds / 3600);
-    const pbMinutes = Math.floor((pbSeconds % 3600) / 60);
-    const pbTimeString = `${pbHours}h ${pbMinutes}m`;
-    if (personalBestEl) personalBestEl.textContent = pbTimeString;
+    if (topCompanionCard) {
+        topCompanionCard.classList.remove('orange_cat', 'tuxedo_cat', 'black_cat');
+    }
 
-    if (personalBestDateEl) {
-        if (pbSeconds === 0 || !data.personal_best_date) {
-            personalBestDateEl.textContent = "No record yet";
-            if (personalBestCard) personalBestCard.classList.remove('highlight-record');
-        } else {
-            const now = new Date();
-            const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-            
-            if (data.personal_best_date === todayKey && pbSeconds > 0) {
-                personalBestDateEl.textContent = "Achieved today! 🏆";
-                if (personalBestCard) personalBestCard.classList.add('highlight-record');
+    if (data.favorite_cat && companionNames[data.favorite_cat]) {
+        if (topCompanionCard) {
+            topCompanionCard.classList.add(data.favorite_cat);
+        }
+        if (topCompanionNameEl) {
+            topCompanionNameEl.textContent = companionNames[data.favorite_cat];
+        }
+        if (topCompanionRateEl) {
+            if (data.favorite_cat_percentage !== undefined && data.favorite_cat_percentage !== null && data.favorite_cat_percentage !== "") {
+                topCompanionRateEl.textContent = `Chosen ${data.favorite_cat_percentage}% of the time`;
             } else {
-                const [y, m, d] = data.personal_best_date.split('-').map(Number);
-                const pbDate = new Date(y, m - 1, d);
-                const dateOptions = { month: 'short', day: 'numeric', year: 'numeric' };
-                personalBestDateEl.textContent = pbDate.toLocaleDateString('en-US', dateOptions);
-                if (personalBestCard) personalBestCard.classList.remove('highlight-record');
+                topCompanionRateEl.textContent = "Your top choice!";
             }
+        }
+    } else {
+        if (topCompanionNameEl) {
+            topCompanionNameEl.textContent = "None";
+        }
+        if (topCompanionRateEl) {
+            topCompanionRateEl.textContent = "No sessions yet";
         }
     }
 
@@ -215,38 +342,20 @@ async function loadAnalytics(weeksAgo = 0) {
         historicalPomodoroElement.textContent = data.historical_pomodoro || 0;
     }
 
-    const favoriteCatElement = document.getElementById("favorite_cat");
-    if (favoriteCatElement) {
-        const catFaceImages = {
-            'orange_cat': './../assets/photos/orange-cat-face.png',
-            'tuxedo_cat': './../assets/photos/tuxedo-cat-face.png',
-            'black_cat': './../assets/photos/black-cat-face.png'
-        };
-        
-        if (data.favorite_cat && catFaceImages[data.favorite_cat]) {
-            favoriteCatElement.innerHTML = `<img src="${catFaceImages[data.favorite_cat]}" alt="${data.favorite_cat}" class="favorite-cat-img">`;
-        } else {
-            favoriteCatElement.textContent = 'None';
-        }
-    }
-
-    const favoriteCatCard = document.getElementById("favorite-cat-card");
-    if (favoriteCatCard) {
-        favoriteCatCard.classList.remove('orange_cat', 'tuxedo_cat', 'black_cat');
-        if (data.favorite_cat) {
-            favoriteCatCard.classList.add(data.favorite_cat);
-        }
-    }
-
     // Graph Generation
     const graphBarsContainer = document.querySelector(".graph-bars");
+    const graphContainer = document.querySelector(".graph"); // Target parent for legend sync
     if (graphBarsContainer && data.weekly_data) {
         graphBarsContainer.innerHTML = ''; // Clear existing
         
-        // Dynamic hover support: style bars according to user's favorite companion
+        // Dynamic hover & legend support: style according to user's favorite companion
         graphBarsContainer.classList.remove('orange_cat', 'tuxedo_cat', 'black_cat', 'empty-state');
+        if (graphContainer) {
+            graphContainer.classList.remove('orange_cat', 'tuxedo_cat', 'black_cat');
+        }
         if (data.favorite_cat) {
             graphBarsContainer.classList.add(data.favorite_cat);
+            if (graphContainer) graphContainer.classList.add(data.favorite_cat);
         }
         
         const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -338,8 +447,9 @@ async function loadAnalytics(weeksAgo = 0) {
             const formattedAvg = avgH > 0 ? (avgM > 0 ? `${avgH}h ${avgM}m` : `${avgH}h`) : `${avgM}m`;
 
             const avgBadge = document.createElement("span");
-            avgBadge.className = "avg-benchmark-label font-inter-10-medium";
-            avgBadge.textContent = `avg ${formattedAvg}`;
+            avgBadge.className = "avg-benchmark-label font-inter-10-regular";
+            // Reverses the order and wraps the time in a strong tag for bolding
+            avgBadge.innerHTML = `<strong>${formattedAvg}</strong> avg`;
             avgLine.appendChild(avgBadge);
 
             // Compute bottom offset accurately: baseline of bars is 20px, max bar area is (containerHeight - 36px)
@@ -461,42 +571,30 @@ if (tickToggle) {
     tickToggle.addEventListener('change', (e) => localStorage.setItem('tickSound', e.target.checked));
 }
 
-// Custom Graph Week Segmented Control Logic
-const segmentButtons = document.querySelectorAll('.segment-btn');
+// Custom Graph Week Picker Logic
+const prevWeekButton = document.getElementById('prev-week-btn');
+const nextWeekButton = document.getElementById('next-week-btn');
+const dateRangeButton = document.getElementById('date-range-btn');
+const calendarPopup = document.getElementById('calendar-popup');
 
-if (segmentButtons.length > 0) {
-    const selectSegment = (btn) => {
-        if (btn.classList.contains('active')) return;
-        
-        segmentButtons.forEach(b => {
-            b.classList.remove('active');
-            b.setAttribute('aria-selected', 'false');
-        });
-        
-        btn.classList.add('active');
-        btn.setAttribute('aria-selected', 'true');
-        
-        const val = btn.getAttribute('data-value');
-        loadAnalytics(parseInt(val, 10));
-    };
+if (prevWeekButton) {
+    prevWeekButton.addEventListener('click', () => {
+        currentWeeksAgo += 1;
+        loadAnalytics(currentWeeksAgo);
+    });
+}
 
-    segmentButtons.forEach((btn, idx) => {
-        btn.addEventListener('click', () => selectSegment(btn));
-        
-        // Arrow key navigation across segments
-        btn.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-                e.preventDefault();
-                const nextIdx = (idx + 1) % segmentButtons.length;
-                segmentButtons[nextIdx].focus();
-                selectSegment(segmentButtons[nextIdx]);
-            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-                e.preventDefault();
-                const prevIdx = (idx - 1 + segmentButtons.length) % segmentButtons.length;
-                segmentButtons[prevIdx].focus();
-                selectSegment(segmentButtons[prevIdx]);
-            }
-        });
+if (nextWeekButton) {
+    nextWeekButton.addEventListener('click', () => {
+        currentWeeksAgo = Math.max(0, currentWeeksAgo - 1);
+        loadAnalytics(currentWeeksAgo);
+    });
+}
+
+if (dateRangeButton && calendarPopup) {
+    dateRangeButton.addEventListener('click', () => {
+        renderCalendar();
+        calendarPopup.classList.toggle('hidden');
     });
 }
 
@@ -509,6 +607,30 @@ if (topToggle) {
         localStorage.setItem('alwaysOnTop', isChecked);
         if (window.mainAPI && window.mainAPI.setAlwaysOnTop) {
             window.mainAPI.setAlwaysOnTop(isChecked);
+        }
+    });
+}
+
+const startupToggle = document.querySelector('.startup-toggle');
+if (startupToggle) {
+    // 1. Initialize state from true OS login items, falling back to localStorage
+    if (window.mainAPI && window.mainAPI.getLaunchOnStartup) {
+        window.mainAPI.getLaunchOnStartup().then((isEnabled) => {
+            startupToggle.checked = Boolean(isEnabled);
+            localStorage.setItem('launchOnStartup', isEnabled);
+        }).catch(() => {
+            startupToggle.checked = localStorage.getItem('launchOnStartup') === 'true';
+        });
+    } else {
+        startupToggle.checked = localStorage.getItem('launchOnStartup') === 'true';
+    }
+
+    // 2. Persist state to OS and localStorage on change
+    startupToggle.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        localStorage.setItem('launchOnStartup', isChecked);
+        if (window.mainAPI && window.mainAPI.setLaunchOnStartup) {
+            window.mainAPI.setLaunchOnStartup(isChecked);
         }
     });
 }
@@ -557,7 +679,7 @@ function updateDashboardDateTime() {
     const now = new Date();
     
     // Format: "October 5, 2026"
-    const optionsDate = { year: 'numeric', month: 'long', day: 'numeric' };
+    const optionsDate = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     
     const dateStr = now.toLocaleDateString('en-US', optionsDate);
 

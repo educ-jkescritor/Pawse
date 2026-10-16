@@ -38,6 +38,7 @@ body.cat-only-mode .app-wrapper {
 #timer-container{
     width: 100%;
     text-align: center;
+    padding-top: 8px;
     line-height: 1; /* controls the space consumed by the text */
 }
 
@@ -190,17 +191,17 @@ body.cat-only-mode .app-wrapper {
 }
 
 /* Secondary buttons hover / active states */
-.timer-controls button:not(#play-btn):hover {
+.timer-controls button:not(#play-btn):not(:disabled):hover {
     background-color: #ECECEC;
     border-color: rgba(0, 0, 0, 0.15);
     transform: translateY(-1px);
 }
 
-.timer-controls button:not(#play-btn):hover img {
+.timer-controls button:not(#play-btn):not(:disabled):hover img {
     opacity: 1;
 }
 
-.timer-controls button:not(#play-btn):active {
+.timer-controls button:not(#play-btn):not(:disabled):active {
     transform: scale(0.95) translateY(0);
     box-shadow: none;
 }
@@ -222,12 +223,12 @@ body.cat-only-mode .app-wrapper {
 }
 
 /* Primary button hover / active states */
-#play-btn:hover {
+#play-btn:not(:disabled):hover {
     transform: translateY(-1.5px);
     box-shadow: 0 5px 11px rgba(53, 166, 241, 0.4);
 }
 
-#play-btn:active {
+#play-btn:not(:disabled):active {
     transform: scale(0.95) translateY(0);
     box-shadow: 0 2px 5px rgba(53, 166, 241, 0.2);
 }

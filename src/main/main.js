@@ -1,5 +1,6 @@
-const { app, BrowserWindow, ipcMain, shell, nativeTheme, screen} = require("electron");
+const { app, BrowserWindow, ipcMain, shell, nativeTheme, screen, Notification } = require("electron");
 const path = require("path");
+const { pathToFileURL } = require("url");
 const iconPath = path.join(__dirname, "../assets/logos/logo.png");
 const { db, generateAnalytics } = require("./database.js");
 const { autoUpdater } = require("electron-updater");
@@ -14,6 +15,37 @@ let win = null;
 let set = null;
 let globalAlwaysOnTop = false;
 let currentMode = 'default'; // Tracks the active window mode: 'default', 'timer-only', or 'cat-only'
+
+function clampBoundsToWorkArea(bounds, targetWidth, targetHeight) {
+  const display = screen.getDisplayMatching(bounds);
+  const workArea = display.workArea;
+
+  let newX = bounds.x;
+  let newY = bounds.y;
+
+  // Clamp horizontally (Right boundary first, then Left boundary)
+  if (newX + targetWidth > workArea.x + workArea.width) {
+    newX = workArea.x + workArea.width - targetWidth;
+  }
+  if (newX < workArea.x) {
+    newX = workArea.x;
+  }
+
+  // Clamp vertically (Bottom boundary first, then Top boundary)
+  if (newY + targetHeight > workArea.y + workArea.height) {
+    newY = workArea.y + workArea.height - targetHeight;
+  }
+  if (newY < workArea.y) {
+    newY = workArea.y;
+  }
+
+  return {
+    x: Math.round(newX),
+    y: Math.round(newY),
+    width: targetWidth,
+    height: targetHeight
+  };
+}
 
 function createWindow() {
   win = new BrowserWindow({
@@ -48,15 +80,15 @@ function createWindow() {
       isShown = true;
       win.setSize(310, 430);
       const b = win.getBounds();
-      win.setBounds({ x: b.x, y: b.y, width: 310, height: 430 });
+      win.setBounds(clampBoundsToWorkArea(b, 310, 430));
       win.webContents.setVisualZoomLevelLimits(1, 1);
       win.webContents.setZoomLevel(0);
       win.show();
-      win.setAlwaysOnTop(true);
+      win.setAlwaysOnTop(true, 'screen-saver');
       win.focus();
       setTimeout(() => {
         if (!win.isDestroyed()) {
-          win.setAlwaysOnTop(globalAlwaysOnTop);
+          win.setAlwaysOnTop(globalAlwaysOnTop, 'screen-saver');
         }
       }, 300);
     }
@@ -114,7 +146,7 @@ function settingsWindow() {
       isSettingsShown = true;
       set.setSize(720, 430);
       const b = set.getBounds();
-      set.setBounds({ x: b.x, y: b.y, width: 720, height: 430 });
+      set.setBounds(clampBoundsToWorkArea(b, 720, 430));
       set.webContents.setVisualZoomLevelLimits(1, 1);
       set.webContents.setZoomLevel(0);
       set.show();
@@ -201,7 +233,7 @@ if (!gotTheLock) {
         win.setMaximumSize(targetWidth, targetHeight);
         win.setSize(targetWidth, targetHeight);
         const b = win.getBounds();
-        win.setBounds({ x: b.x, y: b.y, width: targetWidth, height: targetHeight });
+        win.setBounds(clampBoundsToWorkArea(b, targetWidth, targetHeight));
         win.setMinimumSize(targetWidth, targetHeight);
         win.setMaximumSize(targetWidth, targetHeight);
         win.setResizable(false);
@@ -214,7 +246,7 @@ if (!gotTheLock) {
         set.setMaximumSize(720, 430);
         set.setSize(720, 430);
         const b = set.getBounds();
-        set.setBounds({ x: b.x, y: b.y, width: 720, height: 430 });
+        set.setBounds(clampBoundsToWorkArea(b, 720, 430));
         set.setMinimumSize(720, 430);
         set.setMaximumSize(720, 430);
         set.setResizable(false);
@@ -272,14 +304,9 @@ ipcMain.on('resize-window', (event, mode) => {
   // 3. Set the window size using setSize (consistent with outer bounds WS_THICKFRAME geometry)
   senderWindow.setSize(targetWidth, targetHeight);
 
-  // 4. Immediately re-evaluate bounds to force the OS and Chromium compositor to conform synchronously
+  // 4. Immediately clamp and re-evaluate bounds to ensure window stays fully inside screen workArea
   const currentBounds = senderWindow.getBounds();
-  senderWindow.setBounds({
-    x: currentBounds.x,
-    y: currentBounds.y,
-    width: targetWidth,
-    height: targetHeight
-  });
+  senderWindow.setBounds(clampBoundsToWorkArea(currentBounds, targetWidth, targetHeight));
 
   // 5. Lock min and max to the target dimensions to maintain fixed sizing
   senderWindow.setMinimumSize(targetWidth, targetHeight);
@@ -293,7 +320,7 @@ ipcMain.on('resize-window', (event, mode) => {
   senderWindow.webContents.setZoomLevel(0);
 
   // 8. Apply always on top state
-  senderWindow.setAlwaysOnTop(alwaysOnTop);
+  senderWindow.setAlwaysOnTop(alwaysOnTop, 'screen-saver');
 });
 
 ipcMain.on('close-window', (event) => {
@@ -368,7 +395,7 @@ ipcMain.on('set-always-on-top', (event, isAlwaysOnTop) => {
   const activeWindow = BrowserWindow.fromWebContents(event.sender);
   
   if (win && !win.isDestroyed()) {
-    win.setAlwaysOnTop(isAlwaysOnTop);
+    win.setAlwaysOnTop(isAlwaysOnTop, 'screen-saver');
     
     // Fix Windows Z-order caching bug: when demoting 'win' from the topmost group,
     // Windows leaves it at the top of the normal group (above the settings window).
@@ -396,12 +423,12 @@ ipcMain.on('restore-window', (event) => {
   if (targetWin.isMinimized()) {
     targetWin.restore();
   }
-  targetWin.setAlwaysOnTop(true);
+  targetWin.setAlwaysOnTop(true, 'screen-saver');
   targetWin.show();
   targetWin.focus();
 
   setTimeout(() => {
-    targetWin.setAlwaysOnTop(globalAlwaysOnTop);
+    targetWin.setAlwaysOnTop(globalAlwaysOnTop, 'screen-saver');
   }, 500);
 });
 
@@ -415,6 +442,199 @@ ipcMain.on('flash-frame', (event, flag) => {
     } else {
       senderWindow.flashFrame(false);
     }
+  }
+});
+
+let activeNotification = null;
+let activeNotificationActivateHandler = null;
+
+if (process.platform === 'win32' && Notification && typeof Notification.handleActivation === 'function') {
+  Notification.handleActivation((details) => {
+    if (!activeNotificationActivateHandler || !details) return;
+    const isAction =
+      details.type === 'action' ||
+      (typeof details.arguments === 'string' && details.arguments.includes('type=action'));
+    if (isAction) {
+      activeNotificationActivateHandler(true);
+    } else if (details.type === 'click') {
+      activeNotificationActivateHandler(false);
+    }
+  });
+}
+
+ipcMain.on('show-notification', (event, { title, body, actionText }) => {
+  if (Notification && Notification.isSupported()) {
+    if (activeNotification) {
+      activeNotification._isProgrammaticClose = true;
+      try {
+        activeNotification.close();
+      } catch (e) {}
+      activeNotification = null;
+      activeNotificationActivateHandler = null;
+    }
+
+    const sessionAlertStart = Date.now();
+    const ALERT_DURATION_MS = 30000;
+    const buttonLabel = actionText || 'Continue';
+
+    const escapeXml = (str) =>
+      String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+
+    const presentToast = () => {
+      const notificationOptions = {
+        title: title || 'Pawse',
+        body: body || '',
+        silent: true,
+        timeoutType: 'never',
+        urgency: 'critical',
+        actions: [{ type: 'button', text: buttonLabel }]
+      };
+
+      const notification = new Notification(notificationOptions);
+
+      // On Windows, Electron's `timeoutType: 'never'` automatically appends a second system "Close"
+      // button (`<action activationType="system" arguments="dismiss" content=""/>`). Using `toastXml`
+      // with `scenario="reminder"` and a single structured `type=action` button keeps the persistent
+      // reminder behavior while displaying ONLY the single primary action button (e.g. "Start Break")
+      // and allowing Electron to distinguish body clicks ('click') from button clicks ('action').
+      if (process.platform === 'win32') {
+        const notifId = escapeXml(notification.id || '');
+        notification.toastXml = `<toast scenario="reminder">
+  <visual>
+    <binding template="ToastGeneric">
+      <text>${escapeXml(title || 'Pawse')}</text>
+      <text>${escapeXml(body || '')}</text>
+    </binding>
+  </visual>
+  <actions>
+    <action content="${escapeXml(buttonLabel)}" arguments="type=action&amp;actionIndex=0&amp;tag=${notifId}&amp;id=${notifId}" activationType="foreground" />
+  </actions>
+  <audio silent="true" />
+</toast>`;
+      }
+
+      notification._isProgrammaticClose = false;
+      activeNotification = notification;
+
+      let hasActivated = false;
+      const handleActivate = (isActionButton = false) => {
+        if (hasActivated) return;
+        hasActivated = true;
+        notification._isProgrammaticClose = true;
+        if (activeNotification === notification) {
+          activeNotification = null;
+          activeNotificationActivateHandler = null;
+        }
+        try {
+          notification.close();
+        } catch (e) {}
+        const senderWindow = BrowserWindow.fromWebContents(event.sender);
+        const targetWin = senderWindow || win;
+        if (targetWin && !targetWin.isDestroyed()) {
+          targetWin.flashFrame(false);
+          if (targetWin.isMinimized()) {
+            targetWin.restore();
+          }
+          targetWin.setAlwaysOnTop(true, 'screen-saver');
+          targetWin.show();
+          targetWin.focus();
+
+          setTimeout(() => {
+            if (!targetWin.isDestroyed()) {
+              const shouldStayOnTop =
+                currentMode === 'timer-only' || currentMode === 'cat-only'
+                  ? true
+                  : globalAlwaysOnTop;
+              targetWin.setAlwaysOnTop(shouldStayOnTop, 'screen-saver');
+            }
+          }, 500);
+
+          // Notify renderer whether the user clicked the action button or the toast body
+          targetWin.webContents.send('notification-clicked', {
+            isActionButton: Boolean(isActionButton)
+          });
+        }
+      };
+
+      activeNotificationActivateHandler = handleActivate;
+
+      notification.on('click', () => handleActivate(false));
+      notification.on('action', () => handleActivate(true));
+
+      // Note: Electron emits 'close' as (event, reason) where `reason` is the 2nd argument on Windows
+      // ('timedOut', 'userCanceled', or 'applicationHidden'), or `event.reason` in details objects.
+      notification.on('close', (closeEvent, reasonArg) => {
+        const wasProgrammatic = Boolean(notification._isProgrammaticClose);
+        const closeReason =
+          (typeof reasonArg === 'string' && reasonArg) ||
+          (closeEvent && typeof closeEvent.reason === 'string' && closeEvent.reason) ||
+          (typeof closeEvent === 'string' && closeEvent) ||
+          '';
+
+        if (wasProgrammatic || closeReason === 'applicationHidden') {
+          if (activeNotification === notification) {
+            activeNotification = null;
+            activeNotificationActivateHandler = null;
+          }
+          return;
+        }
+
+        // On Windows 11, if OS Accessibility "Dismiss notifications after this amount of time" (default 5s)
+        // overrides the banner and emits 'timedOut' (or an unlabelled timeout) before our 30s alarm window ends,
+        // remove the stale entry from Action Center and re-present the banner so both toast & sound persist.
+        const elapsedMs = Date.now() - sessionAlertStart;
+        if (
+          process.platform === 'win32' &&
+          closeReason !== 'userCanceled' &&
+          elapsedMs < ALERT_DURATION_MS - 1500
+        ) {
+          if (activeNotification === notification) {
+            notification._isProgrammaticClose = true;
+            try {
+              notification.close();
+            } catch (e) {}
+            presentToast();
+          }
+          return;
+        }
+
+        if (activeNotification === notification) {
+          activeNotification = null;
+          activeNotificationActivateHandler = null;
+        }
+
+        // User explicitly dismissed the notification ('userCanceled' on Windows, or manual close on other OS)
+        if (process.platform !== 'win32' || closeReason === 'userCanceled') {
+          const senderWindow = BrowserWindow.fromWebContents(event.sender);
+          const targetWin = senderWindow || win;
+          if (targetWin && !targetWin.isDestroyed()) {
+            targetWin.flashFrame(false);
+            targetWin.webContents.send('notification-closed');
+          }
+        }
+      });
+
+      notification.show();
+    };
+
+    presentToast();
+  }
+});
+
+ipcMain.on('close-notification', () => {
+  if (activeNotification) {
+    const notifToClose = activeNotification;
+    notifToClose._isProgrammaticClose = true;
+    activeNotification = null;
+    activeNotificationActivateHandler = null;
+    try {
+      notifToClose.close();
+    } catch (e) {}
   }
 });
 
@@ -575,6 +795,27 @@ ipcMain.on('restart-app', () => {
 
 ipcMain.handle('get-version', () => {
   return app.getVersion();
+});
+
+ipcMain.handle('get-launch-on-startup', () => {
+  try {
+    const loginItemSettings = app.getLoginItemSettings();
+    return loginItemSettings.openAtLogin;
+  } catch (err) {
+    console.error('[LaunchOnStartup] Failed to get login item settings:', err);
+    return false;
+  }
+});
+
+ipcMain.on('set-launch-on-startup', (event, isEnabled) => {
+  try {
+    app.setLoginItemSettings({
+      openAtLogin: Boolean(isEnabled),
+      path: app.isPackaged ? app.getPath('exe') : process.execPath
+    });
+  } catch (err) {
+    console.error('[LaunchOnStartup] Failed to set login item settings:', err);
+  }
 });
 
 app.on("window-all-closed", () => {

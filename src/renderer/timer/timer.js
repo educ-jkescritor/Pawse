@@ -27,6 +27,15 @@ const catConfig = catConfiguration[catType];
 localStorage.setItem('timerRunning', 'true');
 window.addEventListener('beforeunload', () => {
     localStorage.setItem('timerRunning', 'false');
+    if (typeof stopAlarmSound === 'function') {
+        stopAlarmSound();
+    }
+    if (window.mainAPI && window.mainAPI.closeNotification) {
+        window.mainAPI.closeNotification();
+    }
+    if (window.mainAPI && window.mainAPI.flashFrame) {
+        window.mainAPI.flashFrame(false);
+    }
     flushSessionData();
     localStorage.removeItem('pawseDurableState'); // Clear the durable state on exit to avoid stale data
 });
@@ -42,7 +51,10 @@ let actualBreak = 0;
 let workCount = 0;
 let breakCount = 0;
 let isAlarmPlaying = false;
+let alarmTimeoutId = null;
 let pendingModal = null;
+let preSkipState = null;
+let nextPhaseState = null;
 let sessionDate = new Date();
 
 // --- DURABLE EXECUTION ENGINE (Local Persistence) ---
@@ -78,10 +90,17 @@ if (savedStateStr) {
 
 // Continuously save state (Fault Tolerance)
 setInterval(() => {
+    let durableRemaining = remainingTime;
+    let durableWorking = workingTime;
+    if (nextPhaseState && remainingTime <= 0) {
+        durableRemaining = nextPhaseState.remainingTime;
+        durableWorking = nextPhaseState.workingTime;
+    }
+
     localStorage.setItem('pawseDurableState', JSON.stringify({
         catType: catType,
-        remainingTime: remainingTime,
-        workingTime: workingTime,
+        remainingTime: durableRemaining,
+        workingTime: durableWorking,
         cycleCount: cycleCount,
         isRunning: isRunning,
         actualWork: actualWork,
@@ -184,6 +203,15 @@ function updateAudioSettings() {
     } else {
         purrAudio.pause();
     }
+
+    // 6. Alarm checklist: keep active alarm in sync if user toggles mute or alarm volume mid-ring
+    if (isAlarmPlaying) {
+        if (alrVol > 0 && soundEnabled) {
+            alarmAudio.play().catch(e => {});
+        } else {
+            alarmAudio.pause();
+        }
+    }
 }
 
 // Listen for settings changes from the Settings window
@@ -202,6 +230,7 @@ let dialogMessage = document.getElementById("dialog-message");
 let dialogBtn = document.getElementById("dialog-btn");
 
 function formatTime(remainingTime) {
+    if (remainingTime < 0) remainingTime = 0;
     let minutes = Math.floor(remainingTime / 60);
     let secs = remainingTime % 60;
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -364,6 +393,7 @@ function updateCatState() {
 }
 
 function startTimer() {
+    clearInterval(timerId);
     document.getElementById("play-icon").src = "../../assets/icons/pause-btn.png";
     isRunning = true;
     updateCatState();
@@ -374,6 +404,13 @@ function startTimer() {
         if (today !== sessionDate.getDate()) {
             flushSessionData(false, true); // forceYesterday = true
             sessionDate = new Date();
+        }
+
+        if (remainingTime <= 0) {
+            remainingTime = 0;
+            pauseTimer();
+            handleSessionComplete();
+            return;
         }
 
         remainingTime--;
@@ -392,69 +429,104 @@ function startTimer() {
 
         document.getElementById("timer-display").textContent = formatTime(remainingTime);     
 
-        if(remainingTime === 0) {
+        if(remainingTime <= 0) {
+            remainingTime = 0;
             setTimeout(() => {    
                 handleSessionComplete();
-            }, 10)
+            }, 10);
         }
-    }, 1000)
+    }, 1000);
 }
 
-function handleSessionComplete() {
+function handleSessionComplete(isManualSkip = false) {
+    if (!isManualSkip) {
+        preSkipState = null;
+    }
     pauseTimer();
 
     if (workingTime === true) {
-        workCount++;
+        if (!isManualSkip) {
+            workCount++;
+        }
         workingTime = false;
         updateCatState();
 
         if (cycleCount === 3) {
+            nextPhaseState = { remainingTime: catConfig.longBreakTime, workingTime: false };
+            const title = isManualSkip ? "Ready for a Catnap?" : "Time for a Catnap!";
+            const message = isManualSkip
+                ? "Skipping ahead to your long rest. Step away from the screen and recharge!"
+                : "Amazing work! You've earned a long, cozy rest. Step away from the screen and recharge.";
+
             showModal(
-                "Time for a Catnap!",
-                "Amazing work! You've earned a long, cozy rest. Step away from the screen and recharge.",
+                title,
+                message,
                 "Start Long Break",
                 function () {
                     remainingTime = catConfig.longBreakTime;
                     document.getElementById("timer-display").textContent = formatTime(remainingTime);
                     startTimer();
                     triggerWelcomeBubble();
-                }
+                },
+                !isManualSkip
             );
         } else {
+            nextPhaseState = { remainingTime: catConfig.shortBreakTime, workingTime: false };
+            const title = isManualSkip ? "Take an Early Break?" : "Stretch Your Paws!";
+            const message = isManualSkip
+                ? "Skipping ahead to your break time. Ready to step back and stretch your paws?"
+                : "Great focus! Your companion is ready for a quick stretch and a treat.";
+
             showModal(
-                "Stretch Your Paws!",
-                "Great focus! Your companion is ready for a quick stretch and a treat.",
+                title,
+                message,
                 "Start Break",
                 function () {
                     remainingTime = catConfig.shortBreakTime;
                     document.getElementById("timer-display").textContent = formatTime(remainingTime);
                     startTimer();
                     triggerWelcomeBubble();
-                }
+                },
+                !isManualSkip
             );
         }
     } else {     
-        breakCount++;
+        if (!isManualSkip) {
+            breakCount++;
+        }
         cycleCount++;
         updateSessionCounter();
 
         if (cycleCount === 4) {
-            flushSessionData(true);
+            nextPhaseState = null;
+            flushSessionData(!isManualSkip);
+
+            const title = isManualSkip ? "Session Finished" : "Paws-itively Brilliant!";
+            const message = isManualSkip
+                ? "You wrapped up this Pomodoro session early. Your recorded time has been saved safely!"
+                : `You successfully completed a full set of ${cycleCount} cycles! Your progress is logged safely. Take a bow!`;
 
             showModal(
-                "Paws-itively Brilliant!",
-                `You successfully completed a full set of ${cycleCount} cycles! Your progress is logged safely. Take a bow!`,
+                title,
+                message,
                 "Return to Menu",
                 function () {
                     localStorage.removeItem('pawseDurableState');
                     window.location.replace("../index.html");
-                }
+                },
+                !isManualSkip
             );
             return;
         } else {
+            nextPhaseState = { remainingTime: catConfig.workTime, workingTime: true };
+            const title = isManualSkip ? "End Break Early?" : "Ready to Focus?";
+            const message = isManualSkip
+                ? `Cutting your rest short? Ready to jump right back into cycle ${cycleCount + 1}!`
+                : `You’ve completed ${cycleCount} cycle(s) so far! Let's keep the momentum going.`;
+
             showModal(
-                "Ready to Focus?",
-                `You’ve completed ${cycleCount} cycle(s) so far! Let's keep the momentum going.`,
+                title,
+                message,
                 "Start Work",
                 function () {
                     workingTime = true;
@@ -462,14 +534,21 @@ function handleSessionComplete() {
                     remainingTime = catConfig.workTime;
                     document.getElementById("timer-display").textContent = formatTime(remainingTime);
                     startTimer();
-                }
+                },
+                !isManualSkip
             ); 
         }
     }
 }
 
 function manualSkipSession() {
-    pauseTimer();
+    // Snapshot state so accidental skip can be canceled via backdrop or Escape
+    preSkipState = {
+        remainingTime,
+        workingTime,
+        cycleCount,
+        wasRunning: isRunning
+    };
 
     // Play companion sound feedback if click sound is enabled
     const meowAudio = meowAudios[catConfig.dbId];
@@ -478,34 +557,32 @@ function manualSkipSession() {
         meowAudio.play().catch(e => {});
     }
 
-    if (workingTime === true) {
-        // Skip current Work sprint -> Transition to Break
-        workingTime = false;
-        updateCatState();
-        
-        remainingTime = (cycleCount === 3) ? catConfig.longBreakTime : catConfig.shortBreakTime;
+    handleSessionComplete(true);
+}
+
+function cancelSkip() {
+    if (!preSkipState) return;
+
+    const restored = preSkipState;
+    preSkipState = null;
+    nextPhaseState = null;
+
+    hideModal(modalOverlay, () => {
+        pendingModal = null;
+        remainingTime = restored.remainingTime;
+        workingTime = restored.workingTime;
+        cycleCount = restored.cycleCount;
         document.getElementById("timer-display").textContent = formatTime(remainingTime);
-        triggerWelcomeBubble();
-        startTimer();
-    } else {
-        // Skip current Break -> Transition to Work
-        cycleCount++;
         updateSessionCounter();
-
-        if (cycleCount === 4) {
-            // Finished 4 cycles with this skipped break -> flush and return to menu
-            flushSessionData(false);
-            localStorage.removeItem('pawseDurableState');
-            window.location.replace("../index.html");
-            return;
-        }
-
-        workingTime = true;
         updateCatState();
-        remainingTime = catConfig.workTime;
-        document.getElementById("timer-display").textContent = formatTime(remainingTime);
-        startTimer();
-    }
+        updateAudioSettings();
+
+        if (restored.wasRunning) {
+            startTimer();
+        } else {
+            pauseTimer();
+        }
+    });
 }
 
 function pauseTimer() {
@@ -553,9 +630,91 @@ soundButton.addEventListener("click", () => {
     updateAudioSettings();
 });
 
+const strictMode = localStorage.getItem('strictMode') === 'true';
+
+function syncStrictModeButtons() {
+    // 1. Skip Button: disabled in Strict Mode OR when session is already at 00:00 (pendingModal staged)
+    if (strictMode || pendingModal) {
+        skipButton.disabled = true;
+        skipButton.style.opacity = "0.5";
+        skipButton.style.cursor = "not-allowed";
+        skipButton.title = strictMode
+            ? "Strict Mode is enabled (skipping disabled)"
+            : "Session complete — press Play to start next session";
+    } else {
+        skipButton.disabled = false;
+        skipButton.style.opacity = "";
+        skipButton.style.cursor = "";
+        skipButton.title = "Skip Session (S)";
+    }
+
+    // 2. Play Button: disabled during active countdowns in Strict Mode, but enabled at 00:00 (pendingModal) to start next phase
+    if (strictMode && !pendingModal) {
+        playButton.disabled = true;
+        playButton.style.opacity = "0.5";
+        playButton.style.cursor = "not-allowed";
+        playButton.title = "Strict Mode is enabled (pausing disabled)";
+    } else {
+        playButton.disabled = false;
+        playButton.style.opacity = "";
+        playButton.style.cursor = "";
+        playButton.title = pendingModal ? "Start Next Session (Space)" : "Play / Pause (Space)";
+    }
+}
+
+function advancePendingModalInMiniMode() {
+    if (!pendingModal) return false;
+
+    stopAlarmSound();
+    if (window.mainAPI && window.mainAPI.closeNotification) {
+        window.mainAPI.closeNotification();
+    }
+    if (window.mainAPI && window.mainAPI.flashFrame) {
+        window.mainAPI.flashFrame(false);
+    }
+
+    // Cycle 4 complete (Final session of the full set): expand to default view to show celebration modal
+    if (cycleCount === 4 && !workingTime) {
+        document.body.classList.remove("timer-only-mode", "cat-only-mode");
+        if (window.mainAPI && window.mainAPI.resize) {
+            window.mainAPI.resize('default');
+        }
+        modalOverlay.classList.remove("closing");
+        modalOverlay.classList.remove("hidden");
+        return true;
+    }
+
+    // Regular session transition (Work -> Break or Break -> Work):
+    // Seamlessly advance to the next session directly in mini-mode!
+    const next = pendingModal.nextAction;
+    pendingModal = null;
+    nextPhaseState = null;
+    syncStrictModeButtons();
+    next();
+    return true;
+}
+
 playButton.addEventListener("click", () => {
     playButton.blur();
-    if (strictMode || isAlarmPlaying) return;
+
+    // If a session has completed and pendingModal is staged (common in mini-mode):
+    if (advancePendingModalInMiniMode()) {
+        return;
+    }
+
+    if (strictMode) return;
+
+    // If an alarm is ringing, clicking play silences it and closes notification
+    if (isAlarmPlaying) {
+        stopAlarmSound();
+        if (window.mainAPI && window.mainAPI.closeNotification) {
+            window.mainAPI.closeNotification();
+        }
+        if (window.mainAPI && window.mainAPI.flashFrame) {
+            window.mainAPI.flashFrame(false);
+        }
+    }
+
     if(isRunning) {
         pauseTimer();
     } else {
@@ -563,22 +722,11 @@ playButton.addEventListener("click", () => {
     }   
 });
 
-const strictMode = localStorage.getItem('strictMode') === 'true';
-if (strictMode) {
-    skipButton.disabled = true;
-    skipButton.style.opacity = "0.5";
-    skipButton.style.cursor = "not-allowed";
-    skipButton.title = "Strict Mode is enabled (skipping disabled)";
-
-    playButton.disabled = true;
-    playButton.style.opacity = "0.5";
-    playButton.style.cursor = "not-allowed";
-    playButton.title = "Strict Mode is enabled (pausing disabled)";
-}
+syncStrictModeButtons();
 
 skipButton.addEventListener("click", () => {
     skipButton.blur();
-    if (strictMode || isAlarmPlaying) return;
+    if (strictMode || isAlarmPlaying || pendingModal) return;
     manualSkipSession();
 });
 
@@ -608,8 +756,11 @@ function updateSessionCounter() {
 };
 
 function hideModal(modalElement, onComplete) {
-    if (!modalElement || modalElement.classList.contains("hidden") || modalElement.classList.contains("closing")) {
+    if (!modalElement || modalElement.classList.contains("hidden")) {
         if (onComplete) onComplete();
+        return;
+    }
+    if (modalElement.classList.contains("closing")) {
         return;
     }
     modalElement.classList.add("closing");
@@ -620,7 +771,24 @@ function hideModal(modalElement, onComplete) {
     }, 200);
 }
 
-function showModal(title, message, btnText, nextAction) {
+function stopAlarmSound() {
+    if (alarmTimeoutId) {
+        clearTimeout(alarmTimeoutId);
+        alarmTimeoutId = null;
+    }
+    isAlarmPlaying = false;
+    alarmAudio.pause();
+    alarmAudio.currentTime = 0;
+}
+
+function showModal(title, message, btnText, nextAction, playAlarm = true) {
+    // Dismiss any active resize modal so it cannot stack behind/over the session modal
+    const resizeModalEl = document.getElementById("resize-modal-overlay");
+    if (resizeModalEl && !resizeModalEl.classList.contains("hidden")) {
+        resizeModalEl.classList.remove("closing");
+        resizeModalEl.classList.add("hidden");
+    }
+
     dialogTitle.innerText = title;
     dialogMessage.innerText = message;
     dialogBtn.innerText = btnText;   
@@ -628,23 +796,61 @@ function showModal(title, message, btnText, nextAction) {
     let alrVol = parseInt(localStorage.getItem('alarmVolume'));
     if(isNaN(alrVol)) alrVol = 50;
 
-    isAlarmPlaying = true;
-    // Start playing the alarm on a loop if the user has it enabled in Settings AND master sound is ON
-    if (alrVol > 0 && soundEnabled) {
-        ambientAudio.pause();
-        purrAudio.pause();
-        alarmAudio.play().catch(e => {});
-    }
+    if (playAlarm) {
+        isAlarmPlaying = true;
+        if (alarmTimeoutId) {
+            clearTimeout(alarmTimeoutId);
+            alarmTimeoutId = null;
+        }
 
-    // Flash taskbar icon to attract user attention if window is minimized or behind another window
-    if (window.mainAPI && window.mainAPI.flashFrame) {
-        window.mainAPI.flashFrame(true);
+        // Start playing the alarm on a loop if the user has it enabled in Settings AND master sound is ON
+        if (alrVol > 0 && soundEnabled) {
+            ambientAudio.pause();
+            purrAudio.pause();
+            alarmAudio.play().catch(e => {});
+        }
+
+        // Industry Standard Auto-Silence: Cap continuous alarm ringing at 30 seconds, dismiss notification, and stop taskbar flashing
+        alarmTimeoutId = setTimeout(() => {
+            stopAlarmSound();
+            if (window.mainAPI && window.mainAPI.closeNotification) {
+                window.mainAPI.closeNotification();
+            }
+            if (window.mainAPI && window.mainAPI.flashFrame) {
+                window.mainAPI.flashFrame(false);
+            }
+        }, 30000);
+
+        // Flash taskbar icon to attract user attention if window is minimized or behind another window
+        if (window.mainAPI && window.mainAPI.flashFrame) {
+            window.mainAPI.flashFrame(true);
+        }
+
+        // Trigger native desktop notification on natural completion with matching button label
+        if (window.mainAPI && window.mainAPI.showNotification) {
+            window.mainAPI.showNotification({
+                title: title,
+                body: message,
+                actionText: btnText
+            });
+        }
+    } else {
+        stopAlarmSound();
     }
 
     const isMiniMode = document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode");
 
-    if (isMiniMode) {
-        // Mini mode: keep widget compact at 00:00 with sound running.
+    if (isMiniMode && !playAlarm) {
+        // When manually skipping in mini mode, expand to default size so modal is immediately accessible
+        document.body.classList.remove("timer-only-mode", "cat-only-mode");
+        if (window.mainAPI && window.mainAPI.resize) {
+            window.mainAPI.resize('default');
+        }
+        pendingModal = null;
+        modalOverlay.classList.remove("closing");
+        modalOverlay.classList.remove("hidden");
+    } else if (isMiniMode) {
+        // Natural completion in mini mode: keep widget compact at 00:00 with sound running.
         // Stage the modal callback and state so it pops up once user restores to default screen.
         pendingModal = { title, message, btnText, nextAction };
         modalOverlay.classList.add("hidden");
@@ -653,23 +859,42 @@ function showModal(title, message, btnText, nextAction) {
         modalOverlay.classList.remove("closing");
         modalOverlay.classList.remove("hidden");
     }
+    syncStrictModeButtons();
 
     dialogBtn.onclick = function() {
+        // Clear pending pre-skip snapshot since skip was confirmed
+        preSkipState = null;
+
         // Stop the alarm when the user proceeds
-        isAlarmPlaying = false;
-        alarmAudio.pause();
-        alarmAudio.currentTime = 0;
+        stopAlarmSound();
         
         // Clear taskbar notification glow
         if (window.mainAPI && window.mainAPI.flashFrame) {
             window.mainAPI.flashFrame(false);
         }
 
+        // Dismiss active desktop notification if still showing
+        if (window.mainAPI && window.mainAPI.closeNotification) {
+            window.mainAPI.closeNotification();
+        }
+
         hideModal(modalOverlay, () => {
             pendingModal = null;
+            nextPhaseState = null;
+            syncStrictModeButtons();
             nextAction();
         });
     }
+}
+
+if (modalOverlay !== null) {
+    modalOverlay.addEventListener("click", function(event) {
+        if (event.target === modalOverlay) {
+            if (preSkipState) {
+                cancelSkip();
+            }
+        }
+    });
 }
 
 let resizeModal = document.getElementById("resize-modal-overlay");
@@ -687,6 +912,7 @@ let catOnlyButton = document.getElementById("cat-only");
 
 if (timerOnlyButton !== null) {
     timerOnlyButton.onclick = function() {
+        if (modalOverlay && !modalOverlay.classList.contains("hidden")) return;
         resizeModal.classList.remove("closing");
         resizeModal.classList.add("hidden");
         document.body.classList.remove("cat-only-mode");
@@ -695,6 +921,7 @@ if (timerOnlyButton !== null) {
     }
 
     catOnlyButton.onclick = function() {
+        if (modalOverlay && !modalOverlay.classList.contains("hidden")) return;
         resizeModal.classList.remove("closing");
         resizeModal.classList.add("hidden");
         document.body.classList.remove("timer-only-mode");
@@ -724,6 +951,62 @@ window.addEventListener('focus', () => {
     }
 });
 
+// Handle notification banner / action button clicks from OS Action Center
+if (window.mainAPI && window.mainAPI.onNotificationClicked) {
+    window.mainAPI.onNotificationClicked((data) => {
+        const isActionButton = Boolean(data && data.isActionButton);
+
+        if (window.mainAPI.closeNotification) {
+            window.mainAPI.closeNotification();
+        }
+        // Silence alarm audio and clear taskbar flashing immediately upon interacting with the notification
+        stopAlarmSound();
+        if (window.mainAPI.flashFrame) {
+            window.mainAPI.flashFrame(false);
+        }
+
+        const inMiniMode = document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode");
+
+        if (isActionButton) {
+            // Toast Action Button ("Start Break", "Start Long Break", "Start Work", "Return to Menu"):
+            // Immediately trigger the next session!
+            if (inMiniMode && cycleCount === 4 && !workingTime) {
+                document.body.classList.remove("timer-only-mode", "cat-only-mode");
+                if (window.mainAPI.resize) {
+                    window.mainAPI.resize('default');
+                }
+            }
+            if (dialogBtn && typeof dialogBtn.onclick === 'function') {
+                dialogBtn.click();
+            }
+        } else {
+            // Toast Body Click:
+            // Bring PAWSE to the front, silence alarm & toast, and show the in-app modal waiting for the user
+            if (inMiniMode) {
+                document.body.classList.remove("timer-only-mode", "cat-only-mode");
+                if (window.mainAPI.resize) {
+                    window.mainAPI.resize('default');
+                }
+            }
+            if (pendingModal) {
+                modalOverlay.classList.remove("closing");
+                modalOverlay.classList.remove("hidden");
+            }
+        }
+    });
+}
+
+// Handle notification dismissal from OS (swiped away or closed via 'X' / 'Close')
+if (window.mainAPI && window.mainAPI.onNotificationClosed) {
+    window.mainAPI.onNotificationClosed(() => {
+        // User explicitly acknowledged and dismissed the alert from OS; silence the alarm sound immediately
+        stopAlarmSound();
+        if (window.mainAPI.flashFrame) {
+            window.mainAPI.flashFrame(false);
+        }
+    });
+}
+
 // --- EXIT MODAL HANDLERS ---
 let exitModalEl = document.getElementById('exit-modal-overlay');
 if (exitModalEl) {
@@ -744,6 +1027,13 @@ if (exitCancelBtn) {
 let exitConfirmBtn = document.getElementById('exit-confirm-btn');
 if (exitConfirmBtn) {
     exitConfirmBtn.onclick = function() {
+        stopAlarmSound();
+        if (window.mainAPI && window.mainAPI.closeNotification) {
+            window.mainAPI.closeNotification();
+        }
+        if (window.mainAPI && window.mainAPI.flashFrame) {
+            window.mainAPI.flashFrame(false);
+        }
         localStorage.removeItem('pawseDurableState');
         if (window.mainAPI && window.mainAPI.resize) {
             window.mainAPI.resize('default');
@@ -779,8 +1069,12 @@ window.addEventListener('keydown', (e) => {
         }
         if (isModalOpen) {
             e.preventDefault();
-            const dialogBtn = document.getElementById("dialog-btn");
-            if (dialogBtn) dialogBtn.click();
+            if (preSkipState) {
+                cancelSkip();
+            } else {
+                const dialogBtn = document.getElementById("dialog-btn");
+                if (dialogBtn) dialogBtn.click();
+            }
             return;
         }
         // If in mini-mode and Escape pressed, restore to default size
@@ -789,6 +1083,10 @@ window.addEventListener('keydown', (e) => {
             document.body.classList.remove("timer-only-mode", "cat-only-mode");
             if (window.mainAPI && window.mainAPI.resize) {
                 window.mainAPI.resize('default');
+            }
+            if (pendingModal && modalOverlay) {
+                modalOverlay.classList.remove("closing");
+                modalOverlay.classList.remove("hidden");
             }
             return;
         }
