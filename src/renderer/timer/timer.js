@@ -54,6 +54,7 @@ let isAlarmPlaying = false;
 let alarmTimeoutId = null;
 let pendingModal = null;
 let preSkipState = null;
+let nextPhaseState = null;
 let sessionDate = new Date();
 
 // --- DURABLE EXECUTION ENGINE (Local Persistence) ---
@@ -89,10 +90,17 @@ if (savedStateStr) {
 
 // Continuously save state (Fault Tolerance)
 setInterval(() => {
+    let durableRemaining = remainingTime;
+    let durableWorking = workingTime;
+    if (nextPhaseState && remainingTime <= 0) {
+        durableRemaining = nextPhaseState.remainingTime;
+        durableWorking = nextPhaseState.workingTime;
+    }
+
     localStorage.setItem('pawseDurableState', JSON.stringify({
         catType: catType,
-        remainingTime: remainingTime,
-        workingTime: workingTime,
+        remainingTime: durableRemaining,
+        workingTime: durableWorking,
         cycleCount: cycleCount,
         isRunning: isRunning,
         actualWork: actualWork,
@@ -444,6 +452,7 @@ function handleSessionComplete(isManualSkip = false) {
         updateCatState();
 
         if (cycleCount === 3) {
+            nextPhaseState = { remainingTime: catConfig.longBreakTime, workingTime: false };
             const title = isManualSkip ? "Ready for a Catnap?" : "Time for a Catnap!";
             const message = isManualSkip
                 ? "Skipping ahead to your long rest. Step away from the screen and recharge!"
@@ -462,6 +471,7 @@ function handleSessionComplete(isManualSkip = false) {
                 !isManualSkip
             );
         } else {
+            nextPhaseState = { remainingTime: catConfig.shortBreakTime, workingTime: false };
             const title = isManualSkip ? "Take an Early Break?" : "Stretch Your Paws!";
             const message = isManualSkip
                 ? "Skipping ahead to your break time. Ready to step back and stretch your paws?"
@@ -488,6 +498,7 @@ function handleSessionComplete(isManualSkip = false) {
         updateSessionCounter();
 
         if (cycleCount === 4) {
+            nextPhaseState = null;
             flushSessionData(!isManualSkip);
 
             const title = isManualSkip ? "Session Finished" : "Paws-itively Brilliant!";
@@ -507,6 +518,7 @@ function handleSessionComplete(isManualSkip = false) {
             );
             return;
         } else {
+            nextPhaseState = { remainingTime: catConfig.workTime, workingTime: true };
             const title = isManualSkip ? "End Break Early?" : "Ready to Focus?";
             const message = isManualSkip
                 ? `Cutting your rest short? Ready to jump right back into cycle ${cycleCount + 1}!`
@@ -553,6 +565,7 @@ function cancelSkip() {
 
     const restored = preSkipState;
     preSkipState = null;
+    nextPhaseState = null;
 
     hideModal(modalOverlay, () => {
         pendingModal = null;
@@ -675,6 +688,7 @@ function advancePendingModalInMiniMode() {
     // Seamlessly advance to the next session directly in mini-mode!
     const next = pendingModal.nextAction;
     pendingModal = null;
+    nextPhaseState = null;
     syncStrictModeButtons();
     next();
     return true;
@@ -742,8 +756,11 @@ function updateSessionCounter() {
 };
 
 function hideModal(modalElement, onComplete) {
-    if (!modalElement || modalElement.classList.contains("hidden") || modalElement.classList.contains("closing")) {
+    if (!modalElement || modalElement.classList.contains("hidden")) {
         if (onComplete) onComplete();
+        return;
+    }
+    if (modalElement.classList.contains("closing")) {
         return;
     }
     modalElement.classList.add("closing");
@@ -765,6 +782,13 @@ function stopAlarmSound() {
 }
 
 function showModal(title, message, btnText, nextAction, playAlarm = true) {
+    // Dismiss any active resize modal so it cannot stack behind/over the session modal
+    const resizeModalEl = document.getElementById("resize-modal-overlay");
+    if (resizeModalEl && !resizeModalEl.classList.contains("hidden")) {
+        resizeModalEl.classList.remove("closing");
+        resizeModalEl.classList.add("hidden");
+    }
+
     dialogTitle.innerText = title;
     dialogMessage.innerText = message;
     dialogBtn.innerText = btnText;   
@@ -856,6 +880,7 @@ function showModal(title, message, btnText, nextAction, playAlarm = true) {
 
         hideModal(modalOverlay, () => {
             pendingModal = null;
+            nextPhaseState = null;
             syncStrictModeButtons();
             nextAction();
         });
@@ -887,6 +912,7 @@ let catOnlyButton = document.getElementById("cat-only");
 
 if (timerOnlyButton !== null) {
     timerOnlyButton.onclick = function() {
+        if (modalOverlay && !modalOverlay.classList.contains("hidden")) return;
         resizeModal.classList.remove("closing");
         resizeModal.classList.add("hidden");
         document.body.classList.remove("cat-only-mode");
@@ -895,6 +921,7 @@ if (timerOnlyButton !== null) {
     }
 
     catOnlyButton.onclick = function() {
+        if (modalOverlay && !modalOverlay.classList.contains("hidden")) return;
         resizeModal.classList.remove("closing");
         resizeModal.classList.add("hidden");
         document.body.classList.remove("timer-only-mode");
