@@ -489,7 +489,6 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
       const notificationOptions = {
         title: title || 'Pawse',
         body: body || '',
-        icon: iconPath,
         silent: true,
         timeoutType: 'never',
         urgency: 'critical',
@@ -504,14 +503,12 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
       // reminder behavior while displaying ONLY the single primary action button (e.g. "Start Break")
       // and allowing Electron to distinguish body clicks ('click') from button clicks ('action').
       if (process.platform === 'win32') {
-        const iconFileUrl = pathToFileURL(iconPath).href;
         const notifId = escapeXml(notification.id || '');
         notification.toastXml = `<toast scenario="reminder">
   <visual>
     <binding template="ToastGeneric">
       <text>${escapeXml(title || 'Pawse')}</text>
       <text>${escapeXml(body || '')}</text>
-      <image placement="appLogoOverride" src="${escapeXml(iconFileUrl)}" />
     </binding>
   </visual>
   <actions>

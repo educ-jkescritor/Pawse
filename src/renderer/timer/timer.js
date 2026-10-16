@@ -805,7 +805,7 @@ function showModal(title, message, btnText, nextAction, playAlarm = true) {
         // Trigger native desktop notification on natural completion with matching button label
         if (window.mainAPI && window.mainAPI.showNotification) {
             window.mainAPI.showNotification({
-                title: `Pawse • ${title}`,
+                title: title,
                 body: message,
                 actionText: btnText
             });
