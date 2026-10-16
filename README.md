@@ -286,7 +286,7 @@ The compiled installer and unpackaged binaries will be located inside the `dist/
 
 **PAWSE** was created and engineered with ❤️ by:
 
-- **Jasmin Joyce Obligado** — Co-Founder & Team Lead / Frontend Developer / UI/UX Designer / Technical Writer  
+- **Jasmin Joyce Obligado** — Co-Founder / UI/UX Designer / Technical Writer / Frontend Developer  
   [GitHub](https://github.com/jjobligado) • [LinkedIn](https://www.linkedin.com/in/jasmin-joyce-obligado/)
 - **Jude Keith Escritor** — Co-Founder / Full-Stack Developer / Pixel Artist / QA Engineer  
   [GitHub](https://github.com/educ-jkescritor) • [LinkedIn](https://www.linkedin.com/in/jude-keith-escritor-370a69267/)
