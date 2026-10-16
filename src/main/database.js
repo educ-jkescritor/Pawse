@@ -82,6 +82,7 @@ function generateAnalytics(weeksAgo = 0) {
             today_work_seconds: 0,
             historical_pomodoro: 0,
             favorite_cat: 'None',
+            favorite_cat_percentage: 0,
             weekly_data: [0, 0, 0, 0, 0, 0, 0], // Sun to Sat
             weekly_avg_seconds: 0,
             current_streak: 0,
@@ -103,8 +104,17 @@ function generateAnalytics(weeksAgo = 0) {
 
         const todayWorkQuery = `SELECT SUM(total_work_seconds) AS today_work_seconds FROM session WHERE date_completed >= ? AND date_completed < ?`;
         const historicalPomodoroQuery = `SELECT SUM(total_pomodoro) AS historical_pomodoro FROM session`;
-        const favoriteCatQuery = `SELECT cat_type, COUNT(*) AS favorite_cat FROM session GROUP BY cat_type ORDER BY favorite_cat DESC LIMIT 1`;
-        
+        const favoriteCatQuery = `
+            SELECT cat_type,
+            COUNT(*) AS cat_count,
+            (SELECT COUNT(*) FROM session WHERE cat_type IS NOT NULL AND cat_type != '') as total_count
+            FROM session
+            WHERE cat_type IS NOT NULL AND cat_type != ''
+            GROUP BY cat_type
+            ORDER BY cat_count DESC
+            LIMIT 1
+            `;
+                
         db.get(todayWorkQuery, [todayStartUTC, todayEndUTC], (err, row1) => {
             if (!err && row1 && row1.today_work_seconds) analyticData.today_work_seconds = row1.today_work_seconds;
 
@@ -112,7 +122,12 @@ function generateAnalytics(weeksAgo = 0) {
                 if (!err && row2 && row2.historical_pomodoro) analyticData.historical_pomodoro = row2.historical_pomodoro;
 
                 db.get(favoriteCatQuery, [], (err, row3) => {
-                    if (!err && row3 && row3.cat_type) analyticData.favorite_cat = row3.cat_type;
+                    if (!err && row3 && row3.cat_type) {
+                        analyticData.favorite_cat = row3.cat_type;
+                        if (row3.total_count > 0) {
+                            analyticData.favorite_cat_percentage = Math.round((row3.cat_count / row3.total_count) * 100);
+                        }
+                    }
 
                     // Query historical sessions to compute streaks, personal best, and daily average
                     const allSessionsQuery = `SELECT date_completed, total_work_seconds, total_pomodoro FROM session WHERE date_completed IS NOT NULL`;

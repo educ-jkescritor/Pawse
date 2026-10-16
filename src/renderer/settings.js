@@ -300,13 +300,21 @@ async function loadAnalytics(weeksAgo = 0) {
     }
 
     // 3. Top Companion Card
-    const topCompanionCard = document.getElementById("top-companion-card");
+const topCompanionCard = document.getElementById("top-companion-card");
     const topCompanionNameEl = document.getElementById("top_companion_name");
     const topCompanionRateEl = document.getElementById("top_companion_rate");
+    const topCompanionIconEl = document.querySelector("#top-companion-card .card-icon");
+
     const companionNames = {
         tuxedo_cat: "Tux",
         orange_cat: "Ginger",
         black_cat: "Void"
+    };
+    
+    const companionIcons = {
+        tuxedo_cat: "visual-companion-tux.svg",
+        orange_cat: "visual-companion-ginger.svg",
+        black_cat: "visual-companion-void.svg"
     };
 
     if (topCompanionCard) {
@@ -320,19 +328,22 @@ async function loadAnalytics(weeksAgo = 0) {
         if (topCompanionNameEl) {
             topCompanionNameEl.textContent = companionNames[data.favorite_cat];
         }
-        if (topCompanionRateEl) {
-            if (data.favorite_cat_percentage !== undefined && data.favorite_cat_percentage !== null && data.favorite_cat_percentage !== "") {
-                topCompanionRateEl.textContent = `Chosen ${data.favorite_cat_percentage}% of the time`;
-            } else {
-                topCompanionRateEl.textContent = "Your top choice!";
-            }
+        if (topCompanionIconEl) {
+            topCompanionIconEl.src = `../assets/icons/${companionIcons[data.favorite_cat]}`;
         }
-    } else {
+        if (topCompanionRateEl) {
+            const percentage = data.favorite_cat_percentage || 0;
+            topCompanionRateEl.textContent = `Chosen ${percentage}% of the time`;
+        }
+    } else { // Empty state fallback
         if (topCompanionNameEl) {
             topCompanionNameEl.textContent = "None";
         }
         if (topCompanionRateEl) {
             topCompanionRateEl.textContent = "No sessions yet";
+        }
+        if (topCompanionIconEl) {
+            topCompanionIconEl.src = "../assets/icons/visual-companion-tux.svg"; 
         }
     }
 
