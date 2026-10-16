@@ -739,24 +739,25 @@ function showModal(title, message, btnText, nextAction, playAlarm = true) {
             alarmAudio.play().catch(e => {});
         }
 
-        // Industry Standard Auto-Silence: Cap continuous alarm ringing at 20 seconds and dismiss notification
+        // Industry Standard Auto-Silence: Cap continuous alarm ringing at 30 seconds and dismiss notification
         alarmTimeoutId = setTimeout(() => {
             stopAlarmSound();
             if (window.mainAPI && window.mainAPI.closeNotification) {
                 window.mainAPI.closeNotification();
             }
-        }, 20000);
+        }, 30000);
 
         // Flash taskbar icon to attract user attention if window is minimized or behind another window
         if (window.mainAPI && window.mainAPI.flashFrame) {
             window.mainAPI.flashFrame(true);
         }
 
-        // Trigger native desktop notification on natural completion
+        // Trigger native desktop notification on natural completion with matching button label
         if (window.mainAPI && window.mainAPI.showNotification) {
             window.mainAPI.showNotification({
                 title: `Pawse • ${title}`,
-                body: message
+                body: message,
+                actionText: btnText
             });
         }
     } else {
@@ -864,17 +865,14 @@ if (restoreBtn) {
     });
 }
 
-// Clear taskbar notification glow and dismiss active desktop notification toast whenever window gains focus
+// Clear taskbar notification glow whenever window gains focus
 window.addEventListener('focus', () => {
     if (window.mainAPI && window.mainAPI.flashFrame) {
         window.mainAPI.flashFrame(false);
     }
-    if (window.mainAPI && window.mainAPI.closeNotification) {
-        window.mainAPI.closeNotification();
-    }
 });
 
-// Handle notification banner clicks from OS Action Center
+// Handle notification banner / action button clicks from OS Action Center
 if (window.mainAPI && window.mainAPI.onNotificationClicked) {
     window.mainAPI.onNotificationClicked(() => {
         if (window.mainAPI.closeNotification) {
@@ -883,25 +881,30 @@ if (window.mainAPI && window.mainAPI.onNotificationClicked) {
         // Silence alarm audio immediately upon interacting with the notification banner
         stopAlarmSound();
 
-        // If in mini mode, restore to default size
-        if (document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode")) {
+        // If in mini mode and the full 4-cycle set finished ("Return to Menu"), restore default window size first
+        const inMiniMode = document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode");
+        if (inMiniMode && cycleCount === 4 && !workingTime) {
             document.body.classList.remove("timer-only-mode", "cat-only-mode");
             if (window.mainAPI.resize) {
                 window.mainAPI.resize('default');
             }
         }
-        if (pendingModal) {
-            modalOverlay.classList.remove("closing");
-            modalOverlay.classList.remove("hidden");
+
+        // Trigger the primary modal action (e.g. "Start Break", "Start Long Break", "Start Work", "Return to Menu")
+        if (dialogBtn && typeof dialogBtn.onclick === 'function') {
+            dialogBtn.click();
         }
     });
 }
 
-// Handle notification dismissal from OS (swiped away or closed via 'X')
+// Handle notification dismissal from OS (swiped away or closed via 'X' / 'Close')
 if (window.mainAPI && window.mainAPI.onNotificationClosed) {
     window.mainAPI.onNotificationClosed(() => {
         // User explicitly acknowledged and dismissed the alert from OS; silence the alarm sound immediately
         stopAlarmSound();
+        if (window.mainAPI.flashFrame) {
+            window.mainAPI.flashFrame(false);
+        }
     });
 }
 

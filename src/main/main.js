@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, shell, nativeTheme, screen, Notification } = require("electron");
 const path = require("path");
+const { pathToFileURL } = require("url");
 const iconPath = path.join(__dirname, "../assets/logos/logo.png");
 const { db, generateAnalytics } = require("./database.js");
 const { autoUpdater } = require("electron-updater");
@@ -445,105 +446,162 @@ ipcMain.on('flash-frame', (event, flag) => {
 });
 
 let activeNotification = null;
-let isProgrammaticClose = false;
 
-ipcMain.on('show-notification', (event, { title, body }) => {
+ipcMain.on('show-notification', (event, { title, body, actionText }) => {
   if (Notification && Notification.isSupported()) {
     if (activeNotification) {
-      isProgrammaticClose = true;
+      activeNotification._isProgrammaticClose = true;
       try {
         activeNotification.close();
       } catch (e) {}
       activeNotification = null;
-      isProgrammaticClose = false;
     }
 
-    const notificationOptions = {
-      title: title || 'Pawse',
-      body: body || '',
-      icon: iconPath,
-      silent: true
-    };
+    const sessionAlertStart = Date.now();
+    const ALERT_DURATION_MS = 30000;
+    const buttonLabel = actionText || 'Continue';
 
-    // On Windows, use toastXml with scenario="alarm" so the notification breaks through
-    // Focus Assist / full-screen mode (e.g. YouTube, media players) just like Windows Clock,
-    // and stays visible until dismissed or auto-closed after 20s
-    if (process.platform === 'win32') {
-      const escapeXml = (str) => String(str).replace(/[<>&'"]/g, (c) => {
-        switch (c) {
-          case '<': return '&lt;';
-          case '>': return '&gt;';
-          case '&': return '&amp;';
-          case '\'': return '&apos;';
-          case '"': return '&quot;';
-          default: return c;
-        }
-      });
-      notificationOptions.toastXml = `
-        <toast scenario="alarm">
-          <visual>
-            <binding template="ToastGeneric">
-              <text>${escapeXml(title || 'Pawse')}</text>
-              <text>${escapeXml(body || '')}</text>
-            </binding>
-          </visual>
-          <audio silent="true"/>
-        </toast>
-      `.trim();
-    }
+    const escapeXml = (str) =>
+      String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
 
-    const notification = new Notification(notificationOptions);
-    activeNotification = notification;
+    const presentToast = () => {
+      const notificationOptions = {
+        title: title || 'Pawse',
+        body: body || '',
+        icon: iconPath,
+        silent: true,
+        timeoutType: 'never',
+        urgency: 'critical',
+        actions: [{ type: 'button', text: buttonLabel }]
+      };
 
-    notification.on('click', () => {
-      isProgrammaticClose = true;
-      const senderWindow = BrowserWindow.fromWebContents(event.sender);
-      const targetWin = senderWindow || win;
-      if (targetWin && !targetWin.isDestroyed()) {
-        if (targetWin.isMinimized()) {
-          targetWin.restore();
-        }
-        targetWin.setAlwaysOnTop(true, 'screen-saver');
-        targetWin.show();
-        targetWin.focus();
-
-        setTimeout(() => {
-          if (!targetWin.isDestroyed()) {
-            targetWin.setAlwaysOnTop(globalAlwaysOnTop, 'screen-saver');
-          }
-        }, 500);
-
-        // Notify renderer so it can restore from mini-mode if active
-        targetWin.webContents.send('notification-clicked');
+      // On Windows, Electron's `timeoutType: 'never'` automatically appends a second system "Close"
+      // button (`<action activationType="system" arguments="dismiss" content=""/>`). Using `toastXml`
+      // with `scenario="reminder"` and a single foreground `<action>` keeps the persistent reminder
+      // behavior while displaying ONLY the single primary action button (e.g. "Start Break", "Start Work").
+      if (process.platform === 'win32') {
+        const iconFileUrl = pathToFileURL(iconPath).href;
+        notificationOptions.toastXml = `<toast scenario="reminder">
+  <visual>
+    <binding template="ToastGeneric">
+      <text>${escapeXml(title || 'Pawse')}</text>
+      <text>${escapeXml(body || '')}</text>
+      <image placement="appLogoOverride" src="${escapeXml(iconFileUrl)}" />
+    </binding>
+  </visual>
+  <actions>
+    <action content="${escapeXml(buttonLabel)}" arguments="confirm" activationType="foreground" />
+  </actions>
+  <audio silent="true" />
+</toast>`;
       }
-    });
 
-    notification.on('close', () => {
-      const wasProgrammatic = isProgrammaticClose;
-      if (activeNotification === notification) {
-        activeNotification = null;
-      }
-      if (!wasProgrammatic) {
+      const notification = new Notification(notificationOptions);
+      notification._isProgrammaticClose = false;
+      activeNotification = notification;
+
+      const handleActivate = () => {
+        notification._isProgrammaticClose = true;
+        if (activeNotification === notification) {
+          activeNotification = null;
+        }
+        try {
+          notification.close();
+        } catch (e) {}
         const senderWindow = BrowserWindow.fromWebContents(event.sender);
         const targetWin = senderWindow || win;
         if (targetWin && !targetWin.isDestroyed()) {
-          targetWin.webContents.send('notification-closed');
-        }
-      }
-    });
+          if (targetWin.isMinimized()) {
+            targetWin.restore();
+          }
+          targetWin.setAlwaysOnTop(true, 'screen-saver');
+          targetWin.show();
+          targetWin.focus();
 
-    notification.show();
+          setTimeout(() => {
+            if (!targetWin.isDestroyed()) {
+              targetWin.setAlwaysOnTop(globalAlwaysOnTop, 'screen-saver');
+            }
+          }, 500);
+
+          // Notify renderer so it can trigger the next session action and silence the alarm
+          targetWin.webContents.send('notification-clicked');
+        }
+      };
+
+      notification.on('click', handleActivate);
+      notification.on('action', handleActivate);
+
+      // Note: Electron emits 'close' as (event, reason) where `reason` is the 2nd argument on Windows
+      // ('timedOut', 'userCanceled', or 'applicationHidden'), or `event.reason` in details objects.
+      notification.on('close', (closeEvent, reasonArg) => {
+        const wasProgrammatic = Boolean(notification._isProgrammaticClose);
+        const closeReason =
+          (typeof reasonArg === 'string' && reasonArg) ||
+          (closeEvent && typeof closeEvent.reason === 'string' && closeEvent.reason) ||
+          (typeof closeEvent === 'string' && closeEvent) ||
+          '';
+
+        if (wasProgrammatic || closeReason === 'applicationHidden') {
+          if (activeNotification === notification) {
+            activeNotification = null;
+          }
+          return;
+        }
+
+        // On Windows 11, if OS Accessibility "Dismiss notifications after this amount of time" (default 5s)
+        // overrides the banner and emits 'timedOut' (or an unlabelled timeout) before our 30s alarm window ends,
+        // remove the stale entry from Action Center and re-present the banner so both toast & sound persist.
+        const elapsedMs = Date.now() - sessionAlertStart;
+        if (
+          process.platform === 'win32' &&
+          closeReason !== 'userCanceled' &&
+          elapsedMs < ALERT_DURATION_MS - 1500
+        ) {
+          if (activeNotification === notification) {
+            notification._isProgrammaticClose = true;
+            try {
+              notification.close();
+            } catch (e) {}
+            presentToast();
+          }
+          return;
+        }
+
+        if (activeNotification === notification) {
+          activeNotification = null;
+        }
+
+        // User explicitly dismissed the notification ('userCanceled' on Windows, or manual close on other OS)
+        if (process.platform !== 'win32' || closeReason === 'userCanceled') {
+          const senderWindow = BrowserWindow.fromWebContents(event.sender);
+          const targetWin = senderWindow || win;
+          if (targetWin && !targetWin.isDestroyed()) {
+            targetWin.webContents.send('notification-closed');
+          }
+        }
+      });
+
+      notification.show();
+    };
+
+    presentToast();
   }
 });
 
 ipcMain.on('close-notification', () => {
   if (activeNotification) {
-    isProgrammaticClose = true;
-    try {
-      activeNotification.close();
-    } catch (e) {}
+    const notifToClose = activeNotification;
+    notifToClose._isProgrammaticClose = true;
     activeNotification = null;
-    isProgrammaticClose = false;
+    try {
+      notifToClose.close();
+    } catch (e) {}
   }
 });
 
