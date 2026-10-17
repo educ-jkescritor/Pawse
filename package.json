@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node start.js",
     "build": "electron-builder --win",
+    "build:store": "electron-builder --win appx",
+    "build:exe": "electron-builder --win nsis",
     "test": "jest"
   },
   "keywords": [
@@ -43,8 +45,23 @@
       "output": "dist"
     },
     "win": {
-      "target": "nsis",
+      "target": [
+        "nsis",
+        "appx"
+      ],
       "icon": "src/assets/logos/logo.png"
+    },
+    "appx": {
+      "identityName": "JudeKeithEscritor.Pawse",
+      "publisher": "CN=0BD60335-B7BE-4ECE-96DA-ADCD12973CDD",
+      "publisherDisplayName": "Jude Keith Escritor",
+      "applicationId": "Pawse",
+      "displayName": "Pawse",
+      "languages": [
+        "en-US"
+      ],
+      "backgroundColor": "#F6F8F7",
+      "showNameOnTiles": true
     }
   }
 }

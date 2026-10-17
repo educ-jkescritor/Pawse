@@ -638,14 +638,20 @@ ipcMain.on('close-notification', () => {
   }
 });
 
-autoUpdater.autoDownload = true;
+const isWindowsStore = Boolean(process.windowsStore);
+
+if (!isWindowsStore) {
+  autoUpdater.autoDownload = true;
+}
 
 let currentUpdateStatus = {
-  state: 'idle',
-  message: 'Current version: v' + app.getVersion(),
-  buttonText: 'Check for Updates',
-  buttonClass: '',
-  disabled: false,
+  state: isWindowsStore ? 'up-to-date' : 'idle',
+  message: isWindowsStore
+    ? 'Updates are handled automatically by the Microsoft Store.'
+    : 'Current version: v' + app.getVersion(),
+  buttonText: isWindowsStore ? 'Managed by Store' : 'Check for Updates',
+  buttonClass: isWindowsStore ? 'btn-success' : '',
+  disabled: isWindowsStore,
   version: app.getVersion(),
   newVersion: null
 };
@@ -671,6 +677,17 @@ ipcMain.handle('get-update-status', () => {
 });
 
 ipcMain.on('check-for-updates', () => {
+  if (isWindowsStore) {
+    sendUpdateStatus(
+      'up-to-date',
+      'Updates are handled automatically by the Microsoft Store.',
+      'Managed by Store',
+      'btn-success',
+      true
+    );
+    return;
+  }
+
   if (!app.isPackaged) {
     console.log('[AutoUpdater - DEV SIMULATOR] Checking for updates...');
     sendUpdateStatus('checking', 'Looking for the latest version...', 'Checking...', 'btn-loading', true);
@@ -784,6 +801,7 @@ autoUpdater.on('update-downloaded', (info) => {
 });
 
 ipcMain.on('restart-app', () => {
+  if (isWindowsStore) return;
   if (!app.isPackaged) {
     console.log('[AutoUpdater - DEV SIMULATOR] Restart & Update clicked. Relaunching app immediately...');
     app.relaunch();
