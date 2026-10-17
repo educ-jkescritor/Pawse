@@ -157,6 +157,12 @@ input, textarea {
     font-weight: 700;
 }
 
+.font-pixel-32-bold {
+    font-family: var(--font-pixel);
+    font-size: 32px;
+    font-weight: 700;
+}
+
 .font-pixel-36-bold {
     font-family: var(--font-pixel);
     font-size: 36px;
