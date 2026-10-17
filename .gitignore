@@ -1,4 +1,43 @@
+# Heavy Dependencies
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Build & Packaging Outputs
 dist/
+build/
+out/
+*.exe
+*.appx
+*.msix
+*.msixupload
+*.appxupload
+
+# Local Databases, Wal, and Journal Files (Never push user data)
 pawse.db
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# Environment Variables & Secrets
 .env
+.env.*
+*.env
+*.pem
+*.key
+*.cert
+*.pfx
+
+# OS & Editor Metadata
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
