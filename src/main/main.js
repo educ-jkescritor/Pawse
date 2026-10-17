@@ -644,16 +644,19 @@ if (!isWindowsStore) {
   autoUpdater.autoDownload = true;
 }
 
+const MICROSOFT_STORE_PRODUCT_ID = '9N0DQPN61VR6';
+
 let currentUpdateStatus = {
-  state: isWindowsStore ? 'up-to-date' : 'idle',
+  state: isWindowsStore ? 'windows-store' : 'idle',
   message: isWindowsStore
-    ? 'Updates are handled automatically by the Microsoft Store.'
+    ? 'Current version: v' + app.getVersion() + ' • Managed by Microsoft Store'
     : 'Current version: v' + app.getVersion(),
-  buttonText: isWindowsStore ? 'Managed by Store' : 'Check for Updates',
-  buttonClass: isWindowsStore ? 'btn-success' : '',
-  disabled: isWindowsStore,
+  buttonText: 'Check for Updates',
+  buttonClass: '',
+  disabled: false,
   version: app.getVersion(),
-  newVersion: null
+  newVersion: null,
+  isStore: isWindowsStore
 };
 
 function sendUpdateStatus(state, message, buttonText, buttonClass = '', disabled = false, newVersion = null) {
@@ -664,7 +667,8 @@ function sendUpdateStatus(state, message, buttonText, buttonClass = '', disabled
     buttonClass,
     disabled,
     version: app.getVersion(),
-    newVersion
+    newVersion,
+    isStore: isWindowsStore
   };
   if (set && !set.isDestroyed()) {
     set.webContents.send('update-status-changed', currentUpdateStatus);
@@ -678,13 +682,23 @@ ipcMain.handle('get-update-status', () => {
 
 ipcMain.on('check-for-updates', () => {
   if (isWindowsStore) {
+    shell.openExternal(`ms-windows-store://pdp/?productid=${MICROSOFT_STORE_PRODUCT_ID}`);
     sendUpdateStatus(
-      'up-to-date',
-      'Updates are handled automatically by the Microsoft Store.',
-      'Managed by Store',
-      'btn-success',
-      true
+      'windows-store',
+      'Opening Microsoft Store to check for updates...',
+      'Check for Updates',
+      '',
+      false
     );
+    setTimeout(() => {
+      sendUpdateStatus(
+        'windows-store',
+        'Current version: v' + app.getVersion() + ' • Managed by Microsoft Store',
+        'Check for Updates',
+        '',
+        false
+      );
+    }, 3000);
     return;
   }
 

@@ -713,8 +713,13 @@ function formatLastChecked(timestamp) {
     return `${monthStr} at ${timeStr}`;
 }
 
+let isStoreEnvironment = false;
+
 function getIdleVersionMessage(version) {
     const vStr = version ? `v${version}` : "v1.0.0";
+    if (isStoreEnvironment) {
+        return `Current version: ${vStr} • Managed by Microsoft Store`;
+    }
     const lastCheckedTs = localStorage.getItem("pawseLastUpdateCheck");
     const formattedDate = formatLastChecked(lastCheckedTs);
 
@@ -726,6 +731,10 @@ function getIdleVersionMessage(version) {
 
 function applyUpdateStatus(status) {
     if (!status) return;
+
+    if (status.isStore || status.state === "windows-store") {
+        isStoreEnvironment = true;
+    }
 
     if (updateResetTimer) {
         clearTimeout(updateResetTimer);
@@ -747,7 +756,7 @@ function applyUpdateStatus(status) {
         }
     }
 
-    // Edge case: Up to Date saves timestamp and auto-resets to idle after 4 seconds
+    // Edge case: Up to Date saves timestamp and auto-resets to idle after 4 seconds (standalone .exe only)
     if (status.state === "up-to-date") {
         localStorage.setItem("pawseLastUpdateCheck", Date.now().toString());
 
@@ -782,8 +791,11 @@ if (window.mainAPI && window.mainAPI.getVersion) {
 if (window.mainAPI && window.mainAPI.getUpdateStatus) {
     window.mainAPI.getUpdateStatus().then((status) => {
         if (status) {
-            // If idle on open, show Last checked timestamp if available
-            if (status.state === "idle") {
+            if (status.isStore || status.state === "windows-store") {
+                isStoreEnvironment = true;
+            }
+            // If idle or store on open, show proper formatted message
+            if (status.state === "idle" || status.state === "windows-store") {
                 status.message = getIdleVersionMessage(currentAppVersion || status.version);
             }
             applyUpdateStatus(status);
@@ -804,13 +816,15 @@ if (updateBtn) {
             window.mainAPI.restartApp();
         } else {
             // "Check for Updates" or "Retry"
-            applyUpdateStatus({
-                state: "checking",
-                message: "Looking for the latest version...",
-                buttonText: "Checking...",
-                buttonClass: "btn-loading",
-                disabled: true
-            });
+            if (!isStoreEnvironment) {
+                applyUpdateStatus({
+                    state: "checking",
+                    message: "Looking for the latest version...",
+                    buttonText: "Checking...",
+                    buttonClass: "btn-loading",
+                    disabled: true
+                });
+            }
             window.mainAPI.checkForUpdates();
         }
     };
