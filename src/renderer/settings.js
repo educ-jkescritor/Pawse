@@ -243,18 +243,34 @@ async function loadAnalytics(weeksAgo = 0) {
     const streakUnitEl = document.getElementById("streak_unit");
     const bestStreakEl = document.getElementById("best_streak");
     const streakCard = document.getElementById("streak-card");
+    const streakIconEl = document.querySelector("#streak-card .card-icon");
 
     const streak = data.current_streak || 0;
-    const bestStreak = data.best_streak || streak;
+    const bestStreak = data.best_streak || 0; // Fallback to 0 for logic checks
 
     if (currentStreakEl) currentStreakEl.textContent = streak;
-    if (streakUnitEl) streakUnitEl.textContent = streak === 1 ? 'day' : 'days';
-    if (bestStreakEl) bestStreakEl.textContent = `Your best is ${bestStreak} days!`;
-    if (streakCard) {
-        if (streak > 0) {
-            streakCard.classList.add('active-streak');
+    if (streakUnitEl) streakUnitEl.textContent = streak <= 1 ? 'day' : 'days';
+
+    if (streakCard && bestStreakEl) {
+        // Reset classes
+        streakCard.classList.remove('active-streak', 'best-streak');
+        
+        if (streak === 0) {
+            // State 1: Inactive (0 days)
+            bestStreakEl.textContent = "Ready to purr-ceed?";
+            if (streakIconEl) streakIconEl.src = "../assets/icons/visual-streak-inactive.png";
+        } else if (streak >= bestStreak) {
+            // State 2: Matched or beaten best streak
+            streakCard.classList.add('best-streak');
+            bestStreakEl.textContent = "Purr-fect new best!";
+            // TODO: Update src to your orange active streak asset
+            if (streakIconEl) streakIconEl.src = "../assets/icons/visual-streak-best.png"; 
         } else {
-            streakCard.classList.remove('active-streak');
+            // State 3: Active streak, but hasn't beaten best yet
+            streakCard.classList.add('active-streak');
+            bestStreakEl.textContent = `Purr-suing ${bestStreak} days.`;
+            // TODO: Update src to your yellow active streak asset
+            if (streakIconEl) streakIconEl.src = "../assets/icons/visual-streak-active.png"; 
         }
     }
 
@@ -262,51 +278,62 @@ async function loadAnalytics(weeksAgo = 0) {
     const todayWorkSecondsElement = document.getElementById("today_work_seconds");
     const todayVsAvgEl = document.getElementById("today_vs_avg");
     const todayFocusCard = document.getElementById("today-focus-card");
+    const focusIconEl = document.querySelector("#today-focus-card .card-icon");
 
     const totalSeconds = data.today_work_seconds || 0;
+    const avgSeconds = data.avg_daily_seconds || 0;
+
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const plainTimeString = `${hours}h ${minutes}m`;
-    const htmlTimeString = `<span class="font-pixel-num-24-bold">${hours}</span>h <span class="font-pixel-num-24-bold">${minutes}</span>m`;
+    const htmlTimeString = `<span><span class="font-pixel-num-20-bold">${hours}</span>h</span><span><span class="font-pixel-num-20-bold">${minutes}</span>m</span>`;
+
     if (todayWorkSecondsElement) todayWorkSecondsElement.innerHTML = htmlTimeString;
 
-    if (todayVsAvgEl) {
-        const avgSeconds = data.avg_daily_seconds || 0;
-        if (avgSeconds === 0) {
-            todayVsAvgEl.textContent = "First day tracking";
-            todayVsAvgEl.className = "card-subtext font-inter-10-regular text-gray";
-            todayVsAvgEl.title = "No previous days tracked yet";
-        } else {
-            const diffSeconds = totalSeconds - avgSeconds;
-            const avgH = Math.floor(avgSeconds / 3600);
-            const avgM = Math.round((avgSeconds % 3600) / 60);
-            const formattedAvg = avgH > 0 ? (avgM > 0 ? `${avgH}h ${avgM}m` : `${avgH}h`) : `${avgM}m`;
+    if (todayFocusCard && todayVsAvgEl) {
+        // Reset classes
+        todayFocusCard.classList.remove('below-avg-focus', 'above-avg-focus', 'active-focus');
 
-            todayVsAvgEl.textContent = diffSeconds > 60
-                ? "Above your usual pace"
-                : diffSeconds < -60
-                    ? "Below your usual pace"
-                    : "Right on your usual pace";
-            todayVsAvgEl.className = "card-subtext font-inter-10-regular text-gray";
+        // Always keep visual-hourglass.png across all 3 states
+        if (focusIconEl) focusIconEl.src = "../assets/icons/visual-hourglass.png";
+
+        const avgH = Math.floor(avgSeconds / 3600);
+        const avgM = Math.round((avgSeconds % 3600) / 60);
+        const formattedAvg = avgH > 0 ? (avgM > 0 ? `${avgH}h ${avgM}m` : `${avgH}h`) : `${avgM}m`;
+
+        if (totalSeconds === 0) {
+            // State 1: Inactive (0 seconds tracked)
+            todayVsAvgEl.textContent = avgSeconds > 0 ? `Average pace is ${formattedAvg}` : "First day tracking";
+            todayVsAvgEl.title = avgSeconds > 0 ? `Overall Daily Average: ${formattedAvg}` : "No previous days tracked yet";
+        } else if (avgSeconds > 0 && totalSeconds > avgSeconds) {
+            // State 3: Above Average (Teal)
+            todayFocusCard.classList.add('above-avg-focus');
+            todayVsAvgEl.textContent = "Above daily average!";
             todayVsAvgEl.title = `Today: ${plainTimeString} | Overall Daily Average: ${formattedAvg}`;
-        }
-    }
-    if (todayFocusCard) {
-        if (totalSeconds > 0) {
-            todayFocusCard.classList.add('active-focus');
         } else {
-            todayFocusCard.classList.remove('active-focus');
+            // State 2: Below Average / Pacing (Blue)
+            todayFocusCard.classList.add('below-avg-focus');
+            todayVsAvgEl.textContent = "Pacing your average";
+            todayVsAvgEl.title = `Today: ${plainTimeString} | Overall Daily Average: ${formattedAvg}`;
         }
     }
 
     // 3. Top Companion Card
-    const topCompanionCard = document.getElementById("top-companion-card");
+const topCompanionCard = document.getElementById("top-companion-card");
     const topCompanionNameEl = document.getElementById("top_companion_name");
     const topCompanionRateEl = document.getElementById("top_companion_rate");
+    const topCompanionIconEl = document.querySelector("#top-companion-card .card-icon");
+
     const companionNames = {
         tuxedo_cat: "Tux",
         orange_cat: "Ginger",
         black_cat: "Void"
+    };
+    
+    const companionIcons = {
+        tuxedo_cat: "../assets/photos/tuxedo-cat-face.png",
+        orange_cat: "../assets/photos/orange-cat-face.png",
+        black_cat: "../assets/photos/black-cat-face.png"
     };
 
     if (topCompanionCard) {
@@ -320,20 +347,23 @@ async function loadAnalytics(weeksAgo = 0) {
         if (topCompanionNameEl) {
             topCompanionNameEl.textContent = companionNames[data.favorite_cat];
         }
-        if (topCompanionRateEl) {
-            if (data.favorite_cat_percentage !== undefined && data.favorite_cat_percentage !== null && data.favorite_cat_percentage !== "") {
-                topCompanionRateEl.textContent = `Chosen ${data.favorite_cat_percentage}% of the time`;
-            } else {
-                topCompanionRateEl.textContent = "Your top choice!";
-            }
+        if (topCompanionIconEl) {
+            topCompanionIconEl.src = companionIcons[data.favorite_cat];
         }
-    } else {
+        if (topCompanionRateEl) {
+            const percentage = data.favorite_cat_percentage || 0;
+            topCompanionRateEl.textContent = `Chosen ${percentage}% of the time`;
+        }
+    } else { // Empty state fallback
         if (topCompanionNameEl) {
             topCompanionNameEl.textContent = "None";
         }
         if (topCompanionRateEl) {
             topCompanionRateEl.textContent = "No sessions yet";
         }
+        // if (topCompanionIconEl) {
+        //     topCompanionIconEl.src = "../assets/icons/visual-companion-tux.svg"; 
+        // }
     }
 
     // Legacy fallbacks (in case DOM or tests look for historical elements)
@@ -597,6 +627,25 @@ if (dateRangeButton && calendarPopup) {
         calendarPopup.classList.toggle('hidden');
     });
 }
+
+// Dismiss calendar popup when clicking outside
+document.addEventListener('click', (event) => {
+    if (calendarPopup && !calendarPopup.classList.contains('hidden')) {
+        // Prevent dismissal when clicking month navigation arrows
+        if (event.target.closest('.calendar-prev') || event.target.closest('.calendar-next')) {
+            return;
+        }
+
+        const isOutside = !calendarPopup.contains(event.target) && 
+                          (!dateRangeButton || !dateRangeButton.contains(event.target)) &&
+                          (!prevWeekButton || !prevWeekButton.contains(event.target)) &&
+                          (!nextWeekButton || !nextWeekButton.contains(event.target));
+        
+        if (isOutside) {
+            calendarPopup.classList.add('hidden');
+        }
+    }
+});
 
 // System Settings Logic
 const topToggle = document.querySelector('.top-toggle');
