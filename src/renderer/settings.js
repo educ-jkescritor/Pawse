@@ -43,6 +43,12 @@ function hideAllContents() {
     dashboardContent.classList.add("hidden");
     aboutContent.classList.add("hidden");
     settingsContent.classList.add("hidden");
+
+    // Reset scrollable container back to top
+    const mainBar = document.querySelector(".main-bar");
+    if (mainBar) {
+        mainBar.scrollTop = 0;
+    }
 }  
 
 // Tab button selection state handling
