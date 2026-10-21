@@ -23,6 +23,17 @@ const urlParams = new URLSearchParams(window.location.search);
 const catType = urlParams.get('cat');
 const catConfig = catConfiguration[catType];
 
+// Initialize Companion Dialogue Engine with historical analytics
+if (window.mainAPI && window.mainAPI.loadanalytics) {
+    window.mainAPI.loadanalytics(0).then(analytics => {
+        if (window.CompanionDialogueEngine) {
+            window.CompanionDialogueEngine.init(analytics);
+        }
+    }).catch(err => {
+        console.warn("Could not load analytics for dialogue engine:", err);
+    });
+}
+
 // Lock settings while timer is active
 localStorage.setItem('timerRunning', 'true');
 window.addEventListener('beforeunload', () => {
@@ -57,6 +68,13 @@ let preSkipState = null;
 let nextPhaseState = null;
 let sessionDate = new Date();
 
+// --- BEHAVIORAL & META STATE TRACKERS (Companion Dialogue Engine) ---
+let isRestoredSession = false;
+let pauseStartTime = null;
+let wasLongPaused = false;
+let lastSessionOutcome = null; // 'majorBailout' | 'earlyCutoff' | 'completed' | 'redemption' | 'breakSkipped'
+let hadPreviousBailout = false;
+
 // --- DURABLE EXECUTION ENGINE (Local Persistence) ---
 const savedStateStr = localStorage.getItem('pawseDurableState');
 if (savedStateStr) {
@@ -82,6 +100,14 @@ if (savedStateStr) {
             
             // If it was manually paused before crashing, start up paused
             isRunning = savedState.isRunning;
+
+            // Flag session recovery for companion recognition
+            isRestoredSession = true;
+            if (!workingTime) {
+                setTimeout(() => {
+                    triggerWelcomeBubble();
+                }, 600);
+            }
         }
     } catch(e) {
         // Ignore corruption
@@ -247,17 +273,6 @@ const clickDurations = {
     'tuxedo_cat': 1000  // 10 frames
 };
 
-// Chat bubble facts list
-const catFacts = [
-    "Cats spend 70% of their lives sleeping.",
-    "A cat's purr can help heal bones and muscles.",
-    "Cats have 32 muscles in each ear to control them.",
-    "A cat's nose print is unique, like a fingerprint!",
-    "Cats can make over 100 vocal sounds.",
-    "A cat can jump up to six times its height!",
-    "Cats have a third eyelid called the 'haw'!",
-    "Cats are crepuscular, meaning they are most active at dawn and dusk."
-];
 let bubbleTimeoutId = null;
 let isPetting = false;
 let isShowingFact = false; // Tracks if a click-fact or welcome-fact is active so hover doesn't overwrite it
@@ -278,23 +293,30 @@ catSprite.addEventListener('click', () => {
         meowAudio.play().catch(e => {});
     }
 
-    // Display a random cat fact in the chat bubble
+    // Display a dynamic contextual message in the chat bubble
     const chatBubble = document.getElementById("chat-bubble");
     const chatText = document.getElementById("chat-text");
     if (chatBubble && chatText) {
         if (bubbleTimeoutId) clearTimeout(bubbleTimeoutId);
         
-        const randomFact = catFacts[Math.floor(Math.random() * catFacts.length)];
-        chatText.textContent = randomFact;
+        let message = "Purr... happy to keep you company.";
+        if (window.CompanionDialogueEngine) {
+            message = window.CompanionDialogueEngine.getPettingMessage(catClass, cycleCount, {
+                actualWork: actualWork,
+                wasLongPaused: wasLongPaused,
+                strictMode: (localStorage.getItem('strictMode') === 'true')
+            });
+        }
+        chatText.textContent = message;
         
         // Dynamically assign theme classes (which auto-reveals the bubble by removing the hidden class)
         chatBubble.className = `chat-bubble ${catClass}`;
         
-        // Hide after 3.5 seconds
+        // Hide after 4.5 seconds for comfortable reading
         bubbleTimeoutId = setTimeout(() => {
             chatBubble.classList.add("hidden");
             isShowingFact = false; // Release fact display lock
-        }, 3500);
+        }, 4500);
     }
 
     // Shift to the click sprite
@@ -321,14 +343,34 @@ function triggerWelcomeBubble() {
         if (bubbleTimeoutId) clearTimeout(bubbleTimeoutId);
         
         isShowingFact = true; // Lock fact display so hover doesn't overwrite it
-        chatText.textContent = "Pet me for a fun fact! 🐾";
+        
+        const context = {
+            actualWork: actualWork,
+            skipType: (lastSessionOutcome === 'majorBailout' || lastSessionOutcome === 'earlyCutoff') ? lastSessionOutcome : null,
+            isRedemption: lastSessionOutcome === 'redemption',
+            isRestored: isRestoredSession,
+            wasLongPaused: wasLongPaused,
+            strictMode: (localStorage.getItem('strictMode') === 'true')
+        };
+
+        let message = "Stretch your paws! Break time has begun.";
+        if (window.CompanionDialogueEngine) {
+            message = window.CompanionDialogueEngine.getBreakArrivalMessage(catConfig.dbId, cycleCount, context);
+        }
+        
+        // Single-fire resets
+        isRestoredSession = false;
+        lastSessionOutcome = null;
+        wasLongPaused = false;
+
+        chatText.textContent = message;
         chatBubble.className = `chat-bubble ${catConfig.dbId}`; // Solid theme style
         
-        // Hide after 4 seconds
+        // Hide after 4.5 seconds
         bubbleTimeoutId = setTimeout(() => {
             chatBubble.classList.add("hidden");
             isShowingFact = false; // Release lock
-        }, 4000);
+        }, 4500);
     }
 }
 
@@ -396,6 +438,13 @@ function startTimer() {
     clearInterval(timerId);
     document.getElementById("play-icon").src = "../../assets/icons/pause-btn.png";
     isRunning = true;
+    if (pauseStartTime) {
+        const pauseDuration = (Date.now() - pauseStartTime) / 1000;
+        if (pauseDuration >= 180) { // 3 minutes or more
+            wasLongPaused = true;
+        }
+        pauseStartTime = null;
+    }
     updateCatState();
     updateAudioSettings();
 
@@ -441,6 +490,14 @@ function startTimer() {
 function handleSessionComplete(isManualSkip = false) {
     if (!isManualSkip) {
         preSkipState = null;
+        if (workingTime === true) {
+            if (hadPreviousBailout) {
+                lastSessionOutcome = 'redemption';
+                hadPreviousBailout = false;
+            } else {
+                lastSessionOutcome = 'completed';
+            }
+        }
     }
     pauseTimer();
 
@@ -550,6 +607,22 @@ function manualSkipSession() {
         wasRunning: isRunning
     };
 
+    // Evaluate Skip Severity for dialogue engine
+    if (workingTime === true) {
+        const ratio = actualWork / catConfig.workTime;
+        if (ratio < 0.25) {
+            lastSessionOutcome = 'majorBailout';
+            hadPreviousBailout = true;
+        } else if (ratio < 0.85) {
+            lastSessionOutcome = 'earlyCutoff';
+            hadPreviousBailout = true;
+        } else {
+            lastSessionOutcome = 'completed';
+        }
+    } else {
+        lastSessionOutcome = 'breakSkipped';
+    }
+
     // Play companion sound feedback if click sound is enabled
     const meowAudio = meowAudios[catConfig.dbId];
     if (meowAudio && soundEnabled && localStorage.getItem('clickSound') !== 'false') {
@@ -562,6 +635,9 @@ function manualSkipSession() {
 
 function cancelSkip() {
     if (!preSkipState) return;
+
+    // Reset skip outcome since skip was cancelled
+    lastSessionOutcome = null;
 
     const restored = preSkipState;
     preSkipState = null;
@@ -589,6 +665,9 @@ function pauseTimer() {
     clearInterval(timerId);
     document.getElementById("play-icon").src = "../../assets/icons/play-btn.png";
     isRunning = false;
+    if (workingTime && !pauseStartTime) {
+        pauseStartTime = Date.now();
+    }
     updateCatState();
     updateAudioSettings();
 }
