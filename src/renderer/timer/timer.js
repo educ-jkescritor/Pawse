@@ -275,15 +275,91 @@ const clickDurations = {
 
 let bubbleTimeoutId = null;
 let isPetting = false;
-let isShowingFact = false; // Tracks if a click-fact or welcome-fact is active so hover doesn't overwrite it
+let isShowingFact = false; // Tracks if a thought bubble is visible
 
+// --- AMBIENT IDLE DIALOGUE ENGINE TIMERS ---
+const IDLE_DELAY_MS = 12000;      // 12 seconds of stillness before cat has an ambient thought
+const IDLE_COOLDOWN_MS = 45000;   // 45 seconds cooldown between thoughts
+let idleThoughtTimeoutId = null;
+let lastThoughtTimestamp = 0;
+
+function resetIdleThoughtTimer() {
+    if (idleThoughtTimeoutId) {
+        clearTimeout(idleThoughtTimeoutId);
+        idleThoughtTimeoutId = null;
+    }
+
+    // Only run idle thought timer during break time and when not actively petting
+    if (workingTime) return;
+
+    idleThoughtTimeoutId = setTimeout(() => {
+        triggerAmbientThought();
+    }, IDLE_DELAY_MS);
+}
+
+function triggerAmbientThought() {
+    // Safety checks: must be break time, not actively petting, and modal not open
+    if (workingTime || isPetting) return;
+
+    const now = Date.now();
+    // Enforce 45-second cooldown between thoughts
+    if (now - lastThoughtTimestamp < IDLE_COOLDOWN_MS) {
+        const remainingCooldown = IDLE_COOLDOWN_MS - (now - lastThoughtTimestamp);
+        idleThoughtTimeoutId = setTimeout(triggerAmbientThought, Math.max(IDLE_DELAY_MS, remainingCooldown));
+        return;
+    }
+
+    const chatBubble = document.getElementById("chat-bubble");
+    const chatText = document.getElementById("chat-text");
+    if (chatBubble && chatText) {
+        if (bubbleTimeoutId) clearTimeout(bubbleTimeoutId);
+
+        isShowingFact = true;
+        lastThoughtTimestamp = Date.now();
+
+        const context = {
+            actualWork: actualWork,
+            wasLongPaused: wasLongPaused,
+            strictMode: (localStorage.getItem('strictMode') === 'true')
+        };
+
+        let message = "Purr... happy to keep you company.";
+        if (window.CompanionDialogueEngine) {
+            message = window.CompanionDialogueEngine.getPettingMessage(catConfig.dbId, cycleCount, context);
+        }
+
+        chatText.textContent = message;
+        chatBubble.className = `chat-bubble ${catConfig.dbId}`;
+
+        // Hide after 4.5 seconds
+        bubbleTimeoutId = setTimeout(() => {
+            chatBubble.classList.add("hidden");
+            isShowingFact = false;
+            // After this thought fades, arm the next idle check (which respects 45s cooldown)
+            resetIdleThoughtTimer();
+        }, 4500);
+    }
+}
 
 catSprite.addEventListener('click', () => {
     // Only allow interaction during break times and if not already petting
     if (workingTime || isPetting) return;
 
+    // Reset / restart the 12-second idle countdown on every pet click
+    resetIdleThoughtTimer();
+
+    // Clean Interrupt: if a thought bubble is visible, dismiss it immediately so petting takes center stage
+    const chatBubble = document.getElementById("chat-bubble");
+    if (chatBubble && !chatBubble.classList.contains("hidden")) {
+        chatBubble.classList.add("hidden");
+        isShowingFact = false;
+        if (bubbleTimeoutId) {
+            clearTimeout(bubbleTimeoutId);
+            bubbleTimeoutId = null;
+        }
+    }
+
     isPetting = true;
-    isShowingFact = true; // Lock fact display
     const catClass = catConfig.dbId;
 
     // Play corresponding companion meow sound if master audio is enabled AND click sound toggle is on
@@ -293,33 +369,7 @@ catSprite.addEventListener('click', () => {
         meowAudio.play().catch(e => {});
     }
 
-    // Display a dynamic contextual message in the chat bubble
-    const chatBubble = document.getElementById("chat-bubble");
-    const chatText = document.getElementById("chat-text");
-    if (chatBubble && chatText) {
-        if (bubbleTimeoutId) clearTimeout(bubbleTimeoutId);
-        
-        let message = "Purr... happy to keep you company.";
-        if (window.CompanionDialogueEngine) {
-            message = window.CompanionDialogueEngine.getPettingMessage(catClass, cycleCount, {
-                actualWork: actualWork,
-                wasLongPaused: wasLongPaused,
-                strictMode: (localStorage.getItem('strictMode') === 'true')
-            });
-        }
-        chatText.textContent = message;
-        
-        // Dynamically assign theme classes (which auto-reveals the bubble by removing the hidden class)
-        chatBubble.className = `chat-bubble ${catClass}`;
-        
-        // Hide after 4.5 seconds for comfortable reading
-        bubbleTimeoutId = setTimeout(() => {
-            chatBubble.classList.add("hidden");
-            isShowingFact = false; // Release fact display lock
-        }, 4500);
-    }
-
-    // Shift to the click sprite
+    // Shift to the click sprite (Pure sensory petting, NO speech bubble)
     catSprite.className = `cat-sprite ${catClass} clicking`;
     catSprite.style.backgroundImage = `url('../../assets/sprites/${catClass}_click.png')`;
 
@@ -342,7 +392,7 @@ function triggerWelcomeBubble() {
     if (chatBubble && chatText) {
         if (bubbleTimeoutId) clearTimeout(bubbleTimeoutId);
         
-        isShowingFact = true; // Lock fact display so hover doesn't overwrite it
+        isShowingFact = true; // Lock fact display
         
         const context = {
             actualWork: actualWork,
@@ -362,6 +412,7 @@ function triggerWelcomeBubble() {
         isRestoredSession = false;
         lastSessionOutcome = null;
         wasLongPaused = false;
+        lastThoughtTimestamp = Date.now(); // Mark arrival time for 45s cooldown
 
         chatText.textContent = message;
         chatBubble.className = `chat-bubble ${catConfig.dbId}`; // Solid theme style
@@ -369,7 +420,9 @@ function triggerWelcomeBubble() {
         // Hide after 4.5 seconds
         bubbleTimeoutId = setTimeout(() => {
             chatBubble.classList.add("hidden");
-            isShowingFact = false; // Release lock
+            isShowingFact = false;
+            // Once arrival bubble fades, arm the 12-second ambient idle timer
+            resetIdleThoughtTimer();
         }, 4500);
     }
 }
@@ -378,6 +431,12 @@ function updateCatState() {
     isPetting = false; // Release lock in case of forced state shifts
     isShowingFact = false; // Reset fact display lock
     
+    // Clear ambient idle dialogue timers when shifting states
+    if (idleThoughtTimeoutId) {
+        clearTimeout(idleThoughtTimeoutId);
+        idleThoughtTimeoutId = null;
+    }
+
     // Hide chat bubble during state transitions (e.g. going back to work)
     const chatBubble = document.getElementById("chat-bubble");
     if (chatBubble) {
