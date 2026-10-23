@@ -978,7 +978,9 @@ p {
 .companion-states {
     display: flex;
     width: 177px;
-    height: 120px;
+    height: auto;
+    min-height: 120px;
+    align-self: stretch;
     padding: 12px;
     align-items: flex-end;
     gap: 12px;
@@ -992,6 +994,7 @@ p {
     display: flex;
     padding: 4px;
     flex-direction: column;
+    justify-content: center;
     align-items: flex-start;
     gap: 4px;
     align-self: stretch;
@@ -1012,6 +1015,7 @@ p {
     border-radius: 4px;
     border: none;
     background: #FFFFFF;
+    transition: background-color 0.4s ease, color 0.4s ease;
 }
 
 .state-btn:hover {
@@ -1027,23 +1031,36 @@ p {
 
 .pixel-gradient {
     position: absolute;
+    width: 40px;
     top: 0;
     bottom: 0;
     right: -16px;
+    pointer-events: none;
+
     background-repeat: repeat-y;
     background-position: top center;
-    background-size: 100% auto; 
+    background-size: 40px auto;
 }
 
 .pixel-gradient.right-gradient {
     left: -16px;
+    right: auto;
 }
 
 .pixel-gradient img {
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    fill: var(--bg-color);
+    display: none;
+}
+
+.tuxedo-info .pixel-gradient {
+    background-image: url('../assets/photos/pixel-gradient-green.svg');
+}
+
+.orange-info .pixel-gradient {
+    background-image: url('../assets/photos/pixel-gradient-orange.svg');
+}
+
+.black-info .pixel-gradient {
+    background-image: url('../assets/photos/pixel-gradient-purple.svg');
 }
 
 .companion-text {
@@ -1056,41 +1073,48 @@ p {
     flex: 1 0 0;
     align-self: stretch;
 
-    background: var(--bg-color);
+    background-color: var(--bg-color);
+    background-image: url('../assets/photos/paw-pattern.svg');
+    background-size: 440px auto;
+    background-repeat: no-repeat;
+    background-position: top left;
 }
 
 .tuxedo-info {
     --bg-color: var(--theme-classic-light);
-    --hover-color: var(--theme-classic-dark);
+    --hover-color: var(--theme-classic-light);
     --active-color: var(--theme-classic-solid);
 }
 
 .orange-info {
     --bg-color: var(--theme-sprint-light);
-    --hover-color: var(--theme-sprint-solid);
+    --hover-color: var(--theme-sprint-light);
     --active-color: var(--theme-sprint-solid);
+}
+
+.black-info {
+    --bg-color: var(--theme-focused-light);
+    --hover-color: var(--theme-focused-light);
+    --active-color: var(--theme-focused-solid);
 }
 
 .orange-info .companion-states {
     justify-content: flex-end;
 }
 
-.black-info {
-    --bg-color: var(--theme-focused-light);
-    --hover-color: var(--theme-focused-dark);
-    --active-color: var(--theme-focused-solid);
+.tuxedo-info .companion-text {
+    background-image: url('../assets/photos/paw-pattern-green.svg');
 }
 
-.companion-attributes p:first-child {
-    background-color: var(--cat-solid);
-    color: var(--text-black);
+.orange-info .companion-text {
+    background-position: right top;
+    background-image: url('../assets/photos/paw-pattern-orange.svg');
 }
 
-.companion-attributes p:not(:first-child) {
-    border: 1.5px solid var(--cat-outline);
-    background-color: transparent;
-    color: var(--cat-outline);
+.black-info .companion-text {
+    background-image: url('../assets/photos/paw-pattern-purple.svg');
 }
+
 
 /* --- ABOUT FOOTER & TEAM SECTION --- */
 .about-footer {
