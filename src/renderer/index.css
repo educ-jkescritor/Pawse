@@ -43,15 +43,20 @@
     --text-gray: #52525B;
 
     --text-active-streak: #F28936;
-    --text-focus-time: #35A6F1;
-    --text-green-companion: #B7E510;
-    --text-orange-companion: #F1B137;
+    --text-best-streak: #E59D10;
+    --text-above-avg-time: #10BCAC;
+    --text-below-avg-time: #35A6F1;
+    --text-green-companion: #9FC610;
+    --text-orange-companion: #EEA311;
     --text-purple-companion: #AF37F1;
 
-    --subtext-focus-time: #3D6E8F;
-    --subtext-active-streak: #8F613D;
+    
+    --subtext-active-streak: #9E5F2E;
+    --subtext-best-streak: #997733;
+    --subtext-above-avg-time: #0C8C80;
+    --subtext-below-avg-time: #3D6E8F;
     --subtext-green: #839933;
-    --subtext-orange: #B2904D;
+    --subtext-orange: #967940;
     --subtext-purple: #8F4CB3;
 
     /* --- UI LAYOUT COLORS --- */
@@ -152,6 +157,12 @@ input, textarea {
     font-weight: 700;
 }
 
+.font-pixel-32-bold {
+    font-family: var(--font-pixel);
+    font-size: 32px;
+    font-weight: 700;
+}
+
 .font-pixel-36-bold {
     font-family: var(--font-pixel);
     font-size: 36px;
@@ -221,22 +232,30 @@ input, textarea {
     font-weight: 500;
 }
 
+.font-inter-11-semibold {
+    font-family: var(--font-inter);
+    font-size: 11px;
+    font-weight: 600;
+}
+
 .font-inter-20-semibold {
     font-family: var(--font-inter);
     font-size: 20px;
     font-weight: 600;
 }
 
-.font-pixel-num-24-bold {
+.font-pixel-num-20-bold {
     font-family: var(--font-pixel-num);
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 500;
+    text-shadow: 0 0 1px currentColor;
 }
 
 .font-pixel-num-48-bold {
     font-family: var(--font-pixel-num);
     font-size: 48px;
     font-weight: 500;
+    text-shadow: 0 0 1px currentColor;
 }
 
 .text-black {

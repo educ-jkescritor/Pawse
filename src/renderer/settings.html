@@ -64,34 +64,49 @@
                     <div class="analytics-container">
                         <div class="analytics-card" id="today-focus-card">
                             <div class="card-titles">
-                                <span class="font-inter-12-medium">Focus Time</span>
-                                <img class="card-icon" src="../assets/icons/visual-hourglass.svg" alt="hourglass">
+                                <span class="font-inter-11-semibold">Daily Focus</span>
+                                <div class="icon-container">
+                                    <img class="card-icon" src="../assets/icons/visual-hourglass.png" alt="hourglass">
+                                </div>
                             </div>
-                            <div class="card-value-row">
-                                <span class="card-data font-pixel-28-bold" id="today_work_seconds"><span class="font-pixel-num-24-bold">0</span>h <span class="font-pixel-num-24-bold">0</span>m</span>
+                            <div class="card-body">
+                                <div class="card-value-row">
+                                    <span class="card-data font-pixel-24-bold" id="today_work_seconds">
+                                        <span><span class="font-pixel-num-20-bold">0</span>h</span>
+                                        <span><span class="font-pixel-num-20-bold">0</span>m</span>
+                                    </span>
+                                </div>
+                                <span class="card-subtext font-inter-10-regular text-gray" id="today_vs_avg">vs daily avg</span>
                             </div>
-                            <span class="card-subtext font-inter-10-regular text-gray" id="today_vs_avg">vs daily avg</span>
                         </div>
                         <div class="analytics-card" id="streak-card">
                             <div class="card-titles">
-                                <span class="font-inter-12-medium">Active Streak</span>
-                                <img class="card-icon" src="../assets/icons/visual-streak.svg" alt="streak">
+                                <span class="font-inter-11-semibold">Current Streak</span>
+                                <div class="icon-container">
+                                    <img class="card-icon" src="../assets/icons/visual-streak-inactive.png" alt="streak">
+                                </div>
                             </div>
-                            <div class="card-value-row">
-                                <span class="card-data font-pixel-num-24-bold" id="current_streak">0</span>
-                                <span class="card-unit font-pixel-28-bold" id="streak_unit">days</span>
+                            <div class="card-body">
+                                <div class="card-value-row">
+                                    <span class="card-data font-pixel-num-20-bold" id="current_streak">0</span>
+                                    <span class="card-unit font-pixel-24-bold" id="streak_unit">days</span>
+                                </div>
+                                <span class="card-subtext font-inter-10-regular text-gray" id="best_streak">Best: 0 days</span>
                             </div>
-                            <span class="card-subtext font-inter-10-regular text-gray" id="best_streak">Best: 0 days</span>
                         </div>
                         <div class="analytics-card" id="top-companion-card">
                             <div class="card-titles">
-                                <span class="font-inter-12-medium">Top Companion</span>
-                                <img class="card-icon" src="../assets/icons/visual-companion.svg" alt="companion">
+                                <span class="font-inter-11-semibold">Top Companion</span>
+                                <div class="icon-container">
+                                    <img class="card-icon" src="../assets/photos/tuxedo-cat-face.png" alt="companion">
+                                </div>
                             </div>
-                            <div class="card-value-row">
-                                <span class="card-data font-pixel-28-bold" id="top_companion_name">None</span>                 
+                            <div class="card-body">
+                                <div class="card-value-row">
+                                    <span class="card-data font-pixel-24-bold" id="top_companion_name">None</span>
+                                </div>
+                                <span class="card-subtext font-inter-10-regular text-gray" id="top_companion_rate">No sessions yet</span>
                             </div>
-                            <span class="card-subtext font-inter-10-regular text-gray" id="top_companion_rate">No sessions yet</span>                            
                         </div>
                     </div>
 
@@ -133,62 +148,77 @@
                         <p class="font-inter-20-semibold">About PAWSE</p>
                         <div class="about-brand">
                             <span class="version-badge font-inter-10-medium">v1.0.0</span>
-                            <span class="font-inter-10-regular text-gray">Cat-themed Productivity Timer</span>
                         </div>
-                        <p class="font-inter-12-regular">PAWSE reimagines the traditional Pomodoro Technique by replacing stressful alarms with gentle companions. We believe that building healthy focus habits shouldn't lead to burnout. Settle in and focus while your furry friend takes a catnap, then enjoy a <span class="font-inter-12-regular-italic">paws-itive</span>, guilt-free break when they wake up. Productivity is simply better with a cat on your desk.</p>
+                        <p class="font-inter-12-regular">Meet your new focus buddy. PAWSE turns the Pomodoro rhythm into a little ritual: work while your cat naps, then stretch when they stir. More steady progress, fewer stressful alarms, and breaks you never have to earn.</p>
                     </div>
                     
                     <div class="companions-section">
                         <p class="font-inter-16-medium">Meet Your Companions</p>
                         <div class="companion-card tuxedo-info">
-                            <span class="companion-image">
-                                <img src="../assets/sprites/tuxedo_cat_static.png" alt="tuxedo-cat">
-                            </span> 
-                            <div class="companion-text">
-                                <p class="font-inter-16-medium"> Tux - The Tuxedo Cat</p>
-                                <div class="companion-attributes">
-                                    <p class="font-inter-10-medium">Classic</p>
-                                    <p class="font-inter-10-regular">25m Work</p>
-                                    <p class="font-inter-10-regular">5m Short Break</p>
-                                    <p class="font-inter-10-regular">20m Long Break</p>
+                            <div class="companion-states">
+                                <div class="states-selector">
+                                    <button class="state-btn active font-inter-8-regular">Idle</button>
+                                    <button class="state-btn font-inter-8-regular">Work</button>
+                                    <button class="state-btn font-inter-8-regular">Break</button>
+                                    <button class="state-btn font-inter-8-regular">Hiss</button>
                                 </div>
-                                <p class="font-inter-12-regular">Operating with that perfect blend of sharp intelligence and a love for strict daily routines, Tux embodies true Tuxitude. Thriving on a predictable schedule—just like waiting by the food bowl at exactly 5:00 PM—this reliable companion keeps your workflow steady, measured, and politely on track.</p>
+                                <span class="companion-image">
+                                    <img src="../assets/sprites/tuxedo_cat_static.png" alt="tuxedo-cat">
+                                </span>
+                                <span class="pixel-gradient">
+                                    <img src="../assets/photos/pixel-gradient-green.svg" alt="pixel-gradient">
+                                </span>
+                            </div>
+                            <div class="companion-text">
+                                <p class="font-pixel-32-bold"> Tux</p>
+                                <p class="font-inter-12-regular">A refined scholar who anchors your workflow with a calm, steady rhythm from his plush floor bed.</p>
                             </div>
                         </div>
 
                         <div class="companion-card orange-info">
-                            <span class="companion-image">
-                                <img src="../assets/sprites/orange_cat_static.png" alt="orange-cat">
-                            </span>
                             <div class="companion-text">
-                                <p class="font-inter-16-medium">Ginger - The Orange Cat</p>
-                                <div class="companion-attributes">
-                                    <p class="font-inter-10-medium">Sprint</p>
-                                    <p class="font-inter-10-regular">15m Work</p>
-                                    <p class="font-inter-10-regular">3m Short Break</p>
-                                    <p class="font-inter-10-regular">12m Long Break</p>
+                                <p class="font-pixel-32-bold">Ginger</p>
+                                <p class="font-inter-12-regular">An unapologetically lazy goofball who snoozes on the loveseat during quick sprints, saving all his chaotic energy for break time.</p>
+                            </div>
+                            <div class="companion-states">
+                                <span class="pixel-gradient right-gradient">
+                                    <img src="../assets/photos/pixel-gradient-orange.svg" alt="pixel-gradient">
+                                </span>
+                                <span class="companion-image">
+                                    <img src="../assets/sprites/orange_cat_static.png" alt="orange-cat">
+                                </span>
+                                <div class="states-selector">
+                                    <button class="state-btn active font-inter-8-regular">Idle</button>
+                                    <button class="state-btn font-inter-8-regular">Work</button>
+                                    <button class="state-btn font-inter-8-regular">Break</button>
+                                    <button class="state-btn font-inter-8-regular">Hiss</button>
                                 </div>
-                                <p class="font-inter-12-regular">Powered purely by famously chaotic Orange Cat Energy, Ginger is the undisputed king of the short sprint. Prone to sudden, explosive zoomies followed by an immediate crash, he operates best in fast, high-energy bursts. If you need to tackle quick tasks with a short attention span, this playful buddy is your purr-fect match.</p>
                             </div>
                         </div>
                         
                         <div class="companion-card black-info">
-                            <span class="companion-image">
-                                <img src="../assets/sprites/black_cat_static.png" alt="black-cat">
-                            </span>
-                            <div class="companion-text">
-                                <p class="font-inter-16-medium">Void - The Black Cat</p>
-                                <div class="companion-attributes">
-                                    <p class="font-inter-10-medium">Focused</p>
-                                    <p class="font-inter-10-regular">50m Work</p>
-                                    <p class="font-inter-10-regular">10m Short Break</p>
-                                    <p class="font-inter-10-regular">40m Long Break</p>
+                            <div class="companion-states">
+                                <div class="states-selector">
+                                    <button class="state-btn active font-inter-8-regular">Idle</button>
+                                    <button class="state-btn font-inter-8-regular">Work</button>
+                                    <button class="state-btn font-inter-8-regular">Break</button>
+                                    <button class="state-btn font-inter-8-regular">Hiss</button>
                                 </div>
-                                <p class="font-inter-12-regular">Stoic, mysterious, and fiercely independent, the Void requires long periods of absolute silence to meticulously plot <span class="font-inter-12-bold-italic">cat world domination</span>. Often caught quietly studying his favorite strategy book in the shadows, he is built for deep focus. He is the ultimate guardian to sit by your side while you tackle your most complex tasks.</p>
+                                <span class="companion-image">
+                                    <img src="../assets/sprites/black_cat_static.png" alt="black-cat">
+                                </span>
+                                <span class="pixel-gradient">
+                                    <img src="../assets/photos/pixel-gradient-purple.svg" alt="pixel-gradient">
+                                </span>
+                            </div>
+                            <div class="companion-text">
+                                <p class="font-pixel-32-bold">Void</p>
+                                <p class="font-inter-12-regular">A sleek, serious mastermind who demands absolute focus, enforcing strict boundaries from his glowing desk during deep work sessions.</p>
                             </div>
                         </div>
                     </div>
-                    
+                        
+    
                     <div class="about-footer">
                         <div class="team-section">
                             <p class="font-inter-16-medium section-title">Meet the Team</p>
