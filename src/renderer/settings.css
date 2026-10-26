@@ -946,16 +946,24 @@ p {
 }
 
 .companion-card {
+    box-sizing: border-box;
     display: flex;
-    width: 100%;
-    align-items: flex-start;
-    gap: 16px;
-    overflow: hidden;
+    flex-direction: row;
+    align-items: stretch;
+    align-self: stretch;
 
-    border-radius: 12px;
+    height: 120px;
+    min-height: 120px;
+    max-height: 120px;
+    flex-shrink: 0;
+    gap: 0;
+
     border: 1px solid var(--stroke-color);
-    background: #FFFFFF;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
 }
+
 
 .companion-image {
     width: 80px; /* Increased width to provide more horizontal breathing room */
@@ -976,145 +984,104 @@ p {
 }
 
 .companion-states {
-    display: flex;
+    box-sizing: border-box;
+    position: relative;
+    flex: 0 0 177px;
     width: 177px;
     height: auto;
-    min-height: 120px;
-    align-self: stretch;
-    padding: 12px;
-    align-items: flex-end;
-    gap: 12px;
-    flex-shrink: 0;
-    position: relative;
-
-    background: #FFFFFF;
-}
-
-.states-selector {
-    display: flex;
-    padding: 4px;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 4px;
+    min-height: 0;
     align-self: stretch;
 
-    border-radius: 6px;
-    border: 1px solid #E0E5E1;
-    background: #FFF
-}
-
-.state-btn {
     display: flex;
-    padding: 4px 2px;
-    justify-content: center;
     align-items: center;
-    gap: 2px;
-    align-self: stretch;
+    justify-content: center;
+    padding: 12px 40px 12px 12px;
+    overflow: hidden;
 
-    border-radius: 4px;
-    border: none;
-    background: #FFFFFF;
-    transition: background-color 0.4s ease, color 0.4s ease;
+    background: var(--bg-color);
 }
 
-.state-btn:hover {
-    background: var(--hover-color);
-    cursor: pointer;
-}
-
-.state-btn.active {
-    background: var(--active-color);
-    cursor: default;
-    font-weight: bold;
-}
-
-.pixel-gradient {
+.companion-card .companion-states .pixel-gradient {
     position: absolute;
-    width: 40px;
     top: 0;
     bottom: 0;
-    right: -16px;
+    right: 0;
+    left: auto;
+    width: 40px;
+    height: auto;
+    transform: none;
     pointer-events: none;
 
+    background-color: transparent;
+    background-image: var(--bg-image);
     background-repeat: repeat-y;
-    background-position: top center;
-    background-size: 40px auto;
+    background-size: 40px 120px;
+    background-position: top right;
 }
 
-.pixel-gradient.right-gradient {
-    left: -16px;
+.companion-card .companion-states .pixel-gradient.right-gradient {
+    left: 0;
     right: auto;
+    transform: none;
 }
 
 .pixel-gradient img {
     display: none;
 }
 
-.tuxedo-info .pixel-gradient {
-    background-image: url('../assets/photos/pixel-gradient-green.svg');
-}
-
-.orange-info .pixel-gradient {
-    background-image: url('../assets/photos/pixel-gradient-orange.svg');
-}
-
-.black-info .pixel-gradient {
-    background-image: url('../assets/photos/pixel-gradient-purple.svg');
-}
 
 .companion-text {
+    box-sizing: border-box;
     display: flex;
-    padding: 12px 16px;
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-    gap: 8px;
-    flex: 1 0 0;
-    align-self: stretch;
 
-    background-color: var(--bg-color);
-    background-image: url('../assets/photos/paw-pattern.svg');
-    background-size: 440px auto;
-    background-repeat: no-repeat;
-    background-position: top left;
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 0;
+    align-self: stretch;
+    padding: 12px 16px;
+    gap: 8px;
+    background: #fff;
+
+    overflow-y: auto;
 }
 
+.companion-text > :first-child {
+    margin-top: auto;
+}
+
+.companion-text > :last-child {
+    margin-bottom: auto;
+}
+
+
 .tuxedo-info {
-    --bg-color: var(--theme-classic-light);
+    --bg-color: linear-gradient(90deg, #ECFEA9 0%, #F1FBD0 111.19%, #F6F8F7 277.97%);
     --hover-color: var(--theme-classic-light);
     --active-color: var(--theme-classic-solid);
+    --bg-image: url('../assets/photos/pixel-gradient-left.svg');
 }
 
 .orange-info {
-    --bg-color: var(--theme-sprint-light);
+    --bg-color: linear-gradient(270deg, #F8C47F 0%, #FEE1A9 110.46%, #FFF 276.55%);
     --hover-color: var(--theme-sprint-light);
     --active-color: var(--theme-sprint-solid);
+    --bg-image: url('../assets/photos/pixel-gradient-right.svg');
 }
 
 .black-info {
-    --bg-color: var(--theme-focused-light);
+    --bg-color: linear-gradient(90deg, #E0A9FE 0%, #EBD1FB 111.3%, #F6F8F7 278.25%);
     --hover-color: var(--theme-focused-light);
     --active-color: var(--theme-focused-solid);
+    --bg-image: url('../assets/photos/pixel-gradient-left.svg');
 }
 
 .orange-info .companion-states {
-    justify-content: flex-end;
+    padding: 12px 12px 12px 40px;
+    justify-content: center;
 }
-
-.tuxedo-info .companion-text {
-    background-image: url('../assets/photos/paw-pattern-green.svg');
-}
-
-.orange-info .companion-text {
-    background-position: right top;
-    background-image: url('../assets/photos/paw-pattern-orange.svg');
-}
-
-.black-info .companion-text {
-    background-image: url('../assets/photos/paw-pattern-purple.svg');
-}
-
 
 /* --- ABOUT FOOTER & TEAM SECTION --- */
 .about-footer {
@@ -1142,16 +1109,18 @@ p {
 }
 
 .team-member-card {
-    flex: 0 0 calc(50% - 6px); /* Perfect 2-column layout */
-    background-color: var(--topbar-fill);
-    border: 1px solid var(--stroke-color);
-    border-radius: 8px;
-    padding: 10px 12px;
     display: flex;
+    padding: 12px;
+    gap: 12px;
     flex-direction: column;
     justify-content: space-between;
-    gap: 8px;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
+    align-items: flex-start;
+    flex: 1 0 0;
+    align-self: stretch;
+
+    border-radius: 8px;
+    border: 1px solid var(--stroke-color);
+    background: #FFF;
 }
 
 .team-member-card:hover {
@@ -1162,12 +1131,13 @@ p {
 .member-info {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    align-items: flex-start;
+    gap: 4px;
+    align-self: stretch;
 }
 
 .member-name {
-    margin: 0;
-    color: var(--text-black);
+    align-self: stretch;
 }
 
 .member-role {

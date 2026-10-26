@@ -633,7 +633,7 @@ function handleSessionComplete(isManualSkip = false) {
 
         if (cycleCount === 3) {
             nextPhaseState = { remainingTime: catConfig.longBreakTime, workingTime: false };
-            const title = isManualSkip ? "Ready for a Catnap?" : "Time for a Catnap!";
+            const title = isManualSkip ? "Ready to Snooze?" : "Time for a Catnap!";
             const message = isManualSkip
                 ? "Skipping ahead to your long rest. Step away from the screen and recharge!"
                 : "Amazing work! You've earned a long, cozy rest. Step away from the screen and recharge.";
@@ -652,10 +652,10 @@ function handleSessionComplete(isManualSkip = false) {
             );
         } else {
             nextPhaseState = { remainingTime: catConfig.shortBreakTime, workingTime: false };
-            const title = isManualSkip ? "Take an Early Break?" : "Stretch Your Paws!";
+            const title = isManualSkip ? "Quick Stretch?" : "Stretch Your Paws!";
             const message = isManualSkip
                 ? "Skipping ahead to your break time. Ready to step back and stretch your paws?"
-                : "Great focus! Your companion is ready for a quick stretch and a treat.";
+                : "Great focus! Your companion is ready for a quick stretch and a small treat.";
 
             showModal(
                 title,
@@ -681,10 +681,10 @@ function handleSessionComplete(isManualSkip = false) {
             nextPhaseState = null;
             flushSessionData(!isManualSkip);
 
-            const title = isManualSkip ? "Session Finished" : "Paws-itively Brilliant!";
+            const title = isManualSkip ? "Finish Session?" : "Pawsome Job!";
             const message = isManualSkip
-                ? "You wrapped up this Pomodoro session early. Your recorded time has been saved safely!"
-                : `You successfully completed a full set of ${cycleCount} cycles! Your progress is logged safely. Take a bow!`;
+                ? "Ready to wrap up this session early? Confirm to save your time and head back."
+                : `You successfully finished ${cycleCount} cycles! Your progress is saved. Take a well-deserved rest!`;
 
             showModal(
                 title,
@@ -701,8 +701,8 @@ function handleSessionComplete(isManualSkip = false) {
             nextPhaseState = { remainingTime: catConfig.workTime, workingTime: true };
             const title = isManualSkip ? "End Break Early?" : "Ready to Focus?";
             const message = isManualSkip
-                ? `Cutting your rest short? Ready to jump right back into cycle ${cycleCount + 1}!`
-                : `You’ve completed ${cycleCount} cycle(s) so far! Let's keep the momentum going.`;
+                ? `Feeling energized already? Take a deep breath and jump right back into the next cycle!`
+                : `You’ve successfully completed ${cycleCount} cycle(s)! Let's keep the strong momentum going.`;
 
             showModal(
                 title,
