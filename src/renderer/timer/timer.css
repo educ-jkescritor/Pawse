@@ -115,12 +115,14 @@ body.cat-only-mode .app-wrapper {
     display: block;
     width: 64px;
     height: 64px;
+    background-image: url('../../assets/sprites/orange_cat_work.png');
     background-size: 192px 64px;
     background-position: 0px 0px;
     animation: workAnimationOrange 0.9s steps(3) infinite;
 }
 
 .cat-sprite.orange_cat.breaking {
+    background-image: url('../../assets/sprites/orange_cat_work_static.png');
     background-size: 64px 64px;
     background-position: 0px 0px;
     animation: none;
@@ -129,6 +131,7 @@ body.cat-only-mode .app-wrapper {
 
 .cat-sprite.orange_cat.work-static {
     display: block;
+    background-image: url('../../assets/sprites/orange_cat_work_static.png');
     background-size: 64px 64px;
     background-position: 0px 0px;
     animation: none;

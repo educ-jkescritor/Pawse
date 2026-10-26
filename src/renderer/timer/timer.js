@@ -475,8 +475,8 @@ function updateCatState() {
         if (!isRunning) {
             // Paused during work: show static work resting asset
             if (catClass === 'orange_cat') {
+                catSprite.style.backgroundImage = '';
                 catSprite.className = `cat-sprite ${catClass} work-static`;
-                catSprite.style.backgroundImage = `url('../../assets/sprites/orange_cat_work_static.png')`;
             } else {
                 catSprite.className = `cat-sprite ${catClass} breaking`;
                 catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
@@ -487,8 +487,8 @@ function updateCatState() {
                 // then plays work animation sequence, then back to work_static
                 let isWorkStatic = true;
 
+                catSprite.style.backgroundImage = ''; // Clear inline override so CSS class takes precedence
                 catSprite.className = `cat-sprite ${catClass} work-static`;
-                catSprite.style.backgroundImage = `url('../../assets/sprites/orange_cat_work_static.png')`;
 
                 function playOrangeSleepSequence() {
                     if (!isRunning || !workingTime) return;
@@ -496,11 +496,9 @@ function updateCatState() {
                     isWorkStatic = !isWorkStatic;
                     if (isWorkStatic) {
                         catSprite.className = `cat-sprite ${catClass} work-static`;
-                        catSprite.style.backgroundImage = `url('../../assets/sprites/orange_cat_work_static.png')`;
                         spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2500); // Rest still for 2.5s
                     } else {
                         catSprite.className = `cat-sprite ${catClass} sleeping-anim`;
-                        catSprite.style.backgroundImage = `url('../../assets/sprites/orange_cat_work.png')`;
                         spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2700); // 3 complete 0.9s loops of 3-frame breathing
                     }
                 }
@@ -535,8 +533,13 @@ function updateCatState() {
         }
     } else {
         // Break time: always static
-        catSprite.className = `cat-sprite ${catClass} breaking`;
-        catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
+        if (catClass === 'orange_cat') {
+            catSprite.style.backgroundImage = '';
+            catSprite.className = `cat-sprite ${catClass} breaking`;
+        } else {
+            catSprite.className = `cat-sprite ${catClass} breaking`;
+            catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
+        }
     }
 }
 
