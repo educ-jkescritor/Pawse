@@ -1142,16 +1142,18 @@ p {
 }
 
 .team-member-card {
-    flex: 0 0 calc(50% - 6px); /* Perfect 2-column layout */
-    background-color: var(--topbar-fill);
-    border: 1px solid var(--stroke-color);
-    border-radius: 8px;
-    padding: 10px 12px;
     display: flex;
+    padding: 12px;
+    gap: 12px;
     flex-direction: column;
     justify-content: space-between;
-    gap: 8px;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
+    align-items: flex-start;
+    flex: 1 0 0;
+    align-self: stretch;
+
+    border-radius: 8px;
+    border: 1px solid var(--stroke-color);
+    background: #FFF;
 }
 
 .team-member-card:hover {
@@ -1162,12 +1164,13 @@ p {
 .member-info {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    align-items: flex-start;
+    gap: 4px;
+    align-self: stretch;
 }
 
 .member-name {
-    margin: 0;
-    color: var(--text-black);
+    align-self: stretch;
 }
 
 .member-role {
