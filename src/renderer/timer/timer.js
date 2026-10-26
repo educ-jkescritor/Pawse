@@ -281,7 +281,11 @@ const clickDurations = {
         `../../assets/sprites/${catConfig.dbId}_click.png`
     ];
     if (catConfig.dbId === 'orange_cat') {
-        urls.push('../../assets/sprites/orange_cat_work_static.png');
+        urls.push(
+            '../../assets/sprites/orange_cat_work_static.png',
+            '../../assets/sprites/orange_cat_break_static.png',
+            '../../assets/sprites/orange_cat_break.png'
+        );
     }
     urls.forEach(url => {
         const img = new Image();
@@ -385,19 +389,29 @@ catSprite.addEventListener('click', () => {
         meowAudio.play().catch(e => {});
     }
 
-    // Shift to the click sprite (Pure sensory petting, NO speech bubble)
-    catSprite.className = `cat-sprite ${catClass} clicking`;
-    catSprite.style.backgroundImage = `url('../../assets/sprites/${catClass}_click.png')`;
+    // Shift to the click / break sprite (Pure sensory petting, NO speech bubble)
+    if (catClass === 'orange_cat') {
+        catSprite.style.backgroundImage = '';
+        catSprite.className = `cat-sprite ${catClass} break-anim`;
+    } else {
+        catSprite.className = `cat-sprite ${catClass} clicking`;
+        catSprite.style.backgroundImage = `url('../../assets/sprites/${catClass}_click.png')`;
+    }
 
     // Wait exactly the length of this specific cat's animation
-    const duration = clickDurations[catClass] || 1000;
+    const duration = (catClass === 'orange_cat') ? 900 : (clickDurations[catClass] || 1000);
     setTimeout(() => {
         // If session forcefully shifted back to work time, let updateCatState handle it
         if (workingTime) return;
 
         // Revert back to static and unlock
-        catSprite.className = `cat-sprite ${catClass} breaking`;
-        catSprite.style.backgroundImage = `url('../../assets/sprites/${catClass}_static.png')`;
+        if (catClass === 'orange_cat') {
+            catSprite.style.backgroundImage = '';
+            catSprite.className = `cat-sprite ${catClass} breaking`;
+        } else {
+            catSprite.className = `cat-sprite ${catClass} breaking`;
+            catSprite.style.backgroundImage = `url('../../assets/sprites/${catClass}_static.png')`;
+        }
         isPetting = false;
     }, duration);
 });

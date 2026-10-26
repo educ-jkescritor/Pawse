@@ -122,11 +122,23 @@ body.cat-only-mode .app-wrapper {
 }
 
 .cat-sprite.orange_cat.breaking {
-    background-image: url('../../assets/sprites/orange_cat_work_static.png');
+    display: block;
+    background-image: url('../../assets/sprites/orange_cat_break_static.png');
     background-size: 64px 64px;
     background-position: 0px 0px;
     animation: none;
     cursor: pointer;
+}
+
+.cat-sprite.orange_cat.break-anim {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/orange_cat_break.png');
+    background-size: 576px 64px; /* 9 frames * 64px */
+    background-position: 0px 0px;
+    animation: orangeBreakAnim 0.9s steps(9) infinite;
+    cursor: default;
 }
 
 .cat-sprite.orange_cat.work-static {
@@ -158,6 +170,11 @@ body.cat-only-mode .app-wrapper {
 @keyframes orangeClickAnim {
     from { background-position: 0px 0px; }
     to { background-position: -4096px 0px; }
+}
+
+@keyframes orangeBreakAnim {
+    from { background-position: 0px 0px; }
+    to { background-position: -576px 0px; }
 }
 
 .cat-sprite.black_cat.clicking {
