@@ -248,14 +248,14 @@ input, textarea {
     font-family: var(--font-pixel-num);
     font-size: 20px;
     font-weight: 500;
-    text-shadow: 0 0 1px currentColor;
+    text-shadow: 0 0 1.15px currentColor;
 }
 
 .font-pixel-num-48-bold {
     font-family: var(--font-pixel-num);
     font-size: 48px;
     font-weight: 500;
-    text-shadow: 0 0 1px currentColor;
+    text-shadow: 0 0 1.2px currentColor;
 }
 
 .text-black {
