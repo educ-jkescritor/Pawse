@@ -273,6 +273,22 @@ const clickDurations = {
     'tuxedo_cat': 1000  // 10 frames
 };
 
+// Preload companion sprite assets into browser GPU memory to eliminate any white flashing on swap
+(function preloadCompanionSprites() {
+    const urls = [
+        `../../assets/sprites/${catConfig.dbId}_static.png`,
+        `../../assets/sprites/${catConfig.dbId}_work.png`,
+        `../../assets/sprites/${catConfig.dbId}_click.png`
+    ];
+    if (catConfig.dbId === 'orange_cat') {
+        urls.push('../../assets/sprites/orange_cat_work_static.png');
+    }
+    urls.forEach(url => {
+        const img = new Image();
+        img.src = url;
+    });
+})();
+
 let bubbleTimeoutId = null;
 let isPetting = false;
 let isShowingFact = false; // Tracks if a thought bubble is visible
@@ -457,34 +473,65 @@ function updateCatState() {
     
     if (workingTime) {
         if (!isRunning) {
-            // Paused during work: just show static
-            catSprite.className = `cat-sprite ${catClass} breaking`;
-            catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
-        } else {
-            // Actively working: Sequence of work -> static -> work
-            let isWorkingAnim = true;
-            
-            // Initial state: Working
-            catSprite.className = `cat-sprite ${catClass} working`;
-            catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
-            
-            function playSequence() {
-                if (!isRunning || !workingTime) return;
-                
-                isWorkingAnim = !isWorkingAnim;
-                if (isWorkingAnim) {
-                    catSprite.className = `cat-sprite ${catClass} working`;
-                    catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
-                    spriteTimeoutId = setTimeout(playSequence, 2800); // Type for 2.8 seconds
-                } else {
-                    catSprite.className = `cat-sprite ${catClass} breaking`;
-                    catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
-                    spriteTimeoutId = setTimeout(playSequence, 2000); // Stop and look for 2 seconds
-                }
+            // Paused during work: show static work resting asset
+            if (catClass === 'orange_cat') {
+                catSprite.className = `cat-sprite ${catClass} work-static`;
+                catSprite.style.backgroundImage = `url('../../assets/sprites/orange_cat_work_static.png')`;
+            } else {
+                catSprite.className = `cat-sprite ${catClass} breaking`;
+                catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
             }
-            
-            // Kick off the sequence
-            spriteTimeoutId = setTimeout(playSequence, 2800);
+        } else {
+            if (catClass === 'orange_cat') {
+                // Orange Cat sleeping sequence: starts with work_static for a few seconds,
+                // then plays work animation sequence, then back to work_static
+                let isWorkStatic = true;
+
+                catSprite.className = `cat-sprite ${catClass} work-static`;
+                catSprite.style.backgroundImage = `url('../../assets/sprites/orange_cat_work_static.png')`;
+
+                function playOrangeSleepSequence() {
+                    if (!isRunning || !workingTime) return;
+
+                    isWorkStatic = !isWorkStatic;
+                    if (isWorkStatic) {
+                        catSprite.className = `cat-sprite ${catClass} work-static`;
+                        catSprite.style.backgroundImage = `url('../../assets/sprites/orange_cat_work_static.png')`;
+                        spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2500); // Rest still for 2.5s
+                    } else {
+                        catSprite.className = `cat-sprite ${catClass} sleeping-anim`;
+                        catSprite.style.backgroundImage = `url('../../assets/sprites/orange_cat_work.png')`;
+                        spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2700); // 3 complete 0.9s loops of 3-frame breathing
+                    }
+                }
+
+                spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2500);
+            } else {
+                // Actively working for other cats: Sequence of work -> static -> work
+                let isWorkingAnim = true;
+                
+                // Initial state: Working
+                catSprite.className = `cat-sprite ${catClass} working`;
+                catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
+                
+                function playSequence() {
+                    if (!isRunning || !workingTime) return;
+                    
+                    isWorkingAnim = !isWorkingAnim;
+                    if (isWorkingAnim) {
+                        catSprite.className = `cat-sprite ${catClass} working`;
+                        catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
+                        spriteTimeoutId = setTimeout(playSequence, 2800); // Type for 2.8 seconds
+                    } else {
+                        catSprite.className = `cat-sprite ${catClass} breaking`;
+                        catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
+                        spriteTimeoutId = setTimeout(playSequence, 2000); // Stop and look for 2 seconds
+                    }
+                }
+                
+                // Kick off the sequence
+                spriteTimeoutId = setTimeout(playSequence, 2800);
+            }
         }
     } else {
         // Break time: always static

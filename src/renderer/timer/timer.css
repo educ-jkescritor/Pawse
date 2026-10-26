@@ -104,6 +104,37 @@ body.cat-only-mode .app-wrapper {
     animation-timing-function: steps(8, end);
 }
 
+/* Orange Cat (Ginger) sleeping work animation: 3 frames in sprite sheet, 64x64 frame size (192x64 total sheet) */
+.cat-sprite.orange_cat {
+    width: 64px;
+    height: 64px;
+    transform: scale(3.0) translateY(0px);
+}
+
+.cat-sprite.orange_cat.sleeping-anim {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-size: 192px 64px;
+    background-position: 0px 0px;
+    animation: workAnimationOrange 0.9s steps(3) infinite;
+}
+
+.cat-sprite.orange_cat.breaking {
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+    cursor: pointer;
+}
+
+.cat-sprite.orange_cat.work-static {
+    display: block;
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+    cursor: default;
+}
+
 .cat-sprite.breaking {
     display: block;
     background-size: 512px 512px; /* Perfectly matches the working frame size now! */
@@ -114,6 +145,9 @@ body.cat-only-mode .app-wrapper {
 
 /* --- CLICK ANIMATIONS --- */
 .cat-sprite.orange_cat.clicking {
+    width: 512px;
+    height: 512px;
+    transform: scale(0.4) translateY(20px);
     display: block;
     background-size: 4096px 512px; /* 8 frames */
     animation: orangeClickAnim 0.8s steps(8) infinite;
@@ -151,6 +185,11 @@ body.cat-only-mode .app-wrapper {
 @keyframes workAnimationTuxedo {
     from { background-position: 0px 0px; }
     to { background-position: -4096px 0px; }
+}
+
+@keyframes workAnimationOrange {
+    from { background-position: 0px 0px; }
+    to { background-position: -192px 0px; }
 }
 
 .timer-controls {
@@ -550,6 +589,14 @@ body.cat-only-mode .cat-area {
 body.cat-only-mode .cat-sprite {
     transform: scale(0.4) translateY(0); /* Zero vertical offset for perfect centering in 240x240 mini window */
     transition: filter 0.25s ease;
+}
+
+body.cat-only-mode .cat-sprite.orange_cat {
+    transform: scale(3.0) translateY(0); /* Preserve 3.0x scale for 64x64 orange cat in 240x240 mini window */
+}
+
+body.cat-only-mode .cat-sprite.orange_cat.clicking {
+    transform: scale(0.4) translateY(0); /* 512px clicking sprite scales with 0.4x */
 }
 
 body.cat-only-mode:hover .cat-sprite,
