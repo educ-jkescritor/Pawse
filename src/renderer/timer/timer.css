@@ -106,9 +106,36 @@ body.cat-only-mode .app-wrapper {
 
 /* Orange Cat (Ginger) sleeping work animation: 3 frames in sprite sheet, 64x64 frame size (192x64 total sheet) */
 .cat-sprite.orange_cat {
+    position: relative;
     width: 64px;
     height: 64px;
     transform: scale(3.0) translateY(0px);
+    backface-visibility: hidden;
+    will-change: background-image, background-position;
+}
+
+.cat-sprite.orange_cat::before,
+.cat-sprite.orange_cat::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.cat-sprite.orange_cat::before {
+    background-image:
+        url('../../assets/sprites/orange_cat_work_static.png'),
+        url('../../assets/sprites/orange_cat_work.png'),
+        url('../../assets/sprites/orange_cat_idle_static.png');
+}
+
+.cat-sprite.orange_cat::after {
+    background-image:
+        url('../../assets/sprites/orange_cat_idle.png'),
+        url('../../assets/sprites/orange_cat_break_static.png'),
+        url('../../assets/sprites/orange_cat_break.png');
 }
 
 .cat-sprite.orange_cat.sleeping-anim {
@@ -121,12 +148,26 @@ body.cat-only-mode .app-wrapper {
     animation: workAnimationOrange 0.9s steps(3) infinite;
 }
 
+.cat-sprite.orange_cat.idle-static,
 .cat-sprite.orange_cat.breaking {
     display: block;
-    background-image: url('../../assets/sprites/orange_cat_break_static.png');
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/orange_cat_idle_static.png');
     background-size: 64px 64px;
     background-position: 0px 0px;
     animation: none;
+    cursor: pointer;
+}
+
+.cat-sprite.orange_cat.idle-anim {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/orange_cat_idle.png');
+    background-size: 320px 64px; /* 5 frames * 64px */
+    background-position: 0px 0px;
+    animation: orangeIdleAnim 0.75s steps(5) infinite;
     cursor: pointer;
 }
 
@@ -143,6 +184,8 @@ body.cat-only-mode .app-wrapper {
 
 .cat-sprite.orange_cat.work-static {
     display: block;
+    width: 64px;
+    height: 64px;
     background-image: url('../../assets/sprites/orange_cat_work_static.png');
     background-size: 64px 64px;
     background-position: 0px 0px;
@@ -170,6 +213,11 @@ body.cat-only-mode .app-wrapper {
 @keyframes orangeClickAnim {
     from { background-position: 0px 0px; }
     to { background-position: -4096px 0px; }
+}
+
+@keyframes orangeIdleAnim {
+    from { background-position: 0px 0px; }
+    to { background-position: -320px 0px; }
 }
 
 @keyframes orangeBreakAnim {

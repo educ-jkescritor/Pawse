@@ -1079,8 +1079,68 @@ p {
 }
 
 .orange-info .companion-states {
-    padding: 12px 12px 12px 40px;
-    justify-content: center;
+    padding: 0 0 0 40px;
+    justify-content: flex-end;
+    align-items: flex-end;
+}
+
+.orange-about-sprite {
+    display: block;
+    position: relative;
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+    background-repeat: no-repeat;
+    background-position: 0px 0px;
+    image-rendering: pixelated;
+    transform: scale(1.75);
+    transform-origin: bottom right;
+    backface-visibility: hidden;
+    will-change: background-image, background-position;
+}
+
+/* Keep both tag_static and tag sprite sheets resident in GPU texture memory at all times */
+.orange-about-sprite::before,
+.orange-about-sprite::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.orange-about-sprite::before {
+    background-image: url('../assets/sprites/orange_cat_tag_static.png');
+}
+
+.orange-about-sprite::after {
+    background-image: url('../assets/sprites/orange_cat_tag.png');
+}
+
+.orange-about-sprite.tag-static {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../assets/sprites/orange_cat_tag_static.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+}
+
+.orange-about-sprite.tag-anim {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../assets/sprites/orange_cat_tag.png');
+    background-size: 256px 64px; /* 4 frames * 64px */
+    background-position: 0px 0px;
+    animation: orangeAboutTagAnim 0.8s steps(4) infinite;
+}
+
+@keyframes orangeAboutTagAnim {
+    from { background-position: 0px 0px; }
+    to { background-position: -256px 0px; }
 }
 
 /* --- ABOUT FOOTER & TEAM SECTION --- */

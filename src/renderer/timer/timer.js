@@ -283,6 +283,8 @@ const clickDurations = {
     if (catConfig.dbId === 'orange_cat') {
         urls.push(
             '../../assets/sprites/orange_cat_work_static.png',
+            '../../assets/sprites/orange_cat_idle_static.png',
+            '../../assets/sprites/orange_cat_idle.png',
             '../../assets/sprites/orange_cat_break_static.png',
             '../../assets/sprites/orange_cat_break.png'
         );
@@ -361,9 +363,47 @@ function triggerAmbientThought() {
     }
 }
 
+function startOrangeBreakIdleLoop() {
+    if (spriteTimeoutId) {
+        clearTimeout(spriteTimeoutId);
+        spriteTimeoutId = null;
+    }
+
+    const catClass = catConfig.dbId;
+    if (catClass !== 'orange_cat' || workingTime || isPetting) return;
+
+    catSprite.style.backgroundImage = '';
+    catSprite.className = `cat-sprite ${catClass} idle-static`;
+
+    if (!isRunning) return;
+
+    let isIdleStatic = true;
+
+    function playOrangeIdleSequence() {
+        if (!isRunning || workingTime || isPetting) return;
+
+        isIdleStatic = !isIdleStatic;
+        if (isIdleStatic) {
+            catSprite.className = `cat-sprite ${catClass} idle-static`;
+            spriteTimeoutId = setTimeout(playOrangeIdleSequence, 2500); // Rest on idle_static for 2.5s
+        } else {
+            catSprite.className = `cat-sprite ${catClass} idle-anim`;
+            spriteTimeoutId = setTimeout(playOrangeIdleSequence, 2250); // 3 complete 0.75s loops of 5-frame idle animation
+        }
+    }
+
+    spriteTimeoutId = setTimeout(playOrangeIdleSequence, 2500);
+}
+
 catSprite.addEventListener('click', () => {
     // Only allow interaction during break times and if not already petting
     if (workingTime || isPetting) return;
+
+    // Stop any active break idle animation sequence so click animation takes over cleanly
+    if (spriteTimeoutId) {
+        clearTimeout(spriteTimeoutId);
+        spriteTimeoutId = null;
+    }
 
     // Reset / restart the 12-second idle countdown on every pet click
     resetIdleThoughtTimer();
@@ -404,15 +444,15 @@ catSprite.addEventListener('click', () => {
         // If session forcefully shifted back to work time, let updateCatState handle it
         if (workingTime) return;
 
-        // Revert back to static and unlock
+        isPetting = false;
+
+        // Revert back to break idle loop (or static for other cats) and unlock
         if (catClass === 'orange_cat') {
-            catSprite.style.backgroundImage = '';
-            catSprite.className = `cat-sprite ${catClass} breaking`;
+            startOrangeBreakIdleLoop();
         } else {
             catSprite.className = `cat-sprite ${catClass} breaking`;
             catSprite.style.backgroundImage = `url('../../assets/sprites/${catClass}_static.png')`;
         }
-        isPetting = false;
     }, duration);
 });
 
@@ -546,10 +586,9 @@ function updateCatState() {
             }
         }
     } else {
-        // Break time: always static
+        // Break time: Orange Cat runs idle_static <-> idle loop when unclicked; other cats stay static
         if (catClass === 'orange_cat') {
-            catSprite.style.backgroundImage = '';
-            catSprite.className = `cat-sprite ${catClass} breaking`;
+            startOrangeBreakIdleLoop();
         } else {
             catSprite.className = `cat-sprite ${catClass} breaking`;
             catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
@@ -628,8 +667,6 @@ function handleSessionComplete(isManualSkip = false) {
         if (!isManualSkip) {
             workCount++;
         }
-        workingTime = false;
-        updateCatState();
 
         if (cycleCount === 3) {
             nextPhaseState = { remainingTime: catConfig.longBreakTime, workingTime: false };
@@ -643,6 +680,7 @@ function handleSessionComplete(isManualSkip = false) {
                 message,
                 "Start Long Break",
                 function () {
+                    workingTime = false;
                     remainingTime = catConfig.longBreakTime;
                     document.getElementById("timer-display").textContent = formatTime(remainingTime);
                     startTimer();
@@ -662,6 +700,7 @@ function handleSessionComplete(isManualSkip = false) {
                 message,
                 "Start Break",
                 function () {
+                    workingTime = false;
                     remainingTime = catConfig.shortBreakTime;
                     document.getElementById("timer-display").textContent = formatTime(remainingTime);
                     startTimer();
@@ -710,7 +749,6 @@ function handleSessionComplete(isManualSkip = false) {
                 "Start Work",
                 function () {
                     workingTime = true;
-                    updateCatState();
                     remainingTime = catConfig.workTime;
                     document.getElementById("timer-display").textContent = formatTime(remainingTime);
                     startTimer();
