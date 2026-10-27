@@ -949,24 +949,20 @@ p {
 }
 
 .companion-card {
-    box-sizing: border-box;
     display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    align-self: stretch;
-
     height: 120px;
     min-height: 120px;
     max-height: 120px;
+    align-items: flex-start;
+    gap: 24px;
+    align-self: stretch;
     flex-shrink: 0;
-    gap: 0;
 
     border: 1px solid var(--stroke-color);
     border-radius: 12px;
     overflow: hidden;
     background: #fff;
 }
-
 
 .companion-image {
     width: 80px; /* Increased width to provide more horizontal breathing room */
@@ -1034,29 +1030,25 @@ p {
 
 
 .companion-text {
-    box-sizing: border-box;
     display: flex;
+    padding: 16px 24px 17px 0;
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-
-    flex: 1 1 0;
-    min-width: 0;
-    min-height: 0;
-    align-self: stretch;
-    padding: 16px 24px;
     gap: 4px;
-    background: #fff;
-
-    overflow-y: auto;
+    flex: 1 0 0;
+    align-self: stretch;
 }
 
-.companion-text > :first-child {
-    margin-top: auto;
-}
-
-.companion-text > :last-child {
-    margin-bottom: auto;
+.orange-info .companion-text {
+    display: flex;
+    padding: 16px 0 17px 24px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 4px;
+    flex: 1 0 0;
+    align-self: stretch;
 }
 
 
