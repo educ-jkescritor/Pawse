@@ -11,8 +11,11 @@ html, body {
 }
 
 .app-wrapper {
-    width: calc(100% - 16px);
+    width: 720px;
+    min-width: 720px;
     height: calc(100% - 8px);
+    flex-shrink: 0;
+    box-sizing: border-box;
     background-color: var(--bg-main);
     border-radius: 12px;
     border: 1px solid var(--stroke-color);
@@ -946,24 +949,20 @@ p {
 }
 
 .companion-card {
-    box-sizing: border-box;
     display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    align-self: stretch;
-
     height: 120px;
     min-height: 120px;
     max-height: 120px;
+    align-items: flex-start;
+    gap: 24px;
+    align-self: stretch;
     flex-shrink: 0;
-    gap: 0;
 
     border: 1px solid var(--stroke-color);
     border-radius: 12px;
     overflow: hidden;
     background: #fff;
 }
-
 
 .companion-image {
     width: 80px; /* Increased width to provide more horizontal breathing room */
@@ -1031,29 +1030,25 @@ p {
 
 
 .companion-text {
-    box-sizing: border-box;
     display: flex;
+    padding: 16px 24px 17px 0;
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-
-    flex: 1 1 0;
-    min-width: 0;
-    min-height: 0;
+    gap: 4px;
+    flex: 1 0 0;
     align-self: stretch;
-    padding: 12px 16px;
-    gap: 8px;
-    background: #fff;
-
-    overflow-y: auto;
 }
 
-.companion-text > :first-child {
-    margin-top: auto;
-}
-
-.companion-text > :last-child {
-    margin-bottom: auto;
+.orange-info .companion-text {
+    display: flex;
+    padding: 16px 0 17px 24px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 4px;
+    flex: 1 0 0;
+    align-self: stretch;
 }
 
 

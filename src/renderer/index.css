@@ -319,15 +319,15 @@ ease;
 }
 
 .cat-label-classic {
-    background: var(--theme-classic-light);
+    background: var(--theme-classic-solid);
 }
 
 .cat-label-sprint {
-    background: var(--theme-sprint-light);
+    background: var(--theme-sprint-solid);
 }
 
 .cat-label-focused {
-    background: var(--theme-focused-light);
+    background: var(--theme-focused-solid);
 }
 
 /* --- TOP BAR --- */
@@ -521,7 +521,7 @@ body::after {
     align-items: center;
     width: 100%;
     padding: 4px 0 8px 0;
-    gap: 6px;
+    gap: 12px;
 }
 
 .cat_buttons button {
