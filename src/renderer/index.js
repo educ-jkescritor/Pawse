@@ -11,6 +11,40 @@ if (localStorage.getItem('alwaysOnTop') === 'true') {
 
 let selectedCat = null;
 
+// Preload Ginger selection sprites into memory to prevent any transition flicker
+(function preloadMainSprites() {
+    [
+        '../assets/sprites/orange_cat_main_static.png',
+        '../assets/sprites/orange_cat_main.png'
+    ].forEach(url => {
+        const img = new Image();
+        img.src = url;
+    });
+})();
+
+// Start continuous alternating sequence between orange_cat_main_static and orange_cat_main
+let orangeMainTimeoutId = null;
+(function startOrangeMainSequence() {
+    const sprite = document.getElementById("orange-main-sprite");
+    if (!sprite) return;
+
+    let isStatic = true;
+    sprite.className = "orange-main-sprite main-static";
+
+    function playMainLoop() {
+        isStatic = !isStatic;
+        if (isStatic) {
+            sprite.className = "orange-main-sprite main-static";
+            orangeMainTimeoutId = setTimeout(playMainLoop, 2500); // Rest on main_static for 2.5s
+        } else {
+            sprite.className = "orange-main-sprite main-anim";
+            orangeMainTimeoutId = setTimeout(playMainLoop, 2700); // 3 cycles of 0.9s 3-frame main animation
+        }
+    }
+
+    orangeMainTimeoutId = setTimeout(playMainLoop, 2500);
+})();
+
 // Store buttons in a dictionary
 const buttons = {
     tuxedo: document.getElementById("tuxedo_cat"),
