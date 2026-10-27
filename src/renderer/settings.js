@@ -110,7 +110,7 @@ function startOrangeAboutSequence() {
             orangeAboutTimeoutId = setTimeout(playTagLoop, 2500); // Rest on tag_static for 2.5s
         } else {
             sprite.className = "orange-about-sprite tag-anim";
-            orangeAboutTimeoutId = setTimeout(playTagLoop, 2400); // 3 cycles of 0.8s 4-frame tag animation
+            orangeAboutTimeoutId = setTimeout(playTagLoop, 2700); // 3 cycles of 0.9s 3-frame tag animation
         }
     }
 
