@@ -86,22 +86,46 @@ function selectCompanion(catKey) {
     }
 }
 
+// Double-click accelerator (400ms industry threshold) to quickly enter timer
+let lastClickTime = 0;
+let lastClickedCat = null;
+const DOUBLE_CLICK_THRESHOLD_MS = 400;
+
+function handleCardClick(catKey) {
+    const now = Date.now();
+    const isQuickDoubleClick = (catKey === lastClickedCat) && (now - lastClickTime <= DOUBLE_CLICK_THRESHOLD_MS);
+
+    lastClickTime = now;
+    lastClickedCat = catKey;
+
+    if (isQuickDoubleClick) {
+        selectedCat = catKey;
+        Object.values(buttons).forEach(btn => btn?.classList.remove("selected"));
+        buttons[catKey]?.classList.add("selected");
+        if (confirmButton) confirmButton.disabled = false;
+        window.location.assign(`timer/timer.html?cat=${catKey}`);
+        return;
+    }
+
+    selectCompanion(catKey);
+}
+
 // Attach event listeners safely
 if (buttons.orange) {
     buttons.orange.onclick = function () {
-        selectCompanion("orange");
+        handleCardClick("orange");
     };
 }
 
 if (buttons.tuxedo) {
     buttons.tuxedo.onclick = function () {
-        selectCompanion("tuxedo");
+        handleCardClick("tuxedo");
     };
 }
 
 if (buttons.black) {
     buttons.black.onclick = function () {
-        selectCompanion("black");
+        handleCardClick("black");
     };
 }
 
