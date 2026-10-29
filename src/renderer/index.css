@@ -125,12 +125,17 @@ input, textarea {
     user-select: auto;
 }
 
+.font-pixel-20-regular {
+    font-family: var(--font-pixel);
+    font-size: 20px;
+    font-weight: 500;
+}
+
 .font-pixel-20-medium {
     font-family: var(--font-pixel);
     font-size: 20px;
     font-weight: 700;
 }
-
 
 .font-pixel-36-medium {
     font-family: var(--font-pixel);
@@ -507,6 +512,7 @@ body::after {
 
 .main-text {
     text-align: center;
+    padding-bottom: 6px;
 }
 
 .main-text p {
