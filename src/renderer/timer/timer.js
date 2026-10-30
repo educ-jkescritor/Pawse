@@ -377,12 +377,10 @@ function startOrangeBreakIdleLoop() {
     catSprite.style.backgroundImage = '';
     catSprite.className = `cat-sprite ${catClass} idle-static`;
 
-    if (!isRunning) return;
-
     let isIdleStatic = true;
 
     function playOrangeIdleSequence() {
-        if (!isRunning || workingTime || isPetting) return;
+        if (workingTime || isPetting) return;
 
         isIdleStatic = !isIdleStatic;
         if (isIdleStatic) {
@@ -531,64 +529,53 @@ function updateCatState() {
     }
     
     if (workingTime) {
-        if (!isRunning) {
-            // Paused during work: show static work resting asset
-            if (catClass === 'orange_cat') {
-                catSprite.style.backgroundImage = '';
-                catSprite.className = `cat-sprite ${catClass} work-static`;
-            } else {
-                catSprite.className = `cat-sprite ${catClass} breaking`;
-                catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
+        if (catClass === 'orange_cat') {
+            // Orange Cat sleeping sequence: starts with work_static for a few seconds,
+            // then plays work animation sequence, then back to work_static
+            let isWorkStatic = true;
+
+            catSprite.style.backgroundImage = ''; // Clear inline override so CSS class takes precedence
+            catSprite.className = `cat-sprite ${catClass} work-static`;
+
+            function playOrangeSleepSequence() {
+                if (!workingTime) return;
+
+                isWorkStatic = !isWorkStatic;
+                if (isWorkStatic) {
+                    catSprite.className = `cat-sprite ${catClass} work-static`;
+                    spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2500); // Rest still for 2.5s
+                } else {
+                    catSprite.className = `cat-sprite ${catClass} sleeping-anim`;
+                    spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2700); // 3 complete 0.9s loops of 3-frame breathing
+                }
             }
+
+            spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2500);
         } else {
-            if (catClass === 'orange_cat') {
-                // Orange Cat sleeping sequence: starts with work_static for a few seconds,
-                // then plays work animation sequence, then back to work_static
-                let isWorkStatic = true;
-
-                catSprite.style.backgroundImage = ''; // Clear inline override so CSS class takes precedence
-                catSprite.className = `cat-sprite ${catClass} work-static`;
-
-                function playOrangeSleepSequence() {
-                    if (!isRunning || !workingTime) return;
-
-                    isWorkStatic = !isWorkStatic;
-                    if (isWorkStatic) {
-                        catSprite.className = `cat-sprite ${catClass} work-static`;
-                        spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2500); // Rest still for 2.5s
-                    } else {
-                        catSprite.className = `cat-sprite ${catClass} sleeping-anim`;
-                        spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2700); // 3 complete 0.9s loops of 3-frame breathing
-                    }
+            // Actively working for other cats: Sequence of work -> static -> work
+            let isWorkingAnim = true;
+            
+            // Initial state: Working
+            catSprite.className = `cat-sprite ${catClass} working`;
+            catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
+            
+            function playSequence() {
+                if (!workingTime) return;
+                
+                isWorkingAnim = !isWorkingAnim;
+                if (isWorkingAnim) {
+                    catSprite.className = `cat-sprite ${catClass} working`;
+                    catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
+                    spriteTimeoutId = setTimeout(playSequence, 2800); // Type for 2.8 seconds
+                } else {
+                    catSprite.className = `cat-sprite ${catClass} breaking`;
+                    catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
+                    spriteTimeoutId = setTimeout(playSequence, 2000); // Stop and look for 2 seconds
                 }
-
-                spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2500);
-            } else {
-                // Actively working for other cats: Sequence of work -> static -> work
-                let isWorkingAnim = true;
-                
-                // Initial state: Working
-                catSprite.className = `cat-sprite ${catClass} working`;
-                catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
-                
-                function playSequence() {
-                    if (!isRunning || !workingTime) return;
-                    
-                    isWorkingAnim = !isWorkingAnim;
-                    if (isWorkingAnim) {
-                        catSprite.className = `cat-sprite ${catClass} working`;
-                        catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
-                        spriteTimeoutId = setTimeout(playSequence, 2800); // Type for 2.8 seconds
-                    } else {
-                        catSprite.className = `cat-sprite ${catClass} breaking`;
-                        catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
-                        spriteTimeoutId = setTimeout(playSequence, 2000); // Stop and look for 2 seconds
-                    }
-                }
-                
-                // Kick off the sequence
-                spriteTimeoutId = setTimeout(playSequence, 2800);
             }
+            
+            // Kick off the sequence
+            spriteTimeoutId = setTimeout(playSequence, 2800);
         }
     } else {
         // Break time: Orange Cat runs idle_static <-> idle loop when unclicked; other cats stay static
@@ -612,7 +599,9 @@ function startTimer() {
         }
         pauseStartTime = null;
     }
-    updateCatState();
+    if (!spriteTimeoutId) {
+        updateCatState();
+    }
     updateAudioSettings();
 
     timerId = setInterval(() => {
@@ -834,7 +823,9 @@ function pauseTimer() {
     if (workingTime && !pauseStartTime) {
         pauseStartTime = Date.now();
     }
-    updateCatState();
+    if (!spriteTimeoutId) {
+        updateCatState();
+    }
     updateAudioSettings();
 }
 
