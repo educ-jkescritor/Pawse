@@ -86,10 +86,10 @@ function selectCompanion(catKey) {
     }
 }
 
-// Double-click accelerator (400ms industry threshold) to quickly enter timer
+// Double-click accelerator (300ms industry threshold) to quickly enter timer
 let lastClickTime = 0;
 let lastClickedCat = null;
-const DOUBLE_CLICK_THRESHOLD_MS = 400;
+const DOUBLE_CLICK_THRESHOLD_MS = 300;
 
 function handleCardClick(catKey) {
     const now = Date.now();
