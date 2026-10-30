@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "aseprite-ai-artist": {
+      "command": "cmd.exe",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "@pebbly/aseprite-ai-artist",
+        "serve"
+      ]
+    }
+  }
+}

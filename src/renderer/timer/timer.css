@@ -104,6 +104,95 @@ body.cat-only-mode .app-wrapper {
     animation-timing-function: steps(8, end);
 }
 
+/* Orange Cat (Ginger) sleeping work animation: 3 frames in sprite sheet, 64x64 frame size (192x64 total sheet) */
+.cat-sprite.orange_cat {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    transform: scale(3.0) translateY(0px);
+    backface-visibility: hidden;
+    will-change: background-image, background-position;
+}
+
+.cat-sprite.orange_cat::before,
+.cat-sprite.orange_cat::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.cat-sprite.orange_cat::before {
+    background-image:
+        url('../../assets/sprites/orange_cat_work_static.png'),
+        url('../../assets/sprites/orange_cat_work.png'),
+        url('../../assets/sprites/orange_cat_idle_static.png');
+}
+
+.cat-sprite.orange_cat::after {
+    background-image:
+        url('../../assets/sprites/orange_cat_idle.png'),
+        url('../../assets/sprites/orange_cat_break_static.png'),
+        url('../../assets/sprites/orange_cat_break.png');
+}
+
+.cat-sprite.orange_cat.sleeping-anim {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/orange_cat_work.png');
+    background-size: 192px 64px;
+    background-position: 0px 0px;
+    animation: workAnimationOrange 0.9s steps(3) infinite;
+}
+
+.cat-sprite.orange_cat.idle-static,
+.cat-sprite.orange_cat.breaking {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/orange_cat_idle_static.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+    cursor: pointer;
+}
+
+.cat-sprite.orange_cat.idle-anim {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/orange_cat_idle.png');
+    background-size: 320px 64px; /* 5 frames * 64px */
+    background-position: 0px 0px;
+    animation: orangeIdleAnim 0.75s steps(5) infinite;
+    cursor: pointer;
+}
+
+.cat-sprite.orange_cat.break-anim {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/orange_cat_break.png');
+    background-size: 576px 64px; /* 9 frames * 64px */
+    background-position: 0px 0px;
+    animation: orangeBreakAnim 0.9s steps(9) infinite;
+    cursor: default;
+}
+
+.cat-sprite.orange_cat.work-static {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/orange_cat_work_static.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+    cursor: default;
+}
+
 .cat-sprite.breaking {
     display: block;
     background-size: 512px 512px; /* Perfectly matches the working frame size now! */
@@ -114,6 +203,9 @@ body.cat-only-mode .app-wrapper {
 
 /* --- CLICK ANIMATIONS --- */
 .cat-sprite.orange_cat.clicking {
+    width: 512px;
+    height: 512px;
+    transform: scale(0.4) translateY(20px);
     display: block;
     background-size: 4096px 512px; /* 8 frames */
     animation: orangeClickAnim 0.8s steps(8) infinite;
@@ -121,6 +213,16 @@ body.cat-only-mode .app-wrapper {
 @keyframes orangeClickAnim {
     from { background-position: 0px 0px; }
     to { background-position: -4096px 0px; }
+}
+
+@keyframes orangeIdleAnim {
+    from { background-position: 0px 0px; }
+    to { background-position: -320px 0px; }
+}
+
+@keyframes orangeBreakAnim {
+    from { background-position: 0px 0px; }
+    to { background-position: -576px 0px; }
 }
 
 .cat-sprite.black_cat.clicking {
@@ -151,6 +253,11 @@ body.cat-only-mode .app-wrapper {
 @keyframes workAnimationTuxedo {
     from { background-position: 0px 0px; }
     to { background-position: -4096px 0px; }
+}
+
+@keyframes workAnimationOrange {
+    from { background-position: 0px 0px; }
+    to { background-position: -192px 0px; }
 }
 
 .timer-controls {
@@ -550,6 +657,14 @@ body.cat-only-mode .cat-area {
 body.cat-only-mode .cat-sprite {
     transform: scale(0.4) translateY(0); /* Zero vertical offset for perfect centering in 240x240 mini window */
     transition: filter 0.25s ease;
+}
+
+body.cat-only-mode .cat-sprite.orange_cat {
+    transform: scale(3.0) translateY(0); /* Preserve 3.0x scale for 64x64 orange cat in 240x240 mini window */
+}
+
+body.cat-only-mode .cat-sprite.orange_cat.clicking {
+    transform: scale(0.4) translateY(0); /* 512px clicking sprite scales with 0.4x */
 }
 
 body.cat-only-mode:hover .cat-sprite,

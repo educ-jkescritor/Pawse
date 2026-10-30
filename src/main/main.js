@@ -117,12 +117,12 @@ function settingsWindow() {
   set = new BrowserWindow({
     icon: iconPath,
     show: false,
-    width: 720, // content area width
+    width: 736, // content area width
     height: 430, // buffered window height
     alwaysOnTop: false,
     //resizable: false,
-    minWidth: 720,
-    maxWidth: 720,
+    minWidth: 736,
+    maxWidth: 736,
     minHeight: 430,
     maxHeight: 430,
     maximizable: false,
@@ -144,9 +144,9 @@ function settingsWindow() {
   const showSettings = () => {
     if (!isSettingsShown && set && !set.isDestroyed()) {
       isSettingsShown = true;
-      set.setSize(720, 430);
+      set.setSize(736, 430);
       const b = set.getBounds();
-      set.setBounds(clampBoundsToWorkArea(b, 720, 430));
+      set.setBounds(clampBoundsToWorkArea(b, 736, 430));
       set.webContents.setVisualZoomLevelLimits(1, 1);
       set.webContents.setZoomLevel(0);
       set.show();
@@ -243,12 +243,12 @@ if (!gotTheLock) {
       if (set && !set.isDestroyed() && !set.isMinimized()) {
         set.setResizable(true);
         set.setMinimumSize(0, 0);
-        set.setMaximumSize(720, 430);
-        set.setSize(720, 430);
+        set.setMaximumSize(736, 430);
+        set.setSize(736, 430);
         const b = set.getBounds();
-        set.setBounds(clampBoundsToWorkArea(b, 720, 430));
-        set.setMinimumSize(720, 430);
-        set.setMaximumSize(720, 430);
+        set.setBounds(clampBoundsToWorkArea(b, 736, 430));
+        set.setMinimumSize(736, 430);
+        set.setMaximumSize(736, 430);
         set.setResizable(false);
         set.webContents.setVisualZoomLevelLimits(1, 1);
         set.webContents.setZoomLevel(0);

@@ -11,8 +11,11 @@ html, body {
 }
 
 .app-wrapper {
-    width: calc(100% - 16px);
+    width: 720px;
+    min-width: 720px;
     height: calc(100% - 8px);
+    flex-shrink: 0;
+    box-sizing: border-box;
     background-color: var(--bg-main);
     border-radius: 12px;
     border: 1px solid var(--stroke-color);
@@ -337,11 +340,28 @@ p {
     height: 100%; /* Force it to exactly fill the main-bar content box */
 }
 
+.dashboard-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    align-self: stretch;
+}
+
 .dashboard-header-row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     width: 100%;
+}
+
+.refresh-icon {
+    cursor: pointer;
+    transition: filter 150ms ease;
+}
+
+.refresh-icon:hover {
+    filter: brightness(0.5);
 }
 
 /* DASHBOARD */
@@ -372,7 +392,7 @@ p {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 4px; /* 8px gap between metric value and subtext */
+    gap: 6px;
     align-self: stretch;
     line-height: 1;
 }
@@ -409,7 +429,7 @@ p {
 
 .analytics-card .card-value-row {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 8px;
 }
 
@@ -428,6 +448,14 @@ p {
 .analytics-card .card-subtext.trend-down {
     color: var(--text-gray);
     font-weight: 400;
+}
+
+.analytics-card .card-data,
+.analytics-card .card-unit {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    text-box-trim: trim-end;
 }
 
 /* CARD STYLING */
@@ -932,182 +960,199 @@ p {
 
 /* Companion */
 .companions-section {
-    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 16px;
-}
-
-.about-companions {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
-    width: 100%;
 }
 
 .companion-card {
     display: flex;
-    flex-direction: column;
-    padding: 16px;
-    gap: 16px;
-    border-radius: 12px;
-    border: 1px solid var(--stroke-color);
-    background: #FFFFFF;
-    min-width: 0;
-}
-
-.companion-card.tuxedo-theme {
-    --showcase-center: var(--theme-classic-light);
-    --box-bg: #F4F8E9; 
-    --card-accent: var(--theme-classic-dark);
-    --state-active: #CFE58A;
-}
-
-.companion-card.orange-theme {
-    --showcase-center: var(--theme-sprint-light); 
-    --box-bg: #FFF5E5; 
-    --card-accent: var(--theme-sprint-dark);
-    --state-active: #F8C47F;
-}
-
-.companion-card.black-theme {
-    --showcase-center: var(--theme-focused-light);
-    --box-bg: #F4EFFE; 
-    --card-accent: var(--theme-focused-dark);
-    --state-active: #BDA9FE;
-}
-
-.cat-title {
-    color: var(--text-black);
-    margin: 0;
-}
-
-/* 2. SPRITE SHOWCASE */
-.sprite-showcase {
+    height: 120px;
+    min-height: 120px;
+    max-height: 120px;
+    align-items: flex-start;
+    gap: 24px;
     align-self: stretch;
-    height: 180px;
-    padding: 16px 14px;
+    flex-shrink: 0;
+
+    border: 1px solid var(--stroke-color);
     border-radius: 12px;
-    background: radial-gradient(98.06% 98.06% at 50% 50%, var(--showcase-center) 0%, #FFFFFF 100%);
+    overflow: hidden;
+    background: #fff;
+}
+
+.companion-image {
+    width: 80px; /* Increased width to provide more horizontal breathing room */
+    height: 68px;
+    flex-shrink: 0;
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
     align-items: center;
+    justify-content: center;
+    overflow: hidden;
 }
 
-.status-badge {
-    align-self: flex-start;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--card-accent);
-}
-
-.status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background-color: var(--card-accent);
-}
-
-.sprite-showcase img {
-    width: 120px;
+.companion-image img {
+    width: 100%;
+    height: 100%;
     object-fit: contain;
-    image-rendering: pixelated;
+    transform: scale(2); /* Zooms sprite to fill container space nicely */
+    image-rendering: pixelated; /* Keep pixel art crisp */
 }
 
-/* 3. STATE TABS */
-.state-tabs {
+.companion-states {
+    box-sizing: border-box;
+    position: relative;
+    flex: 0 0 177px;
+    width: 177px;
+    height: auto;
+    min-height: 0;
+    align-self: stretch;
+
     display: flex;
-    padding: 4px;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 40px 12px 12px;
+    overflow: hidden;
+
+    background: var(--bg-color);
+}
+
+.companion-card .companion-states .pixel-gradient {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: auto;
+    width: 40px;
+    height: auto;
+    transform: none;
+    pointer-events: none;
+
+    background-color: transparent;
+    background-image: var(--bg-image);
+    background-repeat: repeat-y;
+    background-size: 40px 120px;
+    background-position: top right;
+}
+
+.companion-card .companion-states .pixel-gradient.right-gradient {
+    left: 0;
+    right: auto;
+    transform: none;
+}
+
+.pixel-gradient img {
+    display: none;
+}
+
+
+.companion-text {
+    display: flex;
+    padding: 16px 24px 17px 0;
+    flex-direction: column;
+    justify-content: center;
     align-items: flex-start;
     gap: 4px;
-    align-self: stretch;
-
-    border-radius: 10px;
-    background: #EEF1EF;
-}
-
-.state-btn {
-    display: flex;
-    padding: 4px 0;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
     flex: 1 0 0;
-
-    border-radius: 6px;
-    border: none;
-    color: #141414;
-    cursor: pointer;
-    transition: background 0.2s ease, color 0.2s ease;
-    min-width: 0;
-}
-
-.state-btn:hover {
-    color: var(--text-black);
-}
-
-.state-btn.active {
-    background: var(--state-active); 
-    font-weight: 700;
-}
-
-/* 4. ANIMATION DESCRIPTION */
-.animation-desc {
-    display: flex;
-    height: 98px;
-    min-height: 88px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
     align-self: stretch;
 }
 
-/* 5. MORE ABOUT BOX */
-.more-about-box {
+.orange-info .companion-text {
     display: flex;
+    padding: 16px 0 17px 24px;
     flex-direction: column;
+    justify-content: center;
     align-items: flex-start;
-    gap: 12px;
-    background-color: var(--box-bg);
-    padding: 14px;
-    border-radius: 10px;
-    flex: 1; /* Pushes the tag container down uniformly across all 3 cards */
-}
-
-.box-header {
-    color: var(--card-accent);
-    margin: 0;
-}
-
-.box-divider {
-    border: none;
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
-    margin: 0;
-    width: 100%;
-}
-
-.more-about-box .font-inter-12-regular {
-    color: var(--card-accent);
-}
-
-.tag-container {
-    display: flex;
-    align-items: flex-start;
-    align-content: flex-start;
-    gap: 6px;
+    gap: 4px;
+    flex: 1 0 0;
     align-self: stretch;
-    flex-wrap: wrap;
-    margin-top: auto; /* Aligns tags cleanly to the bottom */
 }
 
-.tag {
-    display: flex;
-    padding: 4px 7px;
-    align-items: flex-start;
-    border-radius: 4px;
-    background: #FFF;
+
+.tuxedo-info {
+    --bg-color: linear-gradient(90deg, #ECFEA9 0%, #F1FBD0 111.19%, #F6F8F7 277.97%);
+    --hover-color: var(--theme-classic-light);
+    --active-color: var(--theme-classic-solid);
+    --bg-image: url('../assets/photos/pixel-gradient-left.svg');
+}
+
+.orange-info {
+    --bg-color: linear-gradient(270deg, #F8C47F 0%, #FEE1A9 110.46%, #FFF 276.55%);
+    --hover-color: var(--theme-sprint-light);
+    --active-color: var(--theme-sprint-solid);
+    --bg-image: url('../assets/photos/pixel-gradient-right.svg');
+}
+
+.black-info {
+    --bg-color: linear-gradient(90deg, #E0A9FE 0%, #EBD1FB 111.3%, #F6F8F7 278.25%);
+    --hover-color: var(--theme-focused-light);
+    --active-color: var(--theme-focused-solid);
+    --bg-image: url('../assets/photos/pixel-gradient-left.svg');
+}
+
+.orange-info .companion-states {
+    padding: 0 0 0 40px;
+    justify-content: flex-end;
+    align-items: flex-end;
+}
+
+.orange-about-sprite {
+    display: block;
+    position: relative;
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+    background-repeat: no-repeat;
+    background-position: 0px 0px;
+    image-rendering: pixelated;
+    transform: scale(1.75);
+    transform-origin: bottom right;
+    backface-visibility: hidden;
+    will-change: background-image, background-position;
+}
+
+/* Keep both tag_static and tag sprite sheets resident in GPU texture memory at all times */
+.orange-about-sprite::before,
+.orange-about-sprite::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.orange-about-sprite::before {
+    background-image: url('../assets/sprites/orange_cat_tag_static.png');
+}
+
+.orange-about-sprite::after {
+    background-image: url('../assets/sprites/orange_cat_tag.png');
+}
+
+.orange-about-sprite.tag-static {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../assets/sprites/orange_cat_tag_static.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+}
+
+.orange-about-sprite.tag-anim {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../assets/sprites/orange_cat_tag.png');
+    background-size: 256px 64px; /* 4 frames * 64px */
+    background-position: 0px 0px;
+    animation: orangeAboutTagAnim 0.8s steps(4) infinite;
+}
+
+@keyframes orangeAboutTagAnim {
+    from { background-position: 0px 0px; }
+    to { background-position: -256px 0px; }
 }
 
 /* --- ABOUT FOOTER & TEAM SECTION --- */
@@ -1136,16 +1181,18 @@ p {
 }
 
 .team-member-card {
-    flex: 0 0 calc(50% - 6px); /* Perfect 2-column layout */
-    background-color: var(--topbar-fill);
-    border: 1px solid var(--stroke-color);
-    border-radius: 8px;
-    padding: 10px 12px;
     display: flex;
+    padding: 12px;
+    gap: 12px;
     flex-direction: column;
     justify-content: space-between;
-    gap: 8px;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
+    align-items: flex-start;
+    flex: 1 0 0;
+    align-self: stretch;
+
+    border-radius: 8px;
+    border: 1px solid var(--stroke-color);
+    background: #FFF;
 }
 
 .team-member-card:hover {
@@ -1156,12 +1203,13 @@ p {
 .member-info {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    align-items: flex-start;
+    gap: 4px;
+    align-self: stretch;
 }
 
 .member-name {
-    margin: 0;
-    color: var(--text-black);
+    align-self: stretch;
 }
 
 .member-role {
@@ -1235,33 +1283,88 @@ p {
 }
 
 /* SETTINGS */
+#settings-content {
+    gap: 24px;
+}
+
+#settings-content .settings-title,
+#settings-content .settings-group-header,
+#settings-content .settings-subgroup-header {
+    margin: 0;
+    padding: 0;
+}
+
+#settings-content p {
+    margin: 0;
+}
+
+/* Workflow, Audio, System */
+.settings-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+}
+
+
 .settings-group {
-    width: 100%;
-    padding: 0px 12px;;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 0 10px;
+    min-width: 0;
+}
+
+.settings-items {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    min-width: 0;
+}
+
+/* Alerts, Focus Sounds, Interaction */
+.settings-subgroups {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+.settings-subgroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
 }
 
 .settings-item {
     width: 100%;
     display: flex;
-    flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 0px; /* Comfort margins between settings items */
+    padding: 0;
+    min-width: 0;
 }
 
 .settings-label-container {
     display: flex;
+    flex: 1 1 0;
+    min-width: 0;
     flex-direction: column;
+    align-items: flex-start;
     gap: 2px;
-    text-align: left;
-    max-width: 70%; /* Prevent label overlap with slider/toggle switches */
 }
 
-.settings-label-container p {
-    margin: 0;
+/* Keep controls from shrinking when descriptions wrap */
+#settings-content .settings-item > .toggle-switch,
+#settings-content .settings-item > .slider-container,
+#settings-content .settings-item > #update-btn {
+    flex-shrink: 0;
+}
+
+#settings-content #update-btn {
+    white-space: nowrap;
 }
 
 .toggle-switch {

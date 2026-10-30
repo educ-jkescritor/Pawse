@@ -23,6 +23,17 @@ const urlParams = new URLSearchParams(window.location.search);
 const catType = urlParams.get('cat');
 const catConfig = catConfiguration[catType];
 
+// Initialize Companion Dialogue Engine with historical analytics
+if (window.mainAPI && window.mainAPI.loadanalytics) {
+    window.mainAPI.loadanalytics(0).then(analytics => {
+        if (window.CompanionDialogueEngine) {
+            window.CompanionDialogueEngine.init(analytics);
+        }
+    }).catch(err => {
+        console.warn("Could not load analytics for dialogue engine:", err);
+    });
+}
+
 // Lock settings while timer is active
 localStorage.setItem('timerRunning', 'true');
 window.addEventListener('beforeunload', () => {
@@ -57,6 +68,13 @@ let preSkipState = null;
 let nextPhaseState = null;
 let sessionDate = new Date();
 
+// --- BEHAVIORAL & META STATE TRACKERS (Companion Dialogue Engine) ---
+let isRestoredSession = false;
+let pauseStartTime = null;
+let wasLongPaused = false;
+let lastSessionOutcome = null; // 'majorBailout' | 'earlyCutoff' | 'completed' | 'redemption' | 'breakSkipped'
+let hadPreviousBailout = false;
+
 // --- DURABLE EXECUTION ENGINE (Local Persistence) ---
 const savedStateStr = localStorage.getItem('pawseDurableState');
 if (savedStateStr) {
@@ -82,6 +100,14 @@ if (savedStateStr) {
             
             // If it was manually paused before crashing, start up paused
             isRunning = savedState.isRunning;
+
+            // Flag session recovery for companion recognition
+            isRestoredSession = true;
+            if (!workingTime) {
+                setTimeout(() => {
+                    triggerWelcomeBubble();
+                }, 600);
+            }
         }
     } catch(e) {
         // Ignore corruption
@@ -247,28 +273,153 @@ const clickDurations = {
     'tuxedo_cat': 1000  // 10 frames
 };
 
-// Chat bubble facts list
-const catFacts = [
-    "Cats spend 70% of their lives sleeping.",
-    "A cat's purr can help heal bones and muscles.",
-    "Cats have 32 muscles in each ear to control them.",
-    "A cat's nose print is unique, like a fingerprint!",
-    "Cats can make over 100 vocal sounds.",
-    "A cat can jump up to six times its height!",
-    "Cats have a third eyelid called the 'haw'!",
-    "Cats are crepuscular, meaning they are most active at dawn and dusk."
-];
+// Preload companion sprite assets into browser GPU memory to eliminate any white flashing on swap
+(function preloadCompanionSprites() {
+    const urls = [
+        `../../assets/sprites/${catConfig.dbId}_static.png`,
+        `../../assets/sprites/${catConfig.dbId}_work.png`,
+        `../../assets/sprites/${catConfig.dbId}_click.png`
+    ];
+    if (catConfig.dbId === 'orange_cat') {
+        urls.push(
+            '../../assets/sprites/orange_cat_work_static.png',
+            '../../assets/sprites/orange_cat_idle_static.png',
+            '../../assets/sprites/orange_cat_idle.png',
+            '../../assets/sprites/orange_cat_break_static.png',
+            '../../assets/sprites/orange_cat_break.png'
+        );
+    }
+    urls.forEach(url => {
+        const img = new Image();
+        img.src = url;
+    });
+})();
+
 let bubbleTimeoutId = null;
 let isPetting = false;
-let isShowingFact = false; // Tracks if a click-fact or welcome-fact is active so hover doesn't overwrite it
+let isShowingFact = false; // Tracks if a thought bubble is visible
 
+// --- AMBIENT IDLE DIALOGUE ENGINE TIMERS ---
+const IDLE_DELAY_MS = 12000;      // 12 seconds of stillness before cat has an ambient thought
+const IDLE_COOLDOWN_MS = 45000;   // 45 seconds cooldown between thoughts
+let idleThoughtTimeoutId = null;
+let lastThoughtTimestamp = 0;
+
+function resetIdleThoughtTimer() {
+    if (idleThoughtTimeoutId) {
+        clearTimeout(idleThoughtTimeoutId);
+        idleThoughtTimeoutId = null;
+    }
+
+    // Only run idle thought timer during break time and when not actively petting
+    if (workingTime) return;
+
+    idleThoughtTimeoutId = setTimeout(() => {
+        triggerAmbientThought();
+    }, IDLE_DELAY_MS);
+}
+
+function triggerAmbientThought() {
+    // Safety checks: must be break time, not actively petting, and modal not open
+    if (workingTime || isPetting) return;
+
+    const now = Date.now();
+    // Enforce 45-second cooldown between thoughts
+    if (now - lastThoughtTimestamp < IDLE_COOLDOWN_MS) {
+        const remainingCooldown = IDLE_COOLDOWN_MS - (now - lastThoughtTimestamp);
+        idleThoughtTimeoutId = setTimeout(triggerAmbientThought, Math.max(IDLE_DELAY_MS, remainingCooldown));
+        return;
+    }
+
+    const chatBubble = document.getElementById("chat-bubble");
+    const chatText = document.getElementById("chat-text");
+    if (chatBubble && chatText) {
+        if (bubbleTimeoutId) clearTimeout(bubbleTimeoutId);
+
+        isShowingFact = true;
+        lastThoughtTimestamp = Date.now();
+
+        const context = {
+            actualWork: actualWork,
+            wasLongPaused: wasLongPaused,
+            strictMode: (localStorage.getItem('strictMode') === 'true')
+        };
+
+        let message = "Purr... happy to keep you company.";
+        if (window.CompanionDialogueEngine) {
+            message = window.CompanionDialogueEngine.getPettingMessage(catConfig.dbId, cycleCount, context);
+        }
+
+        chatText.textContent = message;
+        chatBubble.className = `chat-bubble ${catConfig.dbId}`;
+
+        // Hide after 4.5 seconds
+        bubbleTimeoutId = setTimeout(() => {
+            chatBubble.classList.add("hidden");
+            isShowingFact = false;
+            // After this thought fades, arm the next idle check (which respects 45s cooldown)
+            resetIdleThoughtTimer();
+        }, 4500);
+    }
+}
+
+function startOrangeBreakIdleLoop() {
+    if (spriteTimeoutId) {
+        clearTimeout(spriteTimeoutId);
+        spriteTimeoutId = null;
+    }
+
+    const catClass = catConfig.dbId;
+    if (catClass !== 'orange_cat' || workingTime || isPetting) return;
+
+    catSprite.style.backgroundImage = '';
+    catSprite.className = `cat-sprite ${catClass} idle-static`;
+
+    if (!isRunning) return;
+
+    let isIdleStatic = true;
+
+    function playOrangeIdleSequence() {
+        if (!isRunning || workingTime || isPetting) return;
+
+        isIdleStatic = !isIdleStatic;
+        if (isIdleStatic) {
+            catSprite.className = `cat-sprite ${catClass} idle-static`;
+            spriteTimeoutId = setTimeout(playOrangeIdleSequence, 2500); // Rest on idle_static for 2.5s
+        } else {
+            catSprite.className = `cat-sprite ${catClass} idle-anim`;
+            spriteTimeoutId = setTimeout(playOrangeIdleSequence, 2250); // 3 complete 0.75s loops of 5-frame idle animation
+        }
+    }
+
+    spriteTimeoutId = setTimeout(playOrangeIdleSequence, 2500);
+}
 
 catSprite.addEventListener('click', () => {
     // Only allow interaction during break times and if not already petting
     if (workingTime || isPetting) return;
 
+    // Stop any active break idle animation sequence so click animation takes over cleanly
+    if (spriteTimeoutId) {
+        clearTimeout(spriteTimeoutId);
+        spriteTimeoutId = null;
+    }
+
+    // Reset / restart the 12-second idle countdown on every pet click
+    resetIdleThoughtTimer();
+
+    // Clean Interrupt: if a thought bubble is visible, dismiss it immediately so petting takes center stage
+    const chatBubble = document.getElementById("chat-bubble");
+    if (chatBubble && !chatBubble.classList.contains("hidden")) {
+        chatBubble.classList.add("hidden");
+        isShowingFact = false;
+        if (bubbleTimeoutId) {
+            clearTimeout(bubbleTimeoutId);
+            bubbleTimeoutId = null;
+        }
+    }
+
     isPetting = true;
-    isShowingFact = true; // Lock fact display
     const catClass = catConfig.dbId;
 
     // Play corresponding companion meow sound if master audio is enabled AND click sound toggle is on
@@ -278,39 +429,30 @@ catSprite.addEventListener('click', () => {
         meowAudio.play().catch(e => {});
     }
 
-    // Display a random cat fact in the chat bubble
-    const chatBubble = document.getElementById("chat-bubble");
-    const chatText = document.getElementById("chat-text");
-    if (chatBubble && chatText) {
-        if (bubbleTimeoutId) clearTimeout(bubbleTimeoutId);
-        
-        const randomFact = catFacts[Math.floor(Math.random() * catFacts.length)];
-        chatText.textContent = randomFact;
-        
-        // Dynamically assign theme classes (which auto-reveals the bubble by removing the hidden class)
-        chatBubble.className = `chat-bubble ${catClass}`;
-        
-        // Hide after 3.5 seconds
-        bubbleTimeoutId = setTimeout(() => {
-            chatBubble.classList.add("hidden");
-            isShowingFact = false; // Release fact display lock
-        }, 3500);
+    // Shift to the click / break sprite (Pure sensory petting, NO speech bubble)
+    if (catClass === 'orange_cat') {
+        catSprite.style.backgroundImage = '';
+        catSprite.className = `cat-sprite ${catClass} break-anim`;
+    } else {
+        catSprite.className = `cat-sprite ${catClass} clicking`;
+        catSprite.style.backgroundImage = `url('../../assets/sprites/${catClass}_click.png')`;
     }
 
-    // Shift to the click sprite
-    catSprite.className = `cat-sprite ${catClass} clicking`;
-    catSprite.style.backgroundImage = `url('../../assets/sprites/${catClass}_click.png')`;
-
     // Wait exactly the length of this specific cat's animation
-    const duration = clickDurations[catClass] || 1000;
+    const duration = (catClass === 'orange_cat') ? 900 : (clickDurations[catClass] || 1000);
     setTimeout(() => {
         // If session forcefully shifted back to work time, let updateCatState handle it
         if (workingTime) return;
 
-        // Revert back to static and unlock
-        catSprite.className = `cat-sprite ${catClass} breaking`;
-        catSprite.style.backgroundImage = `url('../../assets/sprites/${catClass}_static.png')`;
         isPetting = false;
+
+        // Revert back to break idle loop (or static for other cats) and unlock
+        if (catClass === 'orange_cat') {
+            startOrangeBreakIdleLoop();
+        } else {
+            catSprite.className = `cat-sprite ${catClass} breaking`;
+            catSprite.style.backgroundImage = `url('../../assets/sprites/${catClass}_static.png')`;
+        }
     }, duration);
 });
 
@@ -320,15 +462,38 @@ function triggerWelcomeBubble() {
     if (chatBubble && chatText) {
         if (bubbleTimeoutId) clearTimeout(bubbleTimeoutId);
         
-        isShowingFact = true; // Lock fact display so hover doesn't overwrite it
-        chatText.textContent = "Pet me for a fun fact! 🐾";
+        isShowingFact = true; // Lock fact display
+        
+        const context = {
+            actualWork: actualWork,
+            skipType: (lastSessionOutcome === 'majorBailout' || lastSessionOutcome === 'earlyCutoff') ? lastSessionOutcome : null,
+            isRedemption: lastSessionOutcome === 'redemption',
+            isRestored: isRestoredSession,
+            wasLongPaused: wasLongPaused,
+            strictMode: (localStorage.getItem('strictMode') === 'true')
+        };
+
+        let message = "Stretch your paws! Break time has begun.";
+        if (window.CompanionDialogueEngine) {
+            message = window.CompanionDialogueEngine.getBreakArrivalMessage(catConfig.dbId, cycleCount, context);
+        }
+        
+        // Single-fire resets
+        isRestoredSession = false;
+        lastSessionOutcome = null;
+        wasLongPaused = false;
+        lastThoughtTimestamp = Date.now(); // Mark arrival time for 45s cooldown
+
+        chatText.textContent = message;
         chatBubble.className = `chat-bubble ${catConfig.dbId}`; // Solid theme style
         
-        // Hide after 4 seconds
+        // Hide after 4.5 seconds
         bubbleTimeoutId = setTimeout(() => {
             chatBubble.classList.add("hidden");
-            isShowingFact = false; // Release lock
-        }, 4000);
+            isShowingFact = false;
+            // Once arrival bubble fades, arm the 12-second ambient idle timer
+            resetIdleThoughtTimer();
+        }, 4500);
     }
 }
 
@@ -336,6 +501,12 @@ function updateCatState() {
     isPetting = false; // Release lock in case of forced state shifts
     isShowingFact = false; // Reset fact display lock
     
+    // Clear ambient idle dialogue timers when shifting states
+    if (idleThoughtTimeoutId) {
+        clearTimeout(idleThoughtTimeoutId);
+        idleThoughtTimeoutId = null;
+    }
+
     // Hide chat bubble during state transitions (e.g. going back to work)
     const chatBubble = document.getElementById("chat-bubble");
     if (chatBubble) {
@@ -356,39 +527,72 @@ function updateCatState() {
     
     if (workingTime) {
         if (!isRunning) {
-            // Paused during work: just show static
-            catSprite.className = `cat-sprite ${catClass} breaking`;
-            catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
-        } else {
-            // Actively working: Sequence of work -> static -> work
-            let isWorkingAnim = true;
-            
-            // Initial state: Working
-            catSprite.className = `cat-sprite ${catClass} working`;
-            catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
-            
-            function playSequence() {
-                if (!isRunning || !workingTime) return;
-                
-                isWorkingAnim = !isWorkingAnim;
-                if (isWorkingAnim) {
-                    catSprite.className = `cat-sprite ${catClass} working`;
-                    catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
-                    spriteTimeoutId = setTimeout(playSequence, 2800); // Type for 2.8 seconds
-                } else {
-                    catSprite.className = `cat-sprite ${catClass} breaking`;
-                    catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
-                    spriteTimeoutId = setTimeout(playSequence, 2000); // Stop and look for 2 seconds
-                }
+            // Paused during work: show static work resting asset
+            if (catClass === 'orange_cat') {
+                catSprite.style.backgroundImage = '';
+                catSprite.className = `cat-sprite ${catClass} work-static`;
+            } else {
+                catSprite.className = `cat-sprite ${catClass} breaking`;
+                catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
             }
-            
-            // Kick off the sequence
-            spriteTimeoutId = setTimeout(playSequence, 2800);
+        } else {
+            if (catClass === 'orange_cat') {
+                // Orange Cat sleeping sequence: starts with work_static for a few seconds,
+                // then plays work animation sequence, then back to work_static
+                let isWorkStatic = true;
+
+                catSprite.style.backgroundImage = ''; // Clear inline override so CSS class takes precedence
+                catSprite.className = `cat-sprite ${catClass} work-static`;
+
+                function playOrangeSleepSequence() {
+                    if (!isRunning || !workingTime) return;
+
+                    isWorkStatic = !isWorkStatic;
+                    if (isWorkStatic) {
+                        catSprite.className = `cat-sprite ${catClass} work-static`;
+                        spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2500); // Rest still for 2.5s
+                    } else {
+                        catSprite.className = `cat-sprite ${catClass} sleeping-anim`;
+                        spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2700); // 3 complete 0.9s loops of 3-frame breathing
+                    }
+                }
+
+                spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2500);
+            } else {
+                // Actively working for other cats: Sequence of work -> static -> work
+                let isWorkingAnim = true;
+                
+                // Initial state: Working
+                catSprite.className = `cat-sprite ${catClass} working`;
+                catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
+                
+                function playSequence() {
+                    if (!isRunning || !workingTime) return;
+                    
+                    isWorkingAnim = !isWorkingAnim;
+                    if (isWorkingAnim) {
+                        catSprite.className = `cat-sprite ${catClass} working`;
+                        catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
+                        spriteTimeoutId = setTimeout(playSequence, 2800); // Type for 2.8 seconds
+                    } else {
+                        catSprite.className = `cat-sprite ${catClass} breaking`;
+                        catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
+                        spriteTimeoutId = setTimeout(playSequence, 2000); // Stop and look for 2 seconds
+                    }
+                }
+                
+                // Kick off the sequence
+                spriteTimeoutId = setTimeout(playSequence, 2800);
+            }
         }
     } else {
-        // Break time: always static
-        catSprite.className = `cat-sprite ${catClass} breaking`;
-        catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
+        // Break time: Orange Cat runs idle_static <-> idle loop when unclicked; other cats stay static
+        if (catClass === 'orange_cat') {
+            startOrangeBreakIdleLoop();
+        } else {
+            catSprite.className = `cat-sprite ${catClass} breaking`;
+            catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
+        }
     }
 }
 
@@ -396,6 +600,13 @@ function startTimer() {
     clearInterval(timerId);
     document.getElementById("play-icon").src = "../../assets/icons/pause-btn.png";
     isRunning = true;
+    if (pauseStartTime) {
+        const pauseDuration = (Date.now() - pauseStartTime) / 1000;
+        if (pauseDuration >= 180) { // 3 minutes or more
+            wasLongPaused = true;
+        }
+        pauseStartTime = null;
+    }
     updateCatState();
     updateAudioSettings();
 
@@ -441,6 +652,14 @@ function startTimer() {
 function handleSessionComplete(isManualSkip = false) {
     if (!isManualSkip) {
         preSkipState = null;
+        if (workingTime === true) {
+            if (hadPreviousBailout) {
+                lastSessionOutcome = 'redemption';
+                hadPreviousBailout = false;
+            } else {
+                lastSessionOutcome = 'completed';
+            }
+        }
     }
     pauseTimer();
 
@@ -448,12 +667,10 @@ function handleSessionComplete(isManualSkip = false) {
         if (!isManualSkip) {
             workCount++;
         }
-        workingTime = false;
-        updateCatState();
 
         if (cycleCount === 3) {
             nextPhaseState = { remainingTime: catConfig.longBreakTime, workingTime: false };
-            const title = isManualSkip ? "Ready for a Catnap?" : "Time for a Catnap!";
+            const title = isManualSkip ? "Ready to Snooze?" : "Time for a Catnap!";
             const message = isManualSkip
                 ? "Skipping ahead to your long rest. Step away from the screen and recharge!"
                 : "Amazing work! You've earned a long, cozy rest. Step away from the screen and recharge.";
@@ -463,6 +680,7 @@ function handleSessionComplete(isManualSkip = false) {
                 message,
                 "Start Long Break",
                 function () {
+                    workingTime = false;
                     remainingTime = catConfig.longBreakTime;
                     document.getElementById("timer-display").textContent = formatTime(remainingTime);
                     startTimer();
@@ -472,16 +690,17 @@ function handleSessionComplete(isManualSkip = false) {
             );
         } else {
             nextPhaseState = { remainingTime: catConfig.shortBreakTime, workingTime: false };
-            const title = isManualSkip ? "Take an Early Break?" : "Stretch Your Paws!";
+            const title = isManualSkip ? "Quick Stretch?" : "Stretch Your Paws!";
             const message = isManualSkip
                 ? "Skipping ahead to your break time. Ready to step back and stretch your paws?"
-                : "Great focus! Your companion is ready for a quick stretch and a treat.";
+                : "Great focus! Your companion is ready for a quick stretch and a small treat.";
 
             showModal(
                 title,
                 message,
                 "Start Break",
                 function () {
+                    workingTime = false;
                     remainingTime = catConfig.shortBreakTime;
                     document.getElementById("timer-display").textContent = formatTime(remainingTime);
                     startTimer();
@@ -501,10 +720,10 @@ function handleSessionComplete(isManualSkip = false) {
             nextPhaseState = null;
             flushSessionData(!isManualSkip);
 
-            const title = isManualSkip ? "Session Finished" : "Paws-itively Brilliant!";
+            const title = isManualSkip ? "Finish Session?" : "Pawsome Job!";
             const message = isManualSkip
-                ? "You wrapped up this Pomodoro session early. Your recorded time has been saved safely!"
-                : `You successfully completed a full set of ${cycleCount} cycles! Your progress is logged safely. Take a bow!`;
+                ? "Ready to wrap up this session early? Confirm to save your time and head back."
+                : `You successfully finished ${cycleCount} cycles! Your progress is saved. Take a well-deserved rest!`;
 
             showModal(
                 title,
@@ -521,8 +740,8 @@ function handleSessionComplete(isManualSkip = false) {
             nextPhaseState = { remainingTime: catConfig.workTime, workingTime: true };
             const title = isManualSkip ? "End Break Early?" : "Ready to Focus?";
             const message = isManualSkip
-                ? `Cutting your rest short? Ready to jump right back into cycle ${cycleCount + 1}!`
-                : `You’ve completed ${cycleCount} cycle(s) so far! Let's keep the momentum going.`;
+                ? `Feeling energized already? Take a deep breath and jump right back into the next cycle!`
+                : `You’ve successfully completed ${cycleCount} cycle(s)! Let's keep the strong momentum going.`;
 
             showModal(
                 title,
@@ -530,7 +749,6 @@ function handleSessionComplete(isManualSkip = false) {
                 "Start Work",
                 function () {
                     workingTime = true;
-                    updateCatState();
                     remainingTime = catConfig.workTime;
                     document.getElementById("timer-display").textContent = formatTime(remainingTime);
                     startTimer();
@@ -550,6 +768,22 @@ function manualSkipSession() {
         wasRunning: isRunning
     };
 
+    // Evaluate Skip Severity for dialogue engine
+    if (workingTime === true) {
+        const ratio = actualWork / catConfig.workTime;
+        if (ratio < 0.25) {
+            lastSessionOutcome = 'majorBailout';
+            hadPreviousBailout = true;
+        } else if (ratio < 0.85) {
+            lastSessionOutcome = 'earlyCutoff';
+            hadPreviousBailout = true;
+        } else {
+            lastSessionOutcome = 'completed';
+        }
+    } else {
+        lastSessionOutcome = 'breakSkipped';
+    }
+
     // Play companion sound feedback if click sound is enabled
     const meowAudio = meowAudios[catConfig.dbId];
     if (meowAudio && soundEnabled && localStorage.getItem('clickSound') !== 'false') {
@@ -562,6 +796,9 @@ function manualSkipSession() {
 
 function cancelSkip() {
     if (!preSkipState) return;
+
+    // Reset skip outcome since skip was cancelled
+    lastSessionOutcome = null;
 
     const restored = preSkipState;
     preSkipState = null;
@@ -589,6 +826,9 @@ function pauseTimer() {
     clearInterval(timerId);
     document.getElementById("play-icon").src = "../../assets/icons/play-btn.png";
     isRunning = false;
+    if (workingTime && !pauseStartTime) {
+        pauseStartTime = Date.now();
+    }
     updateCatState();
     updateAudioSettings();
 }

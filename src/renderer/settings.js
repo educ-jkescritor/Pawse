@@ -43,6 +43,12 @@ function hideAllContents() {
     dashboardContent.classList.add("hidden");
     aboutContent.classList.add("hidden");
     settingsContent.classList.add("hidden");
+
+    // Reset scrollable container back to top
+    const mainBar = document.querySelector(".main-bar");
+    if (mainBar) {
+        mainBar.scrollTop = 0;
+    }
 }  
 
 // Tab button selection state handling
@@ -59,8 +65,61 @@ function setActiveTab(activeButton) {
     if (activeButton) activeButton.classList.add("active");
 }
 
+let dashboardContent = document.getElementById("dashboard-content");    
+let aboutContent = document.getElementById("about-content");
+let settingsContent = document.getElementById("settings-content");
+
+// Preload Ginger About sprites into memory to prevent any transition flicker
+(function preloadAboutSprites() {
+    [
+        '../assets/sprites/orange_cat_tag_static.png',
+        '../assets/sprites/orange_cat_tag.png'
+    ].forEach(url => {
+        const img = new Image();
+        img.src = url;
+    });
+})();
+
+let orangeAboutTimeoutId = null;
+
+function stopOrangeAboutSequence() {
+    if (orangeAboutTimeoutId) {
+        clearTimeout(orangeAboutTimeoutId);
+        orangeAboutTimeoutId = null;
+    }
+    const sprite = document.getElementById("orange-about-sprite");
+    if (sprite) {
+        sprite.className = "orange-about-sprite tag-static";
+    }
+}
+
+function startOrangeAboutSequence() {
+    stopOrangeAboutSequence();
+    const sprite = document.getElementById("orange-about-sprite");
+    if (!sprite) return;
+
+    let isStatic = true;
+    sprite.className = "orange-about-sprite tag-static";
+
+    function playTagLoop() {
+        if (aboutContent && aboutContent.classList.contains("hidden")) return;
+
+        isStatic = !isStatic;
+        if (isStatic) {
+            sprite.className = "orange-about-sprite tag-static";
+            orangeAboutTimeoutId = setTimeout(playTagLoop, 2500); // Rest on tag_static for 2.5s
+        } else {
+            sprite.className = "orange-about-sprite tag-anim";
+            orangeAboutTimeoutId = setTimeout(playTagLoop, 2400); // 3 cycles of 0.8s 4-frame tag animation
+        }
+    }
+
+    orangeAboutTimeoutId = setTimeout(playTagLoop, 2500);
+}
+
 let dashboardButton = document.getElementById("dashboard-btn");
 dashboardButton.onclick = function() {
+    stopOrangeAboutSequence();
     hideAllContents();
     dashboardContent.classList.remove("hidden");
     setActiveTab(dashboardButton);
@@ -71,18 +130,16 @@ aboutButton.onclick = function() {
     hideAllContents();
     aboutContent.classList.remove("hidden");
     setActiveTab(aboutButton);
+    startOrangeAboutSequence();
 }
 
 let settingsButton = document.getElementById("settings-btn");
 settingsButton.onclick = function() {
+    stopOrangeAboutSequence();
     hideAllContents();
     settingsContent.classList.remove("hidden");
     setActiveTab(settingsButton);
 }
-
-let dashboardContent = document.getElementById("dashboard-content");    
-let aboutContent = document.getElementById("about-content");
-let settingsContent = document.getElementById("settings-content");
 
 function getWeekDateRangeString(weeksAgo) {
     const today = new Date();
