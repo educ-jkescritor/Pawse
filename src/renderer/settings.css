@@ -1266,33 +1266,88 @@ p {
 }
 
 /* SETTINGS */
+#settings-content {
+    gap: 24px;
+}
+
+#settings-content .settings-title,
+#settings-content .settings-group-header,
+#settings-content .settings-subgroup-header {
+    margin: 0;
+    padding: 0;
+}
+
+#settings-content p {
+    margin: 0;
+}
+
+/* Workflow, Audio, System */
+.settings-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    min-width: 0;
+}
+
+
 .settings-group {
-    width: 100%;
-    padding: 0px 12px;;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 0 10px;
+    min-width: 0;
+}
+
+.settings-items {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    min-width: 0;
+}
+
+/* Alerts, Focus Sounds, Interaction */
+.settings-subgroups {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+.settings-subgroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
 }
 
 .settings-item {
     width: 100%;
     display: flex;
-    flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 0px; /* Comfort margins between settings items */
+    padding: 0;
+    min-width: 0;
 }
 
 .settings-label-container {
     display: flex;
+    flex: 1 1 0;
+    min-width: 0;
     flex-direction: column;
+    align-items: flex-start;
     gap: 2px;
-    text-align: left;
-    max-width: 70%; /* Prevent label overlap with slider/toggle switches */
 }
 
-.settings-label-container p {
-    margin: 0;
+/* Keep controls from shrinking when descriptions wrap */
+#settings-content .settings-item > .toggle-switch,
+#settings-content .settings-item > .slider-container,
+#settings-content .settings-item > #update-btn {
+    flex-shrink: 0;
+}
+
+#settings-content #update-btn {
+    white-space: nowrap;
 }
 
 .toggle-switch {

@@ -41,6 +41,7 @@
     /* --- TEXT COLORS --- */
     --text-black: #141414;
     --text-gray: #52525B;
+    --text-gray-light: #5F5F5F;
 
     --text-active-streak: #F28936;
     --text-best-streak: #E59D10;
@@ -269,6 +270,10 @@ input, textarea {
 
 .text-gray {
     color: var(--text-gray);
+}
+
+.text-gray-light {
+    color: var(--text-gray-light);
 }
 
 .text-system-blue {
