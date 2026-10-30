@@ -82,14 +82,8 @@ if (savedStateStr) {
         const savedState = JSON.parse(savedStateStr);
         // Only restore if the saved state belongs to the exact same cat companion
         if (savedState.catType === catType) {
-            const elapsedSeconds = Math.floor((Date.now() - savedState.timestamp) / 1000);
-            
+            // Freeze exact remaining time on crash recovery (do not subtract offline elapsed seconds)
             remainingTime = savedState.remainingTime;
-            // If it was actively running when closed, subtract the elapsed offline time
-            if (savedState.isRunning) {
-                remainingTime -= elapsedSeconds;
-                if (remainingTime < 0) remainingTime = 0; // Trigger completion instantly if time passed
-            }
             
             workingTime = savedState.workingTime;
             cycleCount = savedState.cycleCount;
@@ -98,8 +92,8 @@ if (savedStateStr) {
             workCount = savedState.workCount || 0;
             breakCount = savedState.breakCount || 0;
             
-            // If it was manually paused before crashing, start up paused
-            isRunning = savedState.isRunning;
+            // Crash recovery resumes in a paused state so the user can settle in before hitting Play
+            isRunning = false;
 
             // Flag session recovery for companion recognition
             isRestoredSession = true;
