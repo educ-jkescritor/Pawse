@@ -357,11 +357,25 @@ p {
 
 .refresh-icon {
     cursor: pointer;
-    transition: filter 150ms ease;
+    transition: filter 150ms ease, transform 0.2s ease;
 }
 
 .refresh-icon:hover {
     filter: brightness(0.5);
+}
+
+.refresh-icon:active {
+    filter: brightness(0.3);
+}
+
+@keyframes spin-refresh {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.refresh-icon.spinning {
+    animation: spin-refresh 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 /* DASHBOARD */
