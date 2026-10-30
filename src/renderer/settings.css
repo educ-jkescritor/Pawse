@@ -340,11 +340,28 @@ p {
     height: 100%; /* Force it to exactly fill the main-bar content box */
 }
 
+.dashboard-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    align-self: stretch;
+}
+
 .dashboard-header-row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     width: 100%;
+}
+
+.refresh-icon {
+    cursor: pointer;
+    transition: filter 150ms ease;
+}
+
+.refresh-icon:hover {
+    filter: brightness(0.5);
 }
 
 /* DASHBOARD */
