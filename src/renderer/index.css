@@ -88,8 +88,15 @@
     --theme-focused-dark: #7D49C6;
 }
 
-* {
+*, *::before, *::after {
     box-sizing: border-box;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+img {
+    -webkit-user-drag: none;
+    user-drag: none;
 }
 
 :focus-visible {
@@ -123,7 +130,8 @@ html, body {
 }
 
 input, textarea {
-    user-select: auto;
+    -webkit-user-select: text;
+    user-select: text;
 }
 
 .font-pixel-20-regular {
