@@ -584,6 +584,10 @@ volumeSliders.forEach(slider => {
         storageKey = 'purrVolume';
     } else if (slider.classList.contains('alarm-slider')){
         storageKey = 'alarmVolume';
+    } else if (slider.classList.contains('tick-slider')) {
+        storageKey = 'tickVolume';
+    } else if (slider.classList.contains('companion-slider')) {
+        storageKey = 'companionVolume';
     }
 
     // 2. Load the saved value on window startup (default to 50 if empty)
@@ -650,12 +654,6 @@ const clickToggle = document.querySelector('.click-toggle');
 if (clickToggle) {
     clickToggle.checked = localStorage.getItem('clickSound') !== 'false';
     clickToggle.addEventListener('change', (e) => localStorage.setItem('clickSound', e.target.checked));
-}
-
-const tickToggle = document.querySelector('.tick-toggle');
-if (tickToggle) {
-    tickToggle.checked = localStorage.getItem('tickSound') === 'true';
-    tickToggle.addEventListener('change', (e) => localStorage.setItem('tickSound', e.target.checked));
 }
 
 // Custom Graph Week Picker Logic

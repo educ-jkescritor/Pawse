@@ -201,14 +201,22 @@ function updateAudioSettings() {
 
     let alrVol = parseInt(localStorage.getItem('alarmVolume'));
     if (isNaN(alrVol)) alrVol = 50;
-    // 2. Read the ticking toggle
-    let tickStr = localStorage.getItem('tickSound');
-    tickEnabled = tickStr === null ? true : (tickStr === 'true');
+
+    let tickVol = parseInt(localStorage.getItem('tickVolume'));
+    if (isNaN(tickVol)) tickVol = 50;
+
+    let compVol = parseInt(localStorage.getItem('companionVolume'));
+    if (isNaN(compVol)) compVol = 50;
+
+    // 2. Tick sound enabled if volume > 0
+    tickEnabled = tickVol > 0;
 
     // 3. Set the loudness of the audios
     ambientAudio.volume = ambVol / 100;
     purrAudio.volume = purVol / 100;
     alarmAudio.volume = alrVol / 100;
+    tickAudio.volume = tickVol / 100;
+    Object.values(meowAudios).forEach(audio => audio.volume = compVol / 100);
 
     // 4. Ambient checklist: (volume > 0) AND (unmuted) AND (session running)
     if (ambVol > 0 && soundEnabled && isRunning && !isAlarmPlaying) {
@@ -236,7 +244,7 @@ function updateAudioSettings() {
 
 // Listen for settings changes from the Settings window
 window.addEventListener('storage', (e) => {
-    if (['ambientVolume', 'purrVolume', 'alarmVolume', 'tickSound'].includes(e.key)) {
+    if (['ambientVolume', 'purrVolume', 'alarmVolume', 'tickVolume', 'companionVolume', 'clickSound'].includes(e.key)) {
         updateAudioSettings();
     }
 });
@@ -416,9 +424,12 @@ catSprite.addEventListener('click', () => {
     isPetting = true;
     const catClass = catConfig.dbId;
 
-    // Play corresponding companion meow sound if master audio is enabled AND click sound toggle is on
+    // Play corresponding companion meow sound if master audio is enabled AND companion volume is above 0
+    let compVol = parseInt(localStorage.getItem('companionVolume'));
+    if (isNaN(compVol)) compVol = 50;
+
     const meowAudio = meowAudios[catClass];
-    if (meowAudio && soundEnabled && localStorage.getItem('clickSound') !== 'false') {
+    if (meowAudio && soundEnabled && compVol > 0) {
         meowAudio.currentTime = 0; // Rewind to start for spam clicks
         meowAudio.play().catch(e => {});
     }
