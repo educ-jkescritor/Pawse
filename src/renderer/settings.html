@@ -56,9 +56,14 @@
             <!-- RIGHT CONTENT AREA -->
             <div class="main-bar">
                 <div id="dashboard-content" class="tab-panel">
-                    <div class="dashboard-header-row">
-                        <p class="font-inter-20-semibold" style="margin: 0;">Your Progress</p>
-                        <p class="font-inter-12-regular text-gray" id="dashboard-datetime" style="margin: 0;"></p>
+                    <div class="dashboard-header">
+                        <div class="dashboard-header-row">
+                            <p class="font-inter-20-semibold" style="margin: 0;">Your Progress</p>
+                            <img class="refresh-icon" src="../assets/icons/refresh-btn.svg" alt="refresh" id="refresh-btn" title="Refresh">
+                        </div>
+                        <div class="dashboard-header-row">
+                            <p class="font-inter-12-medium text-gray-light" id="dashboard-datetime" style="margin: 0;"></p>
+                        </div>
                     </div>
 
                     <div class="analytics-container">
@@ -267,119 +272,188 @@
                     </div>
                 </div>
 
+
+
                 <div id="settings-content" class="tab-panel hidden">
-                    <p class="font-inter-20-semibold">Settings</p>
-
-                    <!-- Workflow Settings -->
-                    <div class="settings-group">                
-                        <p class="font-inter-16-medium">WORKFLOW</p>
-                        <div class="settings-item strict-mode">
-                            <div class="settings-label-container">
-                                <p class="font-inter-12-medium">Strict Mode</p>
-                                <p class="font-inter-10-regular text-gray">Prevents skipping active sessions to enforce focus.</p>
-                            </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" class="strict-toggle">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div class="settings-item auto-start-timer">
-                            <div class="settings-label-container">
-                                <p class="font-inter-12-medium">Auto-Start Timer</p>
-                                <p class="font-inter-10-regular text-gray">Automatically starts your next break or focus timer.</p>
-                            </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" class="timer-toggle">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
+                    <div class="settings-title">
+                        <p class="font-inter-20-semibold">Settings</p>
                     </div>
 
-                    <!-- Audio Settings -->
-                    <div class="settings-group">
-                        <p class="font-inter-16-medium">AUDIO</p>
-                        <div class="settings-item ambient-volume">
-                            <div class="settings-label-container">
-                                <p class="font-inter-12-medium">Ambient Volume</p>
-                                <p class="font-inter-10-regular text-gray">Adjusts the background music volume during focus time.</p>
-                            </div>
-                            <div class="slider-container">
-                                <span class="font-inter-10-regular slider-value">50%</span>
-                                <input type="range" min="0" max="100" value="50" class="volume-slider ambient-slider">
-                            </div>
-                        </div>
-                        <div class="settings-item purr-volume">
-                            <div class="settings-label-container">
-                                <p class="font-inter-12-medium">Purr Volume</p>
-                                <p class="font-inter-10-regular text-gray">Adjusts the cat purring volume during break time.</p>
-                            </div>
-                            <div class="slider-container">
-                                <span class="font-inter-10-regular slider-value">50%</span>
-                                <input type="range" min="0" max="100" value="50" class="volume-slider purr-slider">
-                            </div>
-                        </div>
-                        <div class="settings-item alarm-volume">
-                            <div class="settings-label-container">
-                                <p class="font-inter-12-medium">Alarm</p>
-                                <p class="font-inter-10-regular text-gray">Plays a cat meow alarm when focus cycles are completed.</p>
-                            </div>
-                            <div class="slider-container">
-                                <span class="font-inter-10-regular slider-value">50%</span>
-                                <input type="range" min="0" max="100" value="50" class="volume-slider alarm-slider">
-                            </div>
-                        </div>
-                        <div class="settings-item cat-sound click-sound-container">
-                            <div class="settings-label-container">
-                                <p class="font-inter-12-medium">Cat Sound</p>
-                                <p class="font-inter-10-regular text-gray">Plays gentle cat sounds when interacting with your companions.</p>
-                            </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" class="click-toggle">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        <div class="settings-item tick-sound">
-                            <div class="settings-label-container">
-                                <p class="font-inter-12-medium">Tick Sound</p>
-                                <p class="font-inter-10-regular text-gray">Plays a subtle clock ticking sound during focus time.</p>
-                            </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" class="tick-toggle">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>
+                    <div class="settings-categories">
 
-                    <!-- System Settings -->
-                    <div class="settings-group">
-                        <p class="font-inter-16-medium">SYSTEM</p>
-                        <div class="settings-item always-on-top">
-                            <div class="settings-label-container">
-                                <p class="font-inter-12-medium">Always on Top</p>
-                                <p class="font-inter-10-regular text-gray">Keeps the timer window floating over other apps while you work.</p>
+                        <!-- WORKFLOW -->
+                        <div class="settings-group">
+                            <div class="settings-group-header">
+                                <p class="font-inter-16-medium">WORKFLOW</p>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" class="top-toggle">
-                                <span class="slider"></span>
-                            </label>
+
+                            <div class="settings-items">
+                                <div class="settings-item strict-mode">
+                                    <div class="settings-label-container">
+                                        <p class="font-inter-12-regular">Strict Mode</p>
+                                        <p class="font-inter-10-regular text-gray-light">Prevents skipping active sessions to enforce focus.</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" class="strict-toggle">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="settings-item auto-start-timer">
+                                    <div class="settings-label-container">
+                                        <p class="font-inter-12-regular">Auto-Start Timer</p>
+                                        <p class="font-inter-10-regular text-gray-light">Automatically starts your next break or focus timer.</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" class="timer-toggle">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
                         </div>
-                        <div class="settings-item launch-on-startup">
-                            <div class="settings-label-container">
-                                <p class="font-inter-12-medium">Launch on Startup</p>
-                                <p class="font-inter-10-regular text-gray">Automatically launches Pawse when your system starts up.</p>
+
+                        <!-- AUDIO -->
+                        <div class="settings-group">
+                            <div class="settings-group-header">
+                                <p class="font-inter-16-medium">AUDIO</p>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" class="startup-toggle">
-                                <span class="slider"></span>
-                            </label>
+
+                            <div class="settings-subgroups">
+
+                                <!-- Alerts -->
+                                <div class="settings-subgroup">
+                                    <div class="settings-subgroup-header">
+                                        <p class="font-inter-12-regular text-gray-light">ALERTS</p>
+                                    </div>
+
+                                    <div class="settings-items">
+                                        <div class="settings-item alarm-volume">
+                                            <div class="settings-label-container">
+                                                <p class="font-inter-12-regular">Alert Volume</p>
+                                                <p class="font-inter-10-regular text-gray-light">Adjusts the alarm that plays when focus and break times end.</p>
+                                            </div>
+                                            <div class="slider-container">
+                                                <span class="font-inter-10-regular slider-value">50%</span>
+                                                <input type="range" min="0" max="100" value="50" class="volume-slider alarm-slider">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Focus sounds -->
+                                <div class="settings-subgroup">
+                                    <div class="settings-subgroup-header">
+                                        <p class="font-inter-12-regular text-gray-light">FOCUS SOUNDS</p>
+                                    </div>
+
+                                    <div class="settings-items">
+                                        <div class="settings-item ambient-volume">
+                                            <div class="settings-label-container">
+                                                <p class="font-inter-12-regular">Ambient Volume</p>
+                                                <p class="font-inter-10-regular text-gray-light">Adjusts the background music volume during active focus sessions.</p>
+                                            </div>
+                                            <div class="slider-container">
+                                                <span class="font-inter-10-regular slider-value">50%</span>
+                                                <input type="range" min="0" max="100" value="50" class="volume-slider ambient-slider">
+                                            </div>
+                                        </div>
+
+                                        <div class="settings-item purr-volume">
+                                            <div class="settings-label-container">
+                                                <p class="font-inter-12-regular">Purr Volume</p>
+                                                <p class="font-inter-10-regular text-gray-light">Adjusts the cat purring volume during active focus sessions.</p>
+                                            </div>
+                                            <div class="slider-container">
+                                                <span class="font-inter-10-regular slider-value">50%</span>
+                                                <input type="range" min="0" max="100" value="50" class="volume-slider purr-slider">
+                                            </div>
+                                        </div>
+
+                                        <div class="settings-item tick-sound">
+                                            <div class="settings-label-container">
+                                                <p class="font-inter-12-regular">Tick Sound</p>
+                                                <p class="font-inter-10-regular text-gray-light">Adjusts the subtle clock ticking sound during active focus sessions.</p>
+                                            </div>
+                                            <div class="slider-container">
+                                                <span class="font-inter-10-regular slider-value">50%</span>
+                                                <input type="range" min="0" max="100" value="50" class="volume-slider tick-slider">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Interaction -->
+                                <div class="settings-subgroup">
+                                    <div class="settings-subgroup-header">
+                                        <p class="font-inter-12-regular text-gray-light">INTERACTION</p>
+                                    </div>
+
+                                    <div class="settings-items">
+                                        <div class="settings-item companion-sound">
+                                            <div class="settings-label-container">
+                                                <p class="font-inter-12-regular">Companion Sounds</p>
+                                                <p class="font-inter-10-regular text-gray-light">Adjusts the cat sounds when interacting during breaks.</p>
+                                            </div>
+                                            <div class="slider-container">
+                                                <span class="font-inter-10-regular slider-value">50%</span>
+                                                <input type="range" min="0" max="100" value="50" class="volume-slider companion-slider">
+                                            </div>
+                                        </div>
+                                        <div class="settings-item interface-sound">
+                                            <div class="settings-label-container">
+                                                <p class="font-inter-12-regular">Interface Sounds</p>
+                                                <p class="font-inter-10-regular text-gray-light">Plays click sounds when interacting with buttons.</p>
+                                            </div>
+                                            <label class="toggle-switch">
+                                                <input type="checkbox" class="top-toggle">
+                                                <span class="slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
                         </div>
-                        <div class="settings-item check-for-updates">
-                            <div class="settings-label-container">
-                                <p class="font-inter-12-medium">App Updates</p>
-                                <p id="update-message" class="font-inter-10-regular text-gray">Current version: v1.0.0</p>
+
+                        <!-- SYSTEM -->
+                        <div class="settings-group">
+                            <div class="settings-group-header">
+                                <p class="font-inter-16-medium">SYSTEM</p>
                             </div>
-                            <button id="update-btn" class="font-inter-12-medium">Check for Updates</button>
-                        </div>                        
+
+                            <div class="settings-items">
+                                <div class="settings-item always-on-top">
+                                    <div class="settings-label-container">
+                                        <p class="font-inter-12-regular">Always on Top</p>
+                                        <p class="font-inter-10-regular text-gray">Keeps the timer window floating over other apps while you work.</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" class="top-toggle">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="settings-item launch-on-startup">
+                                    <div class="settings-label-container">
+                                        <p class="font-inter-12-regular">Launch on Startup</p>
+                                        <p class="font-inter-10-regular text-gray">Automatically launches Pawse when your device starts.</p>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" class="startup-toggle">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="settings-item check-for-updates">
+                                    <div class="settings-label-container">
+                                        <p class="font-inter-12-regular">App Updates</p>
+                                        <p id="update-message" class="font-inter-10-regular text-gray">Current version: v1.0.0</p>
+                                    </div>
+                                    <button id="update-btn" class="font-inter-12-medium">Check for Updates</button>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
