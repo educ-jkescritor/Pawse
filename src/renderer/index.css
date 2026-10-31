@@ -383,7 +383,7 @@ ease;
 .main-window-controls,
 .settings-window-controls {
     display: flex;
-    gap: 8px;
+    gap: 4px;
     align-items: center;
 }
 
@@ -442,9 +442,9 @@ ease;
 
 .button-divider {
     width: 2px;
-    height: 24px;
+    height: 20px;
     background-color: var(--stroke-color);
-    margin: 0 4px;
+    margin: 0 2px;
 }
 
 /* Pre-assigned clicked asset per button */
