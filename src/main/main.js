@@ -851,7 +851,7 @@ ipcMain.on('set-launch-on-startup', (event, isEnabled) => {
   try {
     app.setLoginItemSettings({
       openAtLogin: Boolean(isEnabled),
-      path: app.isPackaged ? app.getPath('exe') : process.execPath
+      ...(process.platform === 'win32' ? { path: app.isPackaged ? app.getPath('exe') : process.execPath } : {})
     });
   } catch (err) {
     console.error('[LaunchOnStartup] Failed to set login item settings:', err);
@@ -860,5 +860,15 @@ ipcMain.on('set-launch-on-startup', (event, isEnabled) => {
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  } else if (win && !win.isDestroyed()) {
+    if (win.isMinimized()) win.restore();
+    win.show();
+    win.focus();
+  }
 });
 
