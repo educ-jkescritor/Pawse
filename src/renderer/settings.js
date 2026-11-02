@@ -283,16 +283,18 @@ async function loadAnalytics(weeksAgo = 0) {
         const durableStateStr = localStorage.getItem('pawseDurableState');
         if (durableStateStr && isTimerRunning) {
             const liveState = JSON.parse(durableStateStr);
-            const liveWorkSeconds = Number(liveState.actualWork) || 0;
+            const liveActualWork = Number(liveState.actualWork) || 0;
+            const liveFlushedWork = Number(liveState.flushedWorkSeconds) || 0;
+            const unflushedWorkSeconds = Math.max(0, liveActualWork - liveFlushedWork);
 
-            if (liveWorkSeconds > 0) {
+            if (unflushedWorkSeconds > 0) {
                 // 1. Credit live focus time to today's work total
-                data.today_work_seconds = (data.today_work_seconds || 0) + liveWorkSeconds;
+                data.today_work_seconds = (data.today_work_seconds || 0) + unflushedWorkSeconds;
 
                 // 2. If viewing the current week (weeksAgo === 0), add live seconds to today's chart bar
                 if (weeksAgo === 0 && Array.isArray(data.weekly_data)) {
                     const todayDayIndex = new Date().getDay(); // 0 = Sun, ..., 6 = Sat
-                    data.weekly_data[todayDayIndex] = (data.weekly_data[todayDayIndex] || 0) + liveWorkSeconds;
+                    data.weekly_data[todayDayIndex] = (data.weekly_data[todayDayIndex] || 0) + unflushedWorkSeconds;
 
                     // Recalculate weekly average with the live seconds
                     const activeWeekDays = data.weekly_data.filter(s => s > 0);

@@ -59,6 +59,9 @@ let isRunning = true;
 let soundEnabled = true;
 let actualWork = 0; 
 let actualBreak = 0;
+let flushedWorkSeconds = 0;
+let flushedBreakSeconds = 0;
+let sessionUuid = crypto.randomUUID();
 let workCount = 0;
 let breakCount = 0;
 let isAlarmPlaying = false;
@@ -91,6 +94,11 @@ if (savedStateStr) {
             actualBreak = savedState.actualBreak || 0;
             workCount = savedState.workCount || 0;
             breakCount = savedState.breakCount || 0;
+            if (savedState.sessionUuid) {
+                sessionUuid = savedState.sessionUuid;
+            }
+            flushedWorkSeconds = savedState.flushedWorkSeconds || 0;
+            flushedBreakSeconds = savedState.flushedBreakSeconds || 0;
             
             // Crash recovery resumes in a paused state so the user can settle in before hitting Play
             isRunning = false;
@@ -119,12 +127,15 @@ setInterval(() => {
 
     localStorage.setItem('pawseDurableState', JSON.stringify({
         catType: catType,
+        sessionUuid: sessionUuid,
         remainingTime: durableRemaining,
         workingTime: durableWorking,
         cycleCount: cycleCount,
         isRunning: isRunning,
         actualWork: actualWork,
         actualBreak: actualBreak,
+        flushedWorkSeconds: flushedWorkSeconds,
+        flushedBreakSeconds: flushedBreakSeconds,
         workCount: workCount,
         breakCount: breakCount,
         timestamp: Date.now()
@@ -145,6 +156,7 @@ function flushSessionData(isPomodoroComplete = false, forceYesterday = false) {
 
     let sessionData = {
         cat_type: catConfig.dbId,
+        uuid: sessionUuid,
         total_work_seconds: actualWork,
         total_break_seconds: actualBreak,
         total_work: workCount,
@@ -157,11 +169,27 @@ function flushSessionData(isPomodoroComplete = false, forceYesterday = false) {
         window.mainAPI.savesession(sessionData);
     }
 
-    // Reset local accumulators so we never double-count
-    actualWork = 0;
-    actualBreak = 0;
-    workCount = 0;
-    breakCount = 0;
+    flushedWorkSeconds = actualWork;
+    flushedBreakSeconds = actualBreak;
+
+    // Reset accumulators only on midnight rollover to transition cleanly to the next day
+    if (forceYesterday) {
+        sessionUuid = crypto.randomUUID();
+    
+        actualWork = 0;
+    
+    
+        actualBreak = 0;
+        workCount = 0;
+        breakCount = 0;
+    
+        flushedWorkSeconds = 0;
+        flushedBreakSeconds = 0;
+    }
+
+
+
+
 }
 
 // Initialize Audio Objects
@@ -662,6 +690,9 @@ function handleSessionComplete(isManualSkip = false) {
             workCount++;
         }
 
+        // Flush accumulated work phase data immediately to SQLite so progress is safely durable
+        flushSessionData(false);
+
         if (cycleCount === 3) {
             nextPhaseState = { remainingTime: catConfig.longBreakTime, workingTime: false };
             const title = isManualSkip ? "Ready to Snooze?" : "Time for a Catnap!";
@@ -731,6 +762,9 @@ function handleSessionComplete(isManualSkip = false) {
             );
             return;
         } else {
+            // Flush accumulated break phase data immediately to SQLite
+            flushSessionData(false);
+
             nextPhaseState = { remainingTime: catConfig.workTime, workingTime: true };
             const title = isManualSkip ? "End Break Early?" : "Ready to Focus?";
             const message = isManualSkip

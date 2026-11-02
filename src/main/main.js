@@ -344,7 +344,7 @@ ipcMain.on('settings-window', (event) => {
 
 ipcMain.on('save-session', (event, data) => {
   const uuid = data.uuid || randomUUID();
-  const insertQuery = `INSERT INTO session (
+  const upsertQuery = `INSERT INTO session (
     cat_type, 
     email,
     total_work_seconds, 
@@ -357,9 +357,17 @@ ipcMain.on('save-session', (event, data) => {
     is_synced
   ) VALUES (
     ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), 0
-  )`;
+  )
+  ON CONFLICT(uuid) DO UPDATE SET
+    total_work_seconds = excluded.total_work_seconds,
+    total_break_seconds = excluded.total_break_seconds,
+    total_work = excluded.total_work,
+    total_break = excluded.total_break,
+    total_pomodoro = MAX(session.total_pomodoro, excluded.total_pomodoro),
+    date_completed = COALESCE(excluded.date_completed, session.date_completed, CURRENT_TIMESTAMP),
+    is_synced = 0`;
 
-  db.run(insertQuery, [
+  db.run(upsertQuery, [
     data.cat_type, 
     data.email || 'guest',
     data.total_work_seconds, 
@@ -373,7 +381,7 @@ ipcMain.on('save-session', (event, data) => {
     if (err) {
       console.log("Error inserting session data:", err.message);
     } else {
-      console.log("Session data inserted successfully.");
+      console.log("Session data saved successfully (progressive upsert).");
 
       // In development, keep AppData mirrored as backup so both copies stay in sync
       if (!app.isPackaged) {

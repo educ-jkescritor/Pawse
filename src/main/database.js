@@ -99,6 +99,8 @@ const db = new sqlite3.Database(dbPath, (err) => {
                         });
                     });
                     console.log("Session database is ready.");
+                    // Ensure unique index exists on uuid for ON CONFLICT upsert support
+                    db.run("CREATE UNIQUE INDEX IF NOT EXISTS idx_session_uuid ON session(uuid);");
                 });
             });
         });
