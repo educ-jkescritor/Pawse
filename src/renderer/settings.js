@@ -73,6 +73,8 @@ let settingsContent = document.getElementById("settings-content");
 (function preloadAboutSprites() {
     [
         '../assets/sprites/orange_cat_tag_static.png',
+        '../assets/sprites/black_cat_tag_static.png',
+        '../assets/sprites/black_cat_tag.png',
         '../assets/sprites/orange_cat_tag.png'
     ].forEach(url => {
         const img = new Image();
@@ -81,8 +83,29 @@ let settingsContent = document.getElementById("settings-content");
 })();
 
 let orangeAboutTimeoutId = null;
+let blackAboutTimeoutId = null;
 
-function stopOrangeAboutSequence() {
+function stopAboutSequences() {
+    if (orangeAboutTimeoutId) {
+        clearTimeout(orangeAboutTimeoutId);
+        orangeAboutTimeoutId = null;
+    }
+    if (blackAboutTimeoutId) {
+        clearTimeout(blackAboutTimeoutId);
+        blackAboutTimeoutId = null;
+    }
+    const orangeSprite = document.getElementById("orange-about-sprite");
+    if (orangeSprite) {
+        orangeSprite.className = "orange-about-sprite tag-static";
+    }
+    const blackSprite = document.getElementById("black-about-sprite");
+    if (blackSprite) {
+        blackSprite.className = "black-about-sprite tag-static";
+    }
+}
+const stopOrangeAboutSequence = stopAboutSequences;
+
+function _legacyStop() {
     if (orangeAboutTimeoutId) {
         clearTimeout(orangeAboutTimeoutId);
         orangeAboutTimeoutId = null;
@@ -93,7 +116,52 @@ function stopOrangeAboutSequence() {
     }
 }
 
-function startOrangeAboutSequence() {
+function startAboutSequences() {
+    stopAboutSequences();
+    const orangeSprite = document.getElementById("orange-about-sprite");
+    const blackSprite = document.getElementById("black-about-sprite");
+
+    if (orangeSprite) {
+        let isOrangeStatic = true;
+        orangeSprite.className = "orange-about-sprite tag-static";
+
+        function playOrangeTagLoop() {
+            if (aboutContent && aboutContent.classList.contains("hidden")) return;
+
+            isOrangeStatic = !isOrangeStatic;
+            if (isOrangeStatic) {
+                orangeSprite.className = "orange-about-sprite tag-static";
+                orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 2500);
+            } else {
+                orangeSprite.className = "orange-about-sprite tag-anim";
+                orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 2700);
+            }
+        }
+        orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 2000);
+    }
+
+    if (blackSprite) {
+        let isBlackStatic = true;
+        blackSprite.className = "black-about-sprite tag-static";
+
+        function playBlackTagLoop() {
+            if (aboutContent && aboutContent.classList.contains("hidden")) return;
+
+            isBlackStatic = !isBlackStatic;
+            if (isBlackStatic) {
+                blackSprite.className = "black-about-sprite tag-static";
+                blackAboutTimeoutId = setTimeout(playBlackTagLoop, 2800);
+            } else {
+                blackSprite.className = "black-about-sprite tag-anim";
+                blackAboutTimeoutId = setTimeout(playBlackTagLoop, 2700);
+            }
+        }
+        blackAboutTimeoutId = setTimeout(playBlackTagLoop, 3200);
+    }
+}
+const startOrangeAboutSequence = startAboutSequences;
+
+function _legacyStart() {
     stopOrangeAboutSequence();
     const sprite = document.getElementById("orange-about-sprite");
     if (!sprite) return;
