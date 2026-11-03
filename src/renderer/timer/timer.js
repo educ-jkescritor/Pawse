@@ -312,7 +312,10 @@ const clickDurations = {
         );
     } else if (catConfig.dbId === 'black_cat') {
         urls.push(
-            '../../assets/sprites/black_cat_work_static.png'
+            '../../assets/sprites/black_cat_work_static.png',
+            '../../assets/sprites/black_cat_idle_static.png',
+            '../../assets/sprites/black_cat_idle.png',
+            '../../assets/sprites/black_cat_break.png'
         );
     }
     urls.forEach(url => {
@@ -389,35 +392,36 @@ function triggerAmbientThought() {
     }
 }
 
-function startOrangeBreakIdleLoop() {
+function startBreakIdleLoop() {
     if (spriteTimeoutId) {
         clearTimeout(spriteTimeoutId);
         spriteTimeoutId = null;
     }
 
     const catClass = catConfig.dbId;
-    if (catClass !== 'orange_cat' || workingTime || isPetting) return;
+    if ((catClass !== 'orange_cat' && catClass !== 'black_cat') || workingTime || isPetting) return;
 
     catSprite.style.backgroundImage = '';
     catSprite.className = `cat-sprite ${catClass} idle-static`;
 
     let isIdleStatic = true;
 
-    function playOrangeIdleSequence() {
+    function playIdleSequence() {
         if (workingTime || isPetting) return;
 
         isIdleStatic = !isIdleStatic;
         if (isIdleStatic) {
             catSprite.className = `cat-sprite ${catClass} idle-static`;
-            spriteTimeoutId = setTimeout(playOrangeIdleSequence, 2500); // Rest on idle_static for 2.5s
+            spriteTimeoutId = setTimeout(playIdleSequence, 2500); // Rest on idle_static for 2.5s
         } else {
             catSprite.className = `cat-sprite ${catClass} idle-anim`;
-            spriteTimeoutId = setTimeout(playOrangeIdleSequence, 2250); // 3 complete 0.75s loops of 5-frame idle animation
+            spriteTimeoutId = setTimeout(playIdleSequence, 2250); // 3 complete 0.75s loops of 5-frame idle animation
         }
     }
 
-    spriteTimeoutId = setTimeout(playOrangeIdleSequence, 2500);
+    spriteTimeoutId = setTimeout(playIdleSequence, 2500);
 }
+const startOrangeBreakIdleLoop = startBreakIdleLoop;
 
 catSprite.addEventListener('click', () => {
     // Only allow interaction during break times and if not already petting
@@ -457,7 +461,7 @@ catSprite.addEventListener('click', () => {
     }
 
     // Shift to the click / break sprite (Pure sensory petting, NO speech bubble)
-    if (catClass === 'orange_cat') {
+    if (catClass === 'orange_cat' || catClass === 'black_cat') {
         catSprite.style.backgroundImage = '';
         catSprite.className = `cat-sprite ${catClass} break-anim`;
     } else {
@@ -466,7 +470,7 @@ catSprite.addEventListener('click', () => {
     }
 
     // Wait exactly the length of this specific cat's animation
-    const duration = (catClass === 'orange_cat') ? 900 : (clickDurations[catClass] || 1000);
+    const duration = (catClass === 'orange_cat') ? 900 : (catClass === 'black_cat' ? 700 : (clickDurations[catClass] || 1000));
     setTimeout(() => {
         // If session forcefully shifted back to work time, let updateCatState handle it
         if (workingTime) return;
@@ -474,8 +478,8 @@ catSprite.addEventListener('click', () => {
         isPetting = false;
 
         // Revert back to break idle loop (or static for other cats) and unlock
-        if (catClass === 'orange_cat') {
-            startOrangeBreakIdleLoop();
+        if (catClass === 'orange_cat' || catClass === 'black_cat') {
+            startBreakIdleLoop();
         } else {
             catSprite.className = `cat-sprite ${catClass} breaking`;
             catSprite.style.backgroundImage = `url('../../assets/sprites/${catClass}_static.png')`;
@@ -592,7 +596,7 @@ function updateCatState() {
                     spriteTimeoutId = setTimeout(playBlackWorkSequence, 2500); // Rest still reading for 2.5s
                 } else {
                     catSprite.className = `cat-sprite ${catClass} reading-anim`;
-                    spriteTimeoutId = setTimeout(playBlackWorkSequence, 2500); // 2.5s (2.5 loops of 1.0s 5-frame animation)
+                    spriteTimeoutId = setTimeout(playBlackWorkSequence, 3000); // 3 complete 1.0s loops of 5-frame animation
                 }
             }
 
@@ -624,9 +628,9 @@ function updateCatState() {
             spriteTimeoutId = setTimeout(playSequence, 2800);
         }
     } else {
-        // Break time: Orange Cat runs idle_static <-> idle loop when unclicked; other cats stay static
-        if (catClass === 'orange_cat') {
-            startOrangeBreakIdleLoop();
+        // Break time: Orange & Black Cat run idle_static <-> idle loop when unclicked; Tuxedo stays static
+        if (catClass === 'orange_cat' || catClass === 'black_cat') {
+            startBreakIdleLoop();
         } else {
             catSprite.className = `cat-sprite ${catClass} breaking`;
             catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;

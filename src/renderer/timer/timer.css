@@ -201,9 +201,13 @@ body.cat-only-mode .app-wrapper {
     cursor: pointer; /* Show it can be clicked during break */
 }
 
-/* Black Cat (Void) book reading work animation: 5 frames in sprite sheet, 64x64 frame size (320x64 total sheet) */
+/* Black Cat (Void) book reading work animation, sitting idle break animation, & void petting break animation: 64x64 frame size */
 .cat-sprite.black_cat.work-static,
-.cat-sprite.black_cat.reading-anim {
+.cat-sprite.black_cat.reading-anim,
+.cat-sprite.black_cat.idle-static,
+.cat-sprite.black_cat.idle-anim,
+.cat-sprite.black_cat.break-anim,
+.cat-sprite.black_cat.breaking {
     position: relative;
     width: 64px;
     height: 64px;
@@ -225,7 +229,14 @@ body.cat-only-mode .app-wrapper {
 .cat-sprite.black_cat::before {
     background-image:
         url('../../assets/sprites/black_cat_work_static.png'),
-        url('../../assets/sprites/black_cat_work.png');
+        url('../../assets/sprites/black_cat_work.png'),
+        url('../../assets/sprites/black_cat_idle_static.png');
+}
+
+.cat-sprite.black_cat::after {
+    background-image:
+        url('../../assets/sprites/black_cat_idle.png'),
+        url('../../assets/sprites/black_cat_break.png');
 }
 
 .cat-sprite.black_cat.work-static {
@@ -249,6 +260,40 @@ body.cat-only-mode .app-wrapper {
     animation: workAnimationBlack 1.0s steps(5) infinite;
 }
 
+.cat-sprite.black_cat.idle-static,
+.cat-sprite.black_cat.breaking {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/black_cat_idle_static.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+    cursor: pointer;
+}
+
+.cat-sprite.black_cat.idle-anim {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/black_cat_idle.png');
+    background-size: 320px 64px; /* 5 frames * 64px */
+    background-position: 0px 0px;
+    animation: blackIdleAnim 0.75s steps(5) infinite;
+    cursor: pointer;
+}
+
+.cat-sprite.black_cat.break-anim {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/black_cat_break.png');
+    background-size: 448px 64px; /* 7 frames * 64px */
+    background-position: 0px 0px;
+    animation: blackBreakAnim 0.7s steps(7) infinite;
+    cursor: default;
+}
+
 /* --- CLICK ANIMATIONS --- */
 .cat-sprite.orange_cat.clicking {
     width: 512px;
@@ -268,9 +313,19 @@ body.cat-only-mode .app-wrapper {
     to { background-position: -320px 0px; }
 }
 
+@keyframes blackIdleAnim {
+    from { background-position: 0px 0px; }
+    to { background-position: -320px 0px; }
+}
+
 @keyframes orangeBreakAnim {
     from { background-position: 0px 0px; }
     to { background-position: -576px 0px; }
+}
+
+@keyframes blackBreakAnim {
+    from { background-position: 0px 0px; }
+    to { background-position: -448px 0px; }
 }
 
 .cat-sprite.black_cat.clicking {
@@ -721,7 +776,11 @@ body.cat-only-mode .cat-sprite.orange_cat.clicking {
 }
 
 body.cat-only-mode .cat-sprite.black_cat.work-static,
-body.cat-only-mode .cat-sprite.black_cat.reading-anim {
+body.cat-only-mode .cat-sprite.black_cat.reading-anim,
+body.cat-only-mode .cat-sprite.black_cat.idle-static,
+body.cat-only-mode .cat-sprite.black_cat.idle-anim,
+body.cat-only-mode .cat-sprite.black_cat.break-anim,
+body.cat-only-mode .cat-sprite.black_cat.breaking {
     transform: scale(3.0) translateY(0); /* Preserve 3.0x scale for 64x64 black cat in 240x240 mini window */
 }
 
