@@ -201,6 +201,54 @@ body.cat-only-mode .app-wrapper {
     cursor: pointer; /* Show it can be clicked during break */
 }
 
+/* Black Cat (Void) book reading work animation: 5 frames in sprite sheet, 64x64 frame size (320x64 total sheet) */
+.cat-sprite.black_cat.work-static,
+.cat-sprite.black_cat.reading-anim {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    transform: scale(3.0) translateY(0px);
+    backface-visibility: hidden;
+    will-change: background-image, background-position;
+}
+
+.cat-sprite.black_cat::before,
+.cat-sprite.black_cat::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.cat-sprite.black_cat::before {
+    background-image:
+        url('../../assets/sprites/black_cat_work_static.png'),
+        url('../../assets/sprites/black_cat_work.png');
+}
+
+.cat-sprite.black_cat.work-static {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/black_cat_work_static.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+    cursor: default;
+}
+
+.cat-sprite.black_cat.reading-anim {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/black_cat_work.png');
+    background-size: 320px 64px; /* 5 frames * 64px */
+    background-position: 0px 0px;
+    animation: workAnimationBlack 1.0s steps(5) infinite;
+}
+
 /* --- CLICK ANIMATIONS --- */
 .cat-sprite.orange_cat.clicking {
     width: 512px;
@@ -258,6 +306,11 @@ body.cat-only-mode .app-wrapper {
 @keyframes workAnimationOrange {
     from { background-position: 0px 0px; }
     to { background-position: -192px 0px; }
+}
+
+@keyframes workAnimationBlack {
+    from { background-position: 0px 0px; }
+    to { background-position: -320px 0px; }
 }
 
 .timer-controls {
@@ -665,6 +718,11 @@ body.cat-only-mode .cat-sprite.orange_cat {
 
 body.cat-only-mode .cat-sprite.orange_cat.clicking {
     transform: scale(0.4) translateY(0); /* 512px clicking sprite scales with 0.4x */
+}
+
+body.cat-only-mode .cat-sprite.black_cat.work-static,
+body.cat-only-mode .cat-sprite.black_cat.reading-anim {
+    transform: scale(3.0) translateY(0); /* Preserve 3.0x scale for 64x64 black cat in 240x240 mini window */
 }
 
 body.cat-only-mode:hover .cat-sprite,

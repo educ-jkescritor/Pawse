@@ -90,17 +90,23 @@ const db = new sqlite3.Database(dbPath, (err) => {
                     db.run("UPDATE session SET email = 'guest' WHERE email IS NULL OR email = ''", () => {
                         db.all("SELECT id FROM session WHERE uuid IS NULL OR uuid = ''", (selectErr, rows) => {
                             if (!selectErr && rows && rows.length > 0) {
+                                let pending = rows.length;
                                 rows.forEach((row) => {
                                     const newUuid = crypto.randomUUID();
-                                    db.run("UPDATE session SET uuid = ?, is_synced = 0 WHERE id = ?", [newUuid, row.id]);
+                                    db.run("UPDATE session SET uuid = ?, is_synced = 0 WHERE id = ?", [newUuid, row.id], () => {
+                                        pending--;
+                                        if (pending === 0) {
+                                            db.run("CREATE UNIQUE INDEX IF NOT EXISTS idx_session_uuid ON session(uuid);");
+                                        }
+                                    });
                                 });
                                 console.log(`Successfully assigned UUIDs to ${rows.length} legacy sessions.`);
+                            } else {
+                                db.run("CREATE UNIQUE INDEX IF NOT EXISTS idx_session_uuid ON session(uuid);");
                             }
                         });
                     });
                     console.log("Session database is ready.");
-                    // Ensure unique index exists on uuid for ON CONFLICT upsert support
-                    db.run("CREATE UNIQUE INDEX IF NOT EXISTS idx_session_uuid ON session(uuid);");
                 });
             });
         });
@@ -325,4 +331,3 @@ function generateAnalytics(weeksAgo = 0) {
 }
 
 module.exports = { db, generateAnalytics };
-

@@ -175,21 +175,13 @@ function flushSessionData(isPomodoroComplete = false, forceYesterday = false) {
     // Reset accumulators only on midnight rollover to transition cleanly to the next day
     if (forceYesterday) {
         sessionUuid = crypto.randomUUID();
-    
         actualWork = 0;
-    
-    
         actualBreak = 0;
         workCount = 0;
         breakCount = 0;
-    
         flushedWorkSeconds = 0;
         flushedBreakSeconds = 0;
     }
-
-
-
-
 }
 
 // Initialize Audio Objects
@@ -317,6 +309,10 @@ const clickDurations = {
             '../../assets/sprites/orange_cat_idle.png',
             '../../assets/sprites/orange_cat_break_static.png',
             '../../assets/sprites/orange_cat_break.png'
+        );
+    } else if (catConfig.dbId === 'black_cat') {
+        urls.push(
+            '../../assets/sprites/black_cat_work_static.png'
         );
     }
     urls.forEach(url => {
@@ -579,6 +575,28 @@ function updateCatState() {
             }
 
             spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2500);
+        } else if (catClass === 'black_cat') {
+            // Void (Black Cat) reading book sequence: starts with work_static (calm reading),
+            // then plays reading animation sequence (intense focus aura), then back to work_static
+            let isWorkStatic = true;
+
+            catSprite.style.backgroundImage = ''; // Clear inline override so CSS class takes precedence
+            catSprite.className = `cat-sprite ${catClass} work-static`;
+
+            function playBlackWorkSequence() {
+                if (!workingTime) return;
+
+                isWorkStatic = !isWorkStatic;
+                if (isWorkStatic) {
+                    catSprite.className = `cat-sprite ${catClass} work-static`;
+                    spriteTimeoutId = setTimeout(playBlackWorkSequence, 2500); // Rest still reading for 2.5s
+                } else {
+                    catSprite.className = `cat-sprite ${catClass} reading-anim`;
+                    spriteTimeoutId = setTimeout(playBlackWorkSequence, 2500); // 2.5s (2.5 loops of 1.0s 5-frame animation)
+                }
+            }
+
+            spriteTimeoutId = setTimeout(playBlackWorkSequence, 2500);
         } else {
             // Actively working for other cats: Sequence of work -> static -> work
             let isWorkingAnim = true;
@@ -664,9 +682,11 @@ function startTimer() {
 
         if(remainingTime <= 0) {
             remainingTime = 0;
+            pauseTimer();
             setTimeout(() => {    
                 handleSessionComplete();
             }, 10);
+            return;
         }
     }, 1000);
 }
@@ -690,9 +710,6 @@ function handleSessionComplete(isManualSkip = false) {
             workCount++;
         }
 
-        // Flush accumulated work phase data immediately to SQLite so progress is safely durable
-        flushSessionData(false);
-
         if (cycleCount === 3) {
             nextPhaseState = { remainingTime: catConfig.longBreakTime, workingTime: false };
             const title = isManualSkip ? "Ready to Snooze?" : "Time for a Catnap!";
@@ -705,9 +722,15 @@ function handleSessionComplete(isManualSkip = false) {
                 message,
                 "Start Long Break",
                 function () {
+                    flushSessionData(false);
                     workingTime = false;
                     remainingTime = catConfig.longBreakTime;
                     document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                    if (spriteTimeoutId) {
+                        clearTimeout(spriteTimeoutId);
+                        spriteTimeoutId = null;
+                    }
+                    updateCatState();
                     startTimer();
                     triggerWelcomeBubble();
                 },
@@ -725,9 +748,15 @@ function handleSessionComplete(isManualSkip = false) {
                 message,
                 "Start Break",
                 function () {
+                    flushSessionData(false);
                     workingTime = false;
                     remainingTime = catConfig.shortBreakTime;
                     document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                    if (spriteTimeoutId) {
+                        clearTimeout(spriteTimeoutId);
+                        spriteTimeoutId = null;
+                    }
+                    updateCatState();
                     startTimer();
                     triggerWelcomeBubble();
                 },
@@ -743,7 +772,6 @@ function handleSessionComplete(isManualSkip = false) {
 
         if (cycleCount === 4) {
             nextPhaseState = null;
-            flushSessionData(!isManualSkip);
 
             const title = isManualSkip ? "Finish Session?" : "Pawsome Job!";
             const message = isManualSkip
@@ -755,6 +783,7 @@ function handleSessionComplete(isManualSkip = false) {
                 message,
                 "Return to Menu",
                 function () {
+                    flushSessionData(!isManualSkip);
                     localStorage.removeItem('pawseDurableState');
                     window.location.replace("../index.html");
                 },
@@ -762,9 +791,6 @@ function handleSessionComplete(isManualSkip = false) {
             );
             return;
         } else {
-            // Flush accumulated break phase data immediately to SQLite
-            flushSessionData(false);
-
             nextPhaseState = { remainingTime: catConfig.workTime, workingTime: true };
             const title = isManualSkip ? "End Break Early?" : "Ready to Focus?";
             const message = isManualSkip
@@ -776,9 +802,15 @@ function handleSessionComplete(isManualSkip = false) {
                 message,
                 "Start Work",
                 function () {
+                    flushSessionData(false);
                     workingTime = true;
                     remainingTime = catConfig.workTime;
                     document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                    if (spriteTimeoutId) {
+                        clearTimeout(spriteTimeoutId);
+                        spriteTimeoutId = null;
+                    }
+                    updateCatState();
                     startTimer();
                 },
                 !isManualSkip
@@ -793,6 +825,8 @@ function manualSkipSession() {
         remainingTime,
         workingTime,
         cycleCount,
+        workCount,
+        breakCount,
         wasRunning: isRunning
     };
 
@@ -810,13 +844,6 @@ function manualSkipSession() {
         }
     } else {
         lastSessionOutcome = 'breakSkipped';
-    }
-
-    // Play companion sound feedback if click sound is enabled
-    const meowAudio = meowAudios[catConfig.dbId];
-    if (meowAudio && soundEnabled && localStorage.getItem('clickSound') !== 'false') {
-        meowAudio.currentTime = 0;
-        meowAudio.play().catch(e => {});
     }
 
     handleSessionComplete(true);
@@ -837,8 +864,14 @@ function cancelSkip() {
         remainingTime = restored.remainingTime;
         workingTime = restored.workingTime;
         cycleCount = restored.cycleCount;
+        if (restored.workCount !== undefined) workCount = restored.workCount;
+        if (restored.breakCount !== undefined) breakCount = restored.breakCount;
         document.getElementById("timer-display").textContent = formatTime(remainingTime);
         updateSessionCounter();
+        if (spriteTimeoutId) {
+            clearTimeout(spriteTimeoutId);
+            spriteTimeoutId = null;
+        }
         updateCatState();
         updateAudioSettings();
 
