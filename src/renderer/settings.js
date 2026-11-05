@@ -73,6 +73,8 @@ let settingsContent = document.getElementById("settings-content");
 (function preloadAboutSprites() {
     [
         '../assets/sprites/orange_cat_tag_static.png',
+        '../assets/sprites/black_cat_tag_static.png',
+        '../assets/sprites/black_cat_tag.png',
         '../assets/sprites/orange_cat_tag.png'
     ].forEach(url => {
         const img = new Image();
@@ -81,8 +83,29 @@ let settingsContent = document.getElementById("settings-content");
 })();
 
 let orangeAboutTimeoutId = null;
+let blackAboutTimeoutId = null;
 
-function stopOrangeAboutSequence() {
+function stopAboutSequences() {
+    if (orangeAboutTimeoutId) {
+        clearTimeout(orangeAboutTimeoutId);
+        orangeAboutTimeoutId = null;
+    }
+    if (blackAboutTimeoutId) {
+        clearTimeout(blackAboutTimeoutId);
+        blackAboutTimeoutId = null;
+    }
+    const orangeSprite = document.getElementById("orange-about-sprite");
+    if (orangeSprite) {
+        orangeSprite.className = "orange-about-sprite tag-static";
+    }
+    const blackSprite = document.getElementById("black-about-sprite");
+    if (blackSprite) {
+        blackSprite.className = "black-about-sprite tag-static";
+    }
+}
+const stopOrangeAboutSequence = stopAboutSequences;
+
+function _legacyStop() {
     if (orangeAboutTimeoutId) {
         clearTimeout(orangeAboutTimeoutId);
         orangeAboutTimeoutId = null;
@@ -93,7 +116,52 @@ function stopOrangeAboutSequence() {
     }
 }
 
-function startOrangeAboutSequence() {
+function startAboutSequences() {
+    stopAboutSequences();
+    const orangeSprite = document.getElementById("orange-about-sprite");
+    const blackSprite = document.getElementById("black-about-sprite");
+
+    if (orangeSprite) {
+        let isOrangeStatic = true;
+        orangeSprite.className = "orange-about-sprite tag-static";
+
+        function playOrangeTagLoop() {
+            if (aboutContent && aboutContent.classList.contains("hidden")) return;
+
+            isOrangeStatic = !isOrangeStatic;
+            if (isOrangeStatic) {
+                orangeSprite.className = "orange-about-sprite tag-static";
+                orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 2500);
+            } else {
+                orangeSprite.className = "orange-about-sprite tag-anim";
+                orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 2700);
+            }
+        }
+        orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 2000);
+    }
+
+    if (blackSprite) {
+        let isBlackStatic = true;
+        blackSprite.className = "black-about-sprite tag-static";
+
+        function playBlackTagLoop() {
+            if (aboutContent && aboutContent.classList.contains("hidden")) return;
+
+            isBlackStatic = !isBlackStatic;
+            if (isBlackStatic) {
+                blackSprite.className = "black-about-sprite tag-static";
+                blackAboutTimeoutId = setTimeout(playBlackTagLoop, 2800);
+            } else {
+                blackSprite.className = "black-about-sprite tag-anim";
+                blackAboutTimeoutId = setTimeout(playBlackTagLoop, 2700);
+            }
+        }
+        blackAboutTimeoutId = setTimeout(playBlackTagLoop, 3200);
+    }
+}
+const startOrangeAboutSequence = startAboutSequences;
+
+function _legacyStart() {
     stopOrangeAboutSequence();
     const sprite = document.getElementById("orange-about-sprite");
     if (!sprite) return;
@@ -110,7 +178,7 @@ function startOrangeAboutSequence() {
             orangeAboutTimeoutId = setTimeout(playTagLoop, 2500); // Rest on tag_static for 2.5s
         } else {
             sprite.className = "orange-about-sprite tag-anim";
-            orangeAboutTimeoutId = setTimeout(playTagLoop, 2400); // 3 cycles of 0.8s 4-frame tag animation
+            orangeAboutTimeoutId = setTimeout(playTagLoop, 2700); // 3 cycles of 0.9s 3-frame tag animation
         }
     }
 
@@ -123,6 +191,8 @@ dashboardButton.onclick = function() {
     hideAllContents();
     dashboardContent.classList.remove("hidden");
     setActiveTab(dashboardButton);
+    loadAnalytics(currentWeeksAgo);
+    updateDashboardDateTime();
 }
 
 let aboutButton = document.getElementById("about-btn");
@@ -274,6 +344,60 @@ function renderCalendar() {
 async function loadAnalytics(weeksAgo = 0) {
     currentWeeksAgo = weeksAgo;
     const data = await window.mainAPI.loadanalytics(weeksAgo);
+
+    // Live Session Integration: Seamlessly fold in in-progress focus time when a timer is currently active
+    try {
+        const isTimerRunning = localStorage.getItem('timerRunning') === 'true';
+        const durableStateStr = localStorage.getItem('pawseDurableState');
+        if (durableStateStr && isTimerRunning) {
+            const liveState = JSON.parse(durableStateStr);
+            const liveActualWork = Number(liveState.actualWork) || 0;
+            const liveFlushedWork = Number(liveState.flushedWorkSeconds) || 0;
+            const unflushedWorkSeconds = Math.max(0, liveActualWork - liveFlushedWork);
+
+            if (unflushedWorkSeconds > 0) {
+                // 1. Credit live focus time to today's work total
+                data.today_work_seconds = (data.today_work_seconds || 0) + unflushedWorkSeconds;
+
+                // 2. If viewing the current week (weeksAgo === 0), add live seconds to today's chart bar
+                if (weeksAgo === 0 && Array.isArray(data.weekly_data)) {
+                    const todayDayIndex = new Date().getDay(); // 0 = Sun, ..., 6 = Sat
+                    data.weekly_data[todayDayIndex] = (data.weekly_data[todayDayIndex] || 0) + unflushedWorkSeconds;
+
+                    // Recalculate weekly average with the live seconds
+                    const activeWeekDays = data.weekly_data.filter(s => s > 0);
+                    if (activeWeekDays.length > 0) {
+                        const totalWeekWork = activeWeekDays.reduce((acc, s) => acc + s, 0);
+                        data.weekly_avg_seconds = Math.round(totalWeekWork / activeWeekDays.length);
+                    }
+                }
+
+                // 3. Streak qualification: 60 seconds minimum to activate today's streak
+                if (data.today_work_seconds >= 60 && (!data.current_streak || data.current_streak === 0)) {
+                    data.current_streak = 1;
+                    if (!data.best_streak || data.best_streak < 1) {
+                        data.best_streak = 1;
+                    }
+                }
+
+                // 4. Companion assignment fallback if no prior database history exists
+                if (!data.favorite_cat && liveState.catType) {
+                    const dbIdMap = {
+                        orange: 'orange_cat',
+                        tuxedo: 'tuxedo_cat',
+                        black: 'black_cat',
+                        orange_cat: 'orange_cat',
+                        tuxedo_cat: 'tuxedo_cat',
+                        black_cat: 'black_cat'
+                    };
+                    data.favorite_cat = dbIdMap[liveState.catType] || 'orange_cat';
+                    data.favorite_cat_percentage = 100;
+                }
+            }
+        }
+    } catch (err) {
+        // Fallback safely to pure database values if JSON parsing fails
+    }
 
     // Update dynamic week pill date range
     const dateRangeButton = document.getElementById("date-range-btn");
@@ -554,6 +678,40 @@ const topCompanionCard = document.getElementById("top-companion-card");
 
 loadAnalytics();
 
+// Dashboard Manual Refresh Handler
+const refreshBtn = document.getElementById("refresh-btn");
+let isRefreshingAnalytics = false;
+
+if (refreshBtn) {
+    const handleRefresh = async () => {
+        if (isRefreshingAnalytics) return;
+        isRefreshingAnalytics = true;
+
+        refreshBtn.classList.add("spinning");
+        updateDashboardDateTime();
+
+        try {
+            await loadAnalytics(currentWeeksAgo);
+        } catch (err) {
+            console.error("Failed to refresh dashboard analytics:", err);
+        } finally {
+            // Keep spinning class for the full 500ms CSS animation cycle for smooth UX
+            setTimeout(() => {
+                refreshBtn.classList.remove("spinning");
+                isRefreshingAnalytics = false;
+            }, 500);
+        }
+    };
+
+    refreshBtn.addEventListener("click", handleRefresh);
+    refreshBtn.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleRefresh();
+        }
+    });
+}
+
 // Persistent volume sliders (retains configuration on load)
 const volumeSliders = document.querySelectorAll('.volume-slider');
 
@@ -584,6 +742,10 @@ volumeSliders.forEach(slider => {
         storageKey = 'purrVolume';
     } else if (slider.classList.contains('alarm-slider')){
         storageKey = 'alarmVolume';
+    } else if (slider.classList.contains('tick-slider')) {
+        storageKey = 'tickVolume';
+    } else if (slider.classList.contains('companion-slider')) {
+        storageKey = 'companionVolume';
     }
 
     // 2. Load the saved value on window startup (default to 50 if empty)
@@ -650,12 +812,6 @@ const clickToggle = document.querySelector('.click-toggle');
 if (clickToggle) {
     clickToggle.checked = localStorage.getItem('clickSound') !== 'false';
     clickToggle.addEventListener('change', (e) => localStorage.setItem('clickSound', e.target.checked));
-}
-
-const tickToggle = document.querySelector('.tick-toggle');
-if (tickToggle) {
-    tickToggle.checked = localStorage.getItem('tickSound') === 'true';
-    tickToggle.addEventListener('change', (e) => localStorage.setItem('tickSound', e.target.checked));
 }
 
 // Custom Graph Week Picker Logic

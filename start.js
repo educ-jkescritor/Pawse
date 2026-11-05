@@ -5,6 +5,11 @@ const electronPath = require("electron");
 const cleanEnv = { ...process.env };
 delete cleanEnv.ELECTRON_RUN_AS_NODE;
 
+// Ensure PulseAudio has sufficient latency buffer headroom on Linux/WSL to avoid underruns
+if (process.platform === 'linux' && !cleanEnv.PULSE_LATENCY_MSEC) {
+  cleanEnv.PULSE_LATENCY_MSEC = '120';
+}
+
 const child = spawn(electronPath, ["."], {
   stdio: "inherit",
   env: cleanEnv,

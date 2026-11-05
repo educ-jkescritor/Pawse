@@ -357,11 +357,25 @@ p {
 
 .refresh-icon {
     cursor: pointer;
-    transition: filter 150ms ease;
+    transition: filter 150ms ease, transform 0.2s ease;
 }
 
 .refresh-icon:hover {
     filter: brightness(0.5);
+}
+
+.refresh-icon:active {
+    filter: brightness(0.3);
+}
+
+@keyframes spin-refresh {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.refresh-icon.spinning {
+    animation: spin-refresh 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
 /* DASHBOARD */
@@ -1145,14 +1159,83 @@ p {
     width: 64px;
     height: 64px;
     background-image: url('../assets/sprites/orange_cat_tag.png');
-    background-size: 256px 64px; /* 4 frames * 64px */
+    background-size: 192px 64px; /* 3 frames * 64px */
     background-position: 0px 0px;
-    animation: orangeAboutTagAnim 0.8s steps(4) infinite;
+    animation: orangeAboutTagAnim 0.9s steps(3) infinite;
 }
 
 @keyframes orangeAboutTagAnim {
     from { background-position: 0px 0px; }
-    to { background-position: -256px 0px; }
+    to { background-position: -192px 0px; }
+}
+
+/* Void (Black Cat) About Tag Sprites & Animations */
+.black-info .companion-states {
+    padding: 0 40px 0 0;
+    justify-content: flex-start;
+    align-items: flex-end;
+}
+
+.black-info .companion-image {
+    display: contents;
+}
+
+.black-about-sprite {
+    display: block;
+    position: relative;
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+    background-repeat: no-repeat;
+    background-position: 0px 0px;
+    image-rendering: pixelated;
+    transform: scale(1.75);
+    transform-origin: bottom left;
+    backface-visibility: hidden;
+    will-change: background-image, background-position;
+}
+
+.black-about-sprite::before,
+.black-about-sprite::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.black-about-sprite::before {
+    background-image: url('../assets/sprites/black_cat_tag_static.png');
+}
+
+.black-about-sprite::after {
+    background-image: url('../assets/sprites/black_cat_tag.png');
+}
+
+.black-about-sprite.tag-static {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../assets/sprites/black_cat_tag_static.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+}
+
+.black-about-sprite.tag-anim {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../assets/sprites/black_cat_tag.png');
+    background-size: 192px 64px; /* 3 frames * 64px */
+    background-position: 0px 0px;
+    animation: blackAboutTagAnim 0.9s steps(3) infinite;
+}
+
+@keyframes blackAboutTagAnim {
+    from { background-position: 0px 0px; }
+    to { background-position: -192px 0px; }
 }
 
 /* --- ABOUT FOOTER & TEAM SECTION --- */

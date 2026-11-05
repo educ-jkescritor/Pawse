@@ -59,7 +59,7 @@
                     <div class="dashboard-header">
                         <div class="dashboard-header-row">
                             <p class="font-inter-20-semibold" style="margin: 0;">Your Progress</p>
-                            <img class="refresh-icon" src="../assets/icons/refresh-btn.svg" alt="refresh" id="refresh-btn" title="Refresh">
+                            <img class="refresh-icon" src="../assets/icons/refresh-btn.svg" alt="refresh" id="refresh-btn" title="Refresh" role="button" tabindex="0" aria-label="Refresh Dashboard">
                         </div>
                         <div class="dashboard-header-row">
                             <p class="font-inter-12-medium text-gray-light" id="dashboard-datetime" style="margin: 0;"></p>
@@ -190,7 +190,7 @@
                         <div class="companion-card black-info">
                             <div class="companion-states">
                                 <span class="companion-image">
-                                    <img src="../assets/sprites/black_cat_static.png" alt="black-cat">
+                                    <div id="black-about-sprite" class="black-about-sprite tag-static" role="img" aria-label="black-cat"></div>
                                 </span>
                                 <span class="pixel-gradient">
                                     <img src="../assets/photos/pixel-gradient-purple.svg" alt="pixel-gradient">
@@ -405,7 +405,7 @@
                                                 <p class="font-inter-10-regular text-gray-light">Plays click sounds when interacting with buttons.</p>
                                             </div>
                                             <label class="toggle-switch">
-                                                <input type="checkbox" class="top-toggle">
+                                                <input type="checkbox" class="click-toggle">
                                                 <span class="slider"></span>
                                             </label>
                                         </div>
