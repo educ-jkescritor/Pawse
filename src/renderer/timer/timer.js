@@ -193,6 +193,23 @@ const tickAudio = new Audio('../../assets/sounds/tick.mp3');
 tickAudio.volume = 0.2; // Lowered default volume to prevent ear strain
 let tickEnabled = false;
 const alarmAudio = new Audio('../../assets/sounds/alarm.mp3');
+
+// Linux & Cross-Platform Audio Stream Recovery:
+// When audio drivers (ALSA / PulseAudio) experience underruns, power-saving pauses, or loop transitions,
+// these handlers ensure looping tracks seamlessly recover without silently halting.
+[ambientAudio, purrAudio, alarmAudio].forEach(audio => {
+    audio.addEventListener('stalled', () => {
+        if (!audio.paused && audio.readyState >= 2) {
+            audio.play().catch(() => {});
+        }
+    });
+    audio.addEventListener('ended', () => {
+        if (audio.loop && !audio.paused) {
+            audio.currentTime = 0;
+            audio.play().catch(() => {});
+        }
+    });
+});
 alarmAudio.loop = true;
 alarmAudio.volume = 0.2; // Lowered default volume to prevent ear strain
 

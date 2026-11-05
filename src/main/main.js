@@ -11,6 +11,18 @@ nativeTheme.themeSource = 'light';
 // Suppress internal Chromium C++ diagnostics (e.g. unconfigured Crashpad pipes)
 app.commandLine.appendSwitch('log-level', '3');
 
+// Linux Audio & Visual Optimizations:
+// 1. Increase audio buffer to eliminate ALSA/PulseAudio underruns and dropouts on Linux
+// 2. Enable transparent visuals so real Linux compositors (GNOME Mutter, KDE KWin) render 32-bit ARGB transparency
+if (process.platform === 'linux') {
+  if (!process.env.PULSE_LATENCY_MSEC) {
+    process.env.PULSE_LATENCY_MSEC = '120';
+  }
+  app.commandLine.appendSwitch('audio-buffer-size', '4096');
+  app.commandLine.appendSwitch('enable-transparent-visuals');
+  app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+}
+
 let win = null;
 let set = null;
 let globalAlwaysOnTop = false;
