@@ -29,5 +29,14 @@ contextBridge.exposeInMainWorld('mainAPI', {
     onNotificationClosed: (callback) => {
         ipcRenderer.removeAllListeners('notification-closed');
         ipcRenderer.on('notification-closed', () => callback());
+    },
+    onSystemSuspend: (callback) => {
+        ipcRenderer.removeAllListeners('system-suspend');
+        ipcRenderer.on('system-suspend', () => callback());
+    },
+    onSystemResume: (callback) => {
+        ipcRenderer.removeAllListeners('system-resume');
+        ipcRenderer.on('system-resume', () => callback());
+    }
     }
 });

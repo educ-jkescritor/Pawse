@@ -696,12 +696,16 @@ function startTimer() {
 
         if (elapsedSec > 0) {
             lastTickTime += elapsedSec * 1000;
-            // Cap credited seconds to remaining phase time so OS sleep does not inflate focus analytics
-            const creditedSec = Math.min(elapsedSec, remainingTime);
+            // Sleep Safety: If the system was suspended or frozen for >15s, pause cleanly without counting offline time
+            if (elapsedSec > 15) {
+                pauseTimer();
+                document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                return;
+            }
             if (workingTime === true) {
-                actualWork += creditedSec;
+                actualWork += elapsedSec;
             } else {
-                actualBreak += creditedSec;
+                actualBreak += elapsedSec;
             }
 
             if (tickEnabled && soundEnabled) {
@@ -1356,6 +1360,16 @@ if (window.mainAPI && window.mainAPI.onNotificationClosed) {
         stopAlarmSound();
         if (window.mainAPI.flashFrame) {
             window.mainAPI.flashFrame(false);
+        }
+    });
+}
+
+// Automatically pause active countdown when the computer enters sleep/suspend
+if (window.mainAPI && window.mainAPI.onSystemSuspend) {
+    window.mainAPI.onSystemSuspend(() => {
+        if (isRunning) {
+            pauseTimer();
+            document.getElementById("timer-display").textContent = formatTime(remainingTime);
         }
     });
 }
