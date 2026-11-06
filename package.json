@@ -9,7 +9,8 @@
     "build:store": "electron-builder --win appx",
     "build:exe": "electron-builder --win nsis",
     "build:mac": "electron-builder --mac",
-    "build:all": "electron-builder -mw",
+    "build:linux": "electron-builder --linux",
+    "build:all": "electron-builder -mwl",
     "test": "jest"
   },
   "keywords": [
@@ -93,6 +94,15 @@
         "width": 540,
         "height": 380
       }
+    },
+    "linux": {
+      "category": "Utility",
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "src/assets/logos/logo.png",
+      "maintainer": "Jude Keith Escritor <judekeithescritor@gmail.com>"
     },
     "appx": {
       "identityName": "JudeKeithEscritor.Pawse",
