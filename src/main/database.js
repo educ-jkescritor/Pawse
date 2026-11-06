@@ -33,6 +33,11 @@ const db = new sqlite3.Database(dbPath, (err) => {
     } else {
         console.log("[PAWSE / Database] Connected to SQLite database.");
         
+        // Performance & Concurrency: Enable WAL mode and busy timeout to eliminate SQLITE_BUSY lock contention
+        db.run("PRAGMA journal_mode = WAL;");
+        db.run("PRAGMA busy_timeout = 3000;");
+        db.run("PRAGMA synchronous = NORMAL;");
+        
         const createTableQuery = `CREATE TABLE IF NOT EXISTS session (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT DEFAULT 'guest',

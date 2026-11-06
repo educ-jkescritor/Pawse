@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, nativeTheme, screen, Notification } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, nativeTheme, screen, Notification, powerMonitor } = require("electron");
 
 // Production Hygiene: Suppress debug console logs in packaged end-user builds
 if (app.isPackaged) {
@@ -231,6 +231,19 @@ if (!gotTheLock) {
       }
     });
     
+    // OS Power & Sleep Integration: Pause active timer cleanly when computer suspends
+    powerMonitor.on('suspend', () => {
+      if (win && !win.isDestroyed()) {
+        win.webContents.send('system-suspend');
+      }
+    });
+
+    powerMonitor.on('resume', () => {
+      if (win && !win.isDestroyed()) {
+        win.webContents.send('system-resume');
+      }
+    });
+
     // Automatically re-evaluate frameless window bounds when display scale/orientation/resolution changes
     screen.on('display-metrics-changed', () => {
       if (win && !win.isDestroyed() && !win.isMinimized()) {
