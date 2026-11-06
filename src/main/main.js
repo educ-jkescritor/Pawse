@@ -906,6 +906,10 @@ ipcMain.handle('get-version', () => {
 
 ipcMain.handle('get-launch-on-startup', () => {
   try {
+    if (process.platform === 'linux') {
+      const autostartFile = path.join(app.getPath('home'), '.config', 'autostart', 'pawse.desktop');
+      return fs.existsSync(autostartFile);
+    }
     const loginItemSettings = app.getLoginItemSettings();
     return loginItemSettings.openAtLogin;
   } catch (err) {
@@ -916,6 +920,36 @@ ipcMain.handle('get-launch-on-startup', () => {
 
 ipcMain.on('set-launch-on-startup', (event, isEnabled) => {
   try {
+    if (process.platform === 'linux') {
+      const autostartDir = path.join(app.getPath('home'), '.config', 'autostart');
+      const autostartFile = path.join(autostartDir, 'pawse.desktop');
+
+      if (isEnabled) {
+        if (!fs.existsSync(autostartDir)) {
+          fs.mkdirSync(autostartDir, { recursive: true });
+        }
+        const execPath = process.env.APPIMAGE || (app.isPackaged ? app.getPath('exe') : process.execPath);
+        const desktopContent = [
+          '[Desktop Entry]',
+          'Type=Application',
+          'Version=1.0',
+          'Name=Pawse',
+          'Comment=A secure, resilient, and adorable Pomodoro timer',
+          `Exec="${execPath}"`,
+          `Icon=${iconPath}`,
+          'Terminal=false',
+          'StartupNotify=false',
+          'Categories=Utility;'
+        ].join('\n') + '\n';
+
+        fs.writeFileSync(autostartFile, desktopContent, 'utf8');
+      } else {
+        if (fs.existsSync(autostartFile)) {
+          fs.unlinkSync(autostartFile);
+        }
+      }
+    }
+
     app.setLoginItemSettings({
       openAtLogin: Boolean(isEnabled),
       ...(process.platform === 'win32' ? { path: app.isPackaged ? app.getPath('exe') : process.execPath } : {})
