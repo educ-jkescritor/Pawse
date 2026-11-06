@@ -86,7 +86,11 @@ if (savedStateStr) {
     try {
         const savedState = JSON.parse(savedStateStr);
         // Only restore if the saved state belongs to the exact same cat companion
-        if (savedState.catType === catType) {
+        // Stale Session Protection: Discard crash snapshot if older than 12 hours
+        const MAX_STALE_SESSION_MS = 12 * 60 * 60 * 1000;
+        if (savedState.timestamp && (Date.now() - savedState.timestamp > MAX_STALE_SESSION_MS)) {
+            localStorage.removeItem('pawseDurableState');
+        } else if (savedState.catType === catType) {
             // Freeze exact remaining time on crash recovery (do not subtract offline elapsed seconds)
             remainingTime = savedState.remainingTime;
             
