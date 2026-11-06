@@ -720,21 +720,8 @@ function startTimer() {
         }
 
         // Recompute remaining seconds directly against wall-clock target timestamp
-        remainingTime = Math.max(0, Math.round((targetEndTime - now) / 1000)); /*
-
-
-            // Active tick audio sync: bypass dead air padding
-            tickAudio.currentTime = 0.10;
-            tickAudio.play().catch(e => {});
-        }
-
-
-
-        } else {
-
-        }
-
-        */ document.getElementById("timer-display").textContent = formatTime(remainingTime);
+        remainingTime = Math.max(0, Math.round((targetEndTime - now) / 1000));
+        document.getElementById("timer-display").textContent = formatTime(remainingTime);
 
         if(remainingTime <= 0) {
             remainingTime = 0;
@@ -910,10 +897,10 @@ function cancelSkip() {
 
     // Reset skip outcome since skip was cancelled
     lastSessionOutcome = null;
+    nextPhaseState = null;
 
     const restored = preSkipState;
     preSkipState = null;
-    nextPhaseState = null;
 
     hideModal(modalOverlay, () => {
         pendingModal = null;

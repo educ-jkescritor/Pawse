@@ -285,6 +285,35 @@ if (!gotTheLock) {
         set.webContents.setZoomLevel(0);
       }
     });
+
+    // Multi-Display Disconnect Safety: Rescue window back to primary display if its monitor was unplugged
+    screen.on('display-removed', () => {
+      const primaryDisplay = screen.getPrimaryDisplay();
+      const allDisplays = screen.getAllDisplays();
+
+      [win, set].forEach(targetWindow => {
+        if (targetWindow && !targetWindow.isDestroyed()) {
+          const bounds = targetWindow.getBounds();
+
+          // Check if window coordinates are within any currently active display
+          const isVisibleOnAnyDisplay = allDisplays.some(display => {
+            const { x, y, width, height } = display.bounds;
+            return (
+              bounds.x + bounds.width > x &&
+              bounds.x < x + width &&
+              bounds.y + bounds.height > y &&
+              bounds.y < y + height
+            );
+          });
+
+          // If orphaned off-screen, rescue to the primary display's visible work area
+          if (!isVisibleOnAnyDisplay) {
+            const rescuedBounds = clampBoundsToWorkArea(primaryDisplay.workArea, bounds.width, bounds.height);
+            targetWindow.setBounds(rescuedBounds);
+          }
+        }
+      });
+    });
   });
 }
 
@@ -909,4 +938,3 @@ app.on('activate', () => {
     win.focus();
   }
 });
-
