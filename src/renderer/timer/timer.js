@@ -30,7 +30,7 @@ if (window.mainAPI && window.mainAPI.loadanalytics) {
             window.CompanionDialogueEngine.init(analytics);
         }
     }).catch(err => {
-        console.warn("Could not load analytics for dialogue engine:", err);
+        console.warn("[PAWSE / Dialogue] Could not load analytics for dialogue engine:", err?.message || err);
     });
 }
 

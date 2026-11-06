@@ -397,9 +397,9 @@ ipcMain.on('save-session', (event, data) => {
     data.date_completed || null
   ], (err) => {
     if (err) {
-      console.log("Error inserting session data:", err.message);
+      console.error("[PAWSE / Session] Failed to save session data:", err.message);
     } else {
-      console.log("Session data saved successfully (progressive upsert).");
+      console.log("[PAWSE / Session] Session data saved successfully (progressive upsert).");
 
       // In development, keep AppData mirrored as backup so both copies stay in sync
       if (!app.isPackaged) {
@@ -439,7 +439,7 @@ ipcMain.handle('load-analytics', async (event, weeksAgo) => {
     const analyticsData = await generateAnalytics(weeksAgo);
     return analyticsData;
   } catch (error) {
-    console.error("Error generating analytics:", error);
+    console.error("[PAWSE / Analytics] Failed to compute analytics:", error?.message || error);
     throw error;
   }
 });
@@ -731,14 +731,14 @@ ipcMain.on('check-for-updates', () => {
   }
 
   if (!app.isPackaged) {
-    console.log('[AutoUpdater - DEV SIMULATOR] Checking for updates...');
+    console.log('[PAWSE / AutoUpdater] [Simulator] Checking for updates...');
     sendUpdateStatus('checking', 'Looking for the latest version...', 'Checking...', 'btn-loading', true);
     
     setTimeout(() => {
       // Support testing edge cases via env var (e.g. PAWSE_MOCK_UPDATE="up-to-date" or "error")
       const mockMode = (process.env.PAWSE_MOCK_UPDATE || 'available').toLowerCase();
       if (mockMode === 'up-to-date') {
-        console.log('[AutoUpdater - DEV SIMULATOR] Simulated up to date');
+        console.log('[PAWSE / AutoUpdater] [Simulator] Simulated up to date.');
         sendUpdateStatus(
           'up-to-date',
           'Current version: v' + app.getVersion() + '. Checked just now.',
@@ -747,7 +747,7 @@ ipcMain.on('check-for-updates', () => {
           true
         );
       } else if (mockMode === 'error') {
-        console.log('[AutoUpdater - DEV SIMULATOR] Simulated update check error');
+        console.log('[PAWSE / AutoUpdater] [Simulator] Simulated update check error.');
         sendUpdateStatus(
           'error',
           "Couldn't connect. Check your internet and try again.",
@@ -757,7 +757,7 @@ ipcMain.on('check-for-updates', () => {
         );
       } else {
         const simVersion = '1.1.0';
-        console.log('[AutoUpdater - DEV SIMULATOR] Update found (v' + simVersion + '). Auto-starting download...');
+        console.log('[PAWSE / AutoUpdater] [Simulator] Update found (v' + simVersion + '). Auto-starting download...');
         sendUpdateStatus(
           'downloading',
           `Downloading PAWSE v${simVersion}...`,
@@ -768,7 +768,7 @@ ipcMain.on('check-for-updates', () => {
         );
 
         setTimeout(() => {
-          console.log('[AutoUpdater - DEV SIMULATOR] Download complete. Ready to restart.');
+          console.log('[PAWSE / AutoUpdater] [Simulator] Download complete. Ready to restart.');
           sendUpdateStatus(
             'downloaded',
             `PAWSE v${simVersion} is ready. Restart to apply.`,
@@ -785,7 +785,7 @@ ipcMain.on('check-for-updates', () => {
 
   sendUpdateStatus('checking', 'Looking for the latest version...', 'Checking...', 'btn-loading', true);
   autoUpdater.checkForUpdates().catch((err) => {
-    console.error('[AutoUpdater] Check failed:', err?.message || err);
+    console.error('[PAWSE / AutoUpdater] Check failed:', err?.message || err);
     if (process.platform === 'darwin' && err?.message && err.message.includes('Could not get code signature')) {
       shell.openExternal(GITHUB_RELEASES_URL);
       sendUpdateStatus('idle', 'Current version: v' + app.getVersion() + ' • Opened GitHub Releases', 'Check for Updates', '', false);
@@ -803,7 +803,7 @@ ipcMain.on('check-for-updates', () => {
 
 autoUpdater.on('update-available', (info) => {
   const v = info && info.version ? `v${info.version}` : '';
-  console.log('[AutoUpdater] Update available (' + v + '), auto-downloading...');
+  console.log('[PAWSE / AutoUpdater] Update available (' + v + '), auto-downloading...');
   sendUpdateStatus(
     'downloading',
     `Downloading PAWSE ${v}...`.trim(),
@@ -825,7 +825,7 @@ autoUpdater.on('update-not-available', () => {
 });
 
 autoUpdater.on('error', (err) => {
-  console.error('[AutoUpdater] Error:', err?.message || err);
+  console.error('[PAWSE / AutoUpdater] Update error:', err?.message || err);
   sendUpdateStatus(
     'error',
     "Couldn't connect. Check your internet and try again.",
@@ -850,7 +850,7 @@ autoUpdater.on('update-downloaded', (info) => {
 ipcMain.on('restart-app', () => {
   if (isWindowsStore) return;
   if (!app.isPackaged) {
-    console.log('[AutoUpdater - DEV SIMULATOR] Restart & Update clicked. Relaunching app immediately...');
+    console.log('[PAWSE / AutoUpdater] [Simulator] Restart & Update clicked. Relaunching app immediately...');
     app.relaunch();
     app.quit();
     return;
@@ -867,7 +867,7 @@ ipcMain.handle('get-launch-on-startup', () => {
     const loginItemSettings = app.getLoginItemSettings();
     return loginItemSettings.openAtLogin;
   } catch (err) {
-    console.error('[LaunchOnStartup] Failed to get login item settings:', err);
+    console.error('[PAWSE / Startup] Failed to get login item settings:', err?.message || err);
     return false;
   }
 });
@@ -879,7 +879,7 @@ ipcMain.on('set-launch-on-startup', (event, isEnabled) => {
       ...(process.platform === 'win32' ? { path: app.isPackaged ? app.getPath('exe') : process.execPath } : {})
     });
   } catch (err) {
-    console.error('[LaunchOnStartup] Failed to set login item settings:', err);
+    console.error('[PAWSE / Startup] Failed to set login item settings:', err?.message || err);
   }
 });
 
