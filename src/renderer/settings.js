@@ -694,7 +694,6 @@ if (refreshBtn) {
     const handleRefresh = async () => {
         if (isRefreshingAnalytics) return;
         isRefreshingAnalytics = true;
-Doc
         refreshBtn.classList.add("spinning");
         updateDashboardDateTime();
 
