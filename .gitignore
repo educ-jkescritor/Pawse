@@ -14,6 +14,11 @@ out/
 *.msix
 *.msixupload
 *.appxupload
+*.dmg
+*.zip
+*.AppImage
+*.deb
+*.rpm
 
 # Local Databases, Wal, and Journal Files (Never push user data)
 pawse.db
