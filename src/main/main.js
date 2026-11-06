@@ -659,9 +659,11 @@ ipcMain.on('close-notification', () => {
 });
 
 const isWindowsStore = Boolean(process.windowsStore);
+const GITHUB_RELEASES_URL = 'https://github.com/educ-jkescritor/Pawse/releases/latest';
 
 if (!isWindowsStore) {
-  autoUpdater.autoDownload = true;
+  const isLinuxPlatform = process.platform === 'linux';
+  autoUpdater.autoDownload = !isLinuxPlatform || Boolean(process.env.APPIMAGE);
 }
 
 const MICROSOFT_STORE_PRODUCT_ID = '9N0DQPN61VR6';
@@ -778,6 +780,11 @@ ipcMain.on('check-for-updates', () => {
   sendUpdateStatus('checking', 'Looking for the latest version...', 'Checking...', 'btn-loading', true);
   autoUpdater.checkForUpdates().catch((err) => {
     console.error('[AutoUpdater] Check failed:', err?.message || err);
+    if (process.platform === 'darwin' && err?.message && err.message.includes('Could not get code signature')) {
+      shell.openExternal(GITHUB_RELEASES_URL);
+      sendUpdateStatus('idle', 'Current version: v' + app.getVersion() + ' • Opened GitHub Releases', 'Check for Updates', '', false);
+      return;
+    }
     sendUpdateStatus(
       'error',
       "Couldn't connect. Check your internet and try again.",
