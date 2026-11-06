@@ -6,6 +6,7 @@ if (app.isPackaged) {
   console.debug = () => {};
 }
 const path = require("path");
+const fs = require("fs");
 const { pathToFileURL } = require("url");
 const iconPath = path.join(__dirname, "../assets/logos/logo.png");
 const { db, generateAnalytics } = require("./database.js");
