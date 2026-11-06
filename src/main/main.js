@@ -1,4 +1,10 @@
 const { app, BrowserWindow, ipcMain, shell, nativeTheme, screen, Notification } = require("electron");
+
+// Production Hygiene: Suppress debug console logs in packaged end-user builds
+if (app.isPackaged) {
+  console.log = () => {};
+  console.debug = () => {};
+}
 const path = require("path");
 const { pathToFileURL } = require("url");
 const iconPath = path.join(__dirname, "../assets/logos/logo.png");
