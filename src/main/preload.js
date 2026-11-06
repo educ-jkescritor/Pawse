@@ -38,5 +38,4 @@ contextBridge.exposeInMainWorld('mainAPI', {
         ipcRenderer.removeAllListeners('system-resume');
         ipcRenderer.on('system-resume', () => callback());
     }
-    }
 });
