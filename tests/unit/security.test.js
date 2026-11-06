@@ -53,4 +53,17 @@ describe('Electron DevSecOps & Security Posture', () => {
             expect(timerHtmlContent).not.toContain("'unsafe-eval'");
         });
     });
+
+    describe('Cross-Platform Launch on Startup Configuration', () => {
+        test('should implement XDG autostart file handling for Linux distributions', () => {
+            expect(mainJsContent).toContain('.config');
+            expect(mainJsContent).toContain('autostart');
+            expect(mainJsContent).toContain('pawse.desktop');
+        });
+
+        test('should pass explicit executable path for Windows login item settings', () => {
+            expect(mainJsContent).toContain("process.platform === 'win32'");
+            expect(mainJsContent).toMatch(/app\.getPath\(['"]exe['"]\)/);
+        });
+    });
 });
