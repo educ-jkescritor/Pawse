@@ -94,8 +94,15 @@
     --theme-focused-dark: #7D49C6;
 }
 
-* {
+*, *::before, *::after {
     box-sizing: border-box;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+img {
+    -webkit-user-drag: none;
+    user-drag: none;
 }
 
 :focus-visible {
@@ -129,7 +136,8 @@ html, body {
 }
 
 input, textarea {
-    user-select: auto;
+    -webkit-user-select: text;
+    user-select: text;
 }
 
 .font-pixel-20-regular {
@@ -601,6 +609,10 @@ body::after {
 
 /* Ginger (Sprint Orange Theme) */
 #orange_cat {
+    position: relative;
+    overflow: hidden;
+    border: none;
+    padding: 7px 12px;
     background-image: linear-gradient(180deg, #FFF 0%, var(--theme-sprint-light) 50%, var(--theme-sprint-light) 100%);
     box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
 }
@@ -609,11 +621,21 @@ body::after {
 }
 #orange_cat.selected {
     background-position: bottom;
-    border-color: var(--theme-sprint-solid); /* Lock orange border only when selected */
+    box-shadow: inset 0 0 0 3px var(--theme-sprint-solid), 0 2px 6px 0 rgba(0, 0, 0, 0.2);
+}
+#orange_cat.selected:hover {
+    box-shadow: inset 0 0 0 3px var(--theme-sprint-solid), 0 4px 10px 0 rgba(0, 0, 0, 0.15);
+}
+#orange_cat.selected:active {
+    box-shadow: inset 0 0 0 3px var(--theme-sprint-solid), 0 2px 4px 0 rgba(0, 0, 0, 0.15);
 }
 
 /* Void (Focused Purple Theme) */
 #black_cat {
+    position: relative;
+    overflow: hidden;
+    border: none;
+    padding: 7px 12px;
     background-image: linear-gradient(180deg, #FFF 0%, var(--theme-focused-light) 50%, var(--theme-focused-light) 100%);
     box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
 }
@@ -622,7 +644,13 @@ body::after {
 }
 #black_cat.selected {
     background-position: bottom;
-    border-color: var(--theme-focused-solid); /* Lock purple border only when selected */
+    box-shadow: inset 0 0 0 3px var(--theme-focused-solid), 0 2px 6px 0 rgba(0, 0, 0, 0.2);
+}
+#black_cat.selected:hover {
+    box-shadow: inset 0 0 0 3px var(--theme-focused-solid), 0 4px 10px 0 rgba(0, 0, 0, 0.15);
+}
+#black_cat.selected:active {
+    box-shadow: inset 0 0 0 3px var(--theme-focused-solid), 0 2px 4px 0 rgba(0, 0, 0, 0.15);
 }
 
 .cat_info {
@@ -704,11 +732,175 @@ body::after {
     /* Smooth transition for the zoom effect */
 }
 
-/* Optional: Zoom in a bit more on hover/selection for a premium interactive feel */
-/* .cat_buttons button:hover .cat_image img,
-.cat_buttons button.selected .cat_image img {
-    transform: scale(1.4);
-} */
+/* Ginger Cat Selection Bottom-Aligned Peeking Sprite */
+#orange_cat .cat_image,
+#black_cat .cat_image {
+    align-self: stretch;
+    align-items: flex-end;
+    justify-content: center;
+    height: auto;
+    margin-top: -7px;
+    margin-bottom: -7px;
+    overflow: visible;
+}
+
+.orange-main-sprite,
+.black-main-sprite {
+    display: block;
+    position: relative;
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+    background-repeat: no-repeat;
+    background-position: 0px 0px;
+    image-rendering: pixelated;
+    transform: scale(1.3);
+    transform-origin: bottom center;
+    backface-visibility: hidden;
+    will-change: background-image, background-position;
+    pointer-events: none;
+}
+
+/* Keep both main_static and main sprite sheets resident in GPU texture memory at all times */
+.orange-main-sprite::before,
+.orange-main-sprite::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.orange-main-sprite::before {
+    background-image: 
+        url('../assets/sprites/orange_cat_main_static1.png'),
+        url('../assets/sprites/orange_cat_main_static2.png'),
+        url('../assets/sprites/orange_cat_main_static3.png'),
+        url('../assets/sprites/orange_cat_main_static4.png');
+}
+
+.orange-main-sprite::before-unused {
+    background-image: url('../assets/sprites/orange_cat_main_static.png');
+}
+
+.orange-main-sprite::after {
+    background-image: url('../assets/sprites/orange_cat_main.png');
+}
+
+.orange-main-sprite.main-static,
+.orange-main-sprite.main-static-1 {
+    background-image: url('../assets/sprites/orange_cat_main_static1.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+}
+
+.orange-main-sprite.main-static-2 {
+    background-image: url('../assets/sprites/orange_cat_main_static2.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+}
+
+.orange-main-sprite.main-static-3 {
+    background-image: url('../assets/sprites/orange_cat_main_static3.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+}
+
+.orange-main-sprite.main-static-4 {
+    background-image: url('../assets/sprites/orange_cat_main_static4.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+}
+
+.orange-main-sprite.main-static-unused {
+    background-image: url('../assets/sprites/orange_cat_main_static.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+}
+
+.orange-main-sprite.main-anim {
+    background-image: url('../assets/sprites/orange_cat_main.png');
+    background-size: 256px 64px; /* 4 frames * 64px */
+    background-position: 0px 0px;
+    animation: orangeMainAnim 1.0s steps(4) infinite;
+}
+
+@keyframes orangeMainAnim {
+    from { background-position: 0px 0px; }
+    to { background-position: -256px 0px; }
+}
+
+/* Void (Black Cat) Main Sprites & Animations */
+.black-main-sprite::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+    background-image: 
+        url('../assets/sprites/black_cat_main_static1.png'),
+        url('../assets/sprites/black_cat_main_static2.png'),
+        url('../assets/sprites/black_cat_main_static3.png'),
+        url('../assets/sprites/black_cat_main_static4.png');
+}
+
+.black-main-sprite::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+    background-image: url('../assets/sprites/black_cat_main.png');
+}
+
+.black-main-sprite.main-static,
+.black-main-sprite.main-static-1 {
+    background-image: url('../assets/sprites/black_cat_main_static1.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+}
+
+.black-main-sprite.main-static-2 {
+    background-image: url('../assets/sprites/black_cat_main_static2.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+}
+
+.black-main-sprite.main-static-3 {
+    background-image: url('../assets/sprites/black_cat_main_static3.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+}
+
+.black-main-sprite.main-static-4 {
+    background-image: url('../assets/sprites/black_cat_main_static4.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+}
+
+.black-main-sprite.main-anim {
+    background-image: url('../assets/sprites/black_cat_main.png');
+    background-size: 256px 64px; /* 4 frames * 64px */
+    background-position: 0px 0px;
+    animation: blackMainAnim 1.0s steps(4) infinite;
+}
+
+@keyframes blackMainAnim {
+    from { background-position: 0px 0px; }
+    to { background-position: -256px 0px; }
+}
 
 /* Companion text color animation on selection and hover */
 /* Base Selection Lock */

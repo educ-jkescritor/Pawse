@@ -11,6 +11,18 @@ nativeTheme.themeSource = 'light';
 // Suppress internal Chromium C++ diagnostics (e.g. unconfigured Crashpad pipes)
 app.commandLine.appendSwitch('log-level', '3');
 
+// Linux Audio & Visual Optimizations:
+// 1. Increase audio buffer to eliminate ALSA/PulseAudio underruns and dropouts on Linux
+// 2. Enable transparent visuals so real Linux compositors (GNOME Mutter, KDE KWin) render 32-bit ARGB transparency
+if (process.platform === 'linux') {
+  if (!process.env.PULSE_LATENCY_MSEC) {
+    process.env.PULSE_LATENCY_MSEC = '120';
+  }
+  app.commandLine.appendSwitch('audio-buffer-size', '4096');
+  app.commandLine.appendSwitch('enable-transparent-visuals');
+  app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+}
+
 let win = null;
 let set = null;
 let globalAlwaysOnTop = false;
@@ -344,7 +356,7 @@ ipcMain.on('settings-window', (event) => {
 
 ipcMain.on('save-session', (event, data) => {
   const uuid = data.uuid || randomUUID();
-  const insertQuery = `INSERT INTO session (
+  const upsertQuery = `INSERT INTO session (
     cat_type, 
     email,
     total_work_seconds, 
@@ -357,9 +369,17 @@ ipcMain.on('save-session', (event, data) => {
     is_synced
   ) VALUES (
     ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), 0
-  )`;
+  )
+  ON CONFLICT(uuid) DO UPDATE SET
+    total_work_seconds = excluded.total_work_seconds,
+    total_break_seconds = excluded.total_break_seconds,
+    total_work = excluded.total_work,
+    total_break = excluded.total_break,
+    total_pomodoro = MAX(session.total_pomodoro, excluded.total_pomodoro),
+    date_completed = COALESCE(excluded.date_completed, session.date_completed, CURRENT_TIMESTAMP),
+    is_synced = 0`;
 
-  db.run(insertQuery, [
+  db.run(upsertQuery, [
     data.cat_type, 
     data.email || 'guest',
     data.total_work_seconds, 
@@ -373,7 +393,7 @@ ipcMain.on('save-session', (event, data) => {
     if (err) {
       console.log("Error inserting session data:", err.message);
     } else {
-      console.log("Session data inserted successfully.");
+      console.log("Session data saved successfully (progressive upsert).");
 
       // In development, keep AppData mirrored as backup so both copies stay in sync
       if (!app.isPackaged) {
@@ -639,9 +659,11 @@ ipcMain.on('close-notification', () => {
 });
 
 const isWindowsStore = Boolean(process.windowsStore);
+const GITHUB_RELEASES_URL = 'https://github.com/educ-jkescritor/Pawse/releases/latest';
 
 if (!isWindowsStore) {
-  autoUpdater.autoDownload = true;
+  const isLinuxPlatform = process.platform === 'linux';
+  autoUpdater.autoDownload = !isLinuxPlatform || Boolean(process.env.APPIMAGE);
 }
 
 const MICROSOFT_STORE_PRODUCT_ID = '9N0DQPN61VR6';
@@ -758,6 +780,11 @@ ipcMain.on('check-for-updates', () => {
   sendUpdateStatus('checking', 'Looking for the latest version...', 'Checking...', 'btn-loading', true);
   autoUpdater.checkForUpdates().catch((err) => {
     console.error('[AutoUpdater] Check failed:', err?.message || err);
+    if (process.platform === 'darwin' && err?.message && err.message.includes('Could not get code signature')) {
+      shell.openExternal(GITHUB_RELEASES_URL);
+      sendUpdateStatus('idle', 'Current version: v' + app.getVersion() + ' • Opened GitHub Releases', 'Check for Updates', '', false);
+      return;
+    }
     sendUpdateStatus(
       'error',
       "Couldn't connect. Check your internet and try again.",
@@ -843,7 +870,7 @@ ipcMain.on('set-launch-on-startup', (event, isEnabled) => {
   try {
     app.setLoginItemSettings({
       openAtLogin: Boolean(isEnabled),
-      path: app.isPackaged ? app.getPath('exe') : process.execPath
+      ...(process.platform === 'win32' ? { path: app.isPackaged ? app.getPath('exe') : process.execPath } : {})
     });
   } catch (err) {
     console.error('[LaunchOnStartup] Failed to set login item settings:', err);
@@ -852,5 +879,15 @@ ipcMain.on('set-launch-on-startup', (event, isEnabled) => {
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow();
+  } else if (win && !win.isDestroyed()) {
+    if (win.isMinimized()) win.restore();
+    win.show();
+    win.focus();
+  }
 });
 

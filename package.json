@@ -8,6 +8,9 @@
     "build": "electron-builder --win",
     "build:store": "electron-builder --win appx",
     "build:exe": "electron-builder --win nsis",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "build:all": "electron-builder -mwl",
     "test": "jest"
   },
   "keywords": [
@@ -50,6 +53,56 @@
         "appx"
       ],
       "icon": "src/assets/logos/logo.png"
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "icon": "src/assets/logos/logo.png",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
+    },
+    "dmg": {
+      "title": "${productName} ${version}",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 380
+      }
+    },
+    "linux": {
+      "category": "Utility",
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "src/assets/logos/logo.png",
+      "maintainer": "Jude Keith Escritor <judekeithescritor@gmail.com>"
     },
     "appx": {
       "identityName": "JudeKeithEscritor.Pawse",
