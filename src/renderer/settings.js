@@ -693,7 +693,7 @@ if (refreshBtn) {
         try {
             await loadAnalytics(currentWeeksAgo);
         } catch (err) {
-            console.error("Failed to refresh dashboard analytics:", err);
+            console.error("[PAWSE / Analytics] Failed to refresh dashboard analytics:", err?.message || err);
         } finally {
             // Keep spinning class for the full 500ms CSS animation cycle for smooth UX
             setTimeout(() => {

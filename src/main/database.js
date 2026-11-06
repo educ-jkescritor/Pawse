@@ -18,7 +18,7 @@ if (isDev && fs.existsSync(appDataDb) && fs.existsSync(rootDb)) {
         const rootMtime = fs.statSync(rootDb).mtimeMs;
         if (appDataMtime > rootMtime) {
             fs.copyFileSync(appDataDb, rootDb);
-            console.log("Synced newer database from AppData into local pawse.db.");
+            console.log("[PAWSE / Database] Synced newer database from AppData into local pawse.db.");
         }
     } catch (syncErr) {
         // Non-critical startup check
@@ -29,9 +29,9 @@ const dbPath = isDev ? rootDb : appDataDb;
 
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
-        console.log("Error opening database:", err.message);
+        console.error("[PAWSE / Database] Failed to open SQLite database:", err.message);
     } else {
-        console.log("Connected to the SQLite database.");
+        console.log("[PAWSE / Database] Connected to SQLite database.");
         
         const createTableQuery = `CREATE TABLE IF NOT EXISTS session (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -49,14 +49,14 @@ const db = new sqlite3.Database(dbPath, (err) => {
         
         db.run(createTableQuery, (err) => {
             if (err) {
-                console.log("Error creating session table:", err.message);
+                console.error("[PAWSE / Database] Failed to create session table:", err.message);
                 return;
             }
 
             // Inspect existing table structure to apply only missing column deltas (idempotent migration)
             db.all("PRAGMA table_info(session)", (pragmaErr, columns) => {
                 if (pragmaErr) {
-                    console.log("Error reading table schema:", pragmaErr.message);
+                    console.error("[PAWSE / Database] Failed to inspect PRAGMA schema:", pragmaErr.message);
                     return;
                 }
 
@@ -77,9 +77,9 @@ const db = new sqlite3.Database(dbPath, (err) => {
                     const col = missingColumns[index];
                     db.run(col.ddl, (alterErr) => {
                         if (alterErr) {
-                            console.log(`Error adding column ${col.name}:`, alterErr.message);
+                            console.error(`[PAWSE / Database] Column migration failed (${col.name}):`, alterErr.message);
                         } else {
-                            console.log(`Migrated column: added ${col.name} to session table.`);
+                            console.log(`[PAWSE / Database] Migrated column: added ${col.name} to session table.`);
                         }
                         runMigrations(index + 1, onComplete);
                     });
@@ -100,13 +100,13 @@ const db = new sqlite3.Database(dbPath, (err) => {
                                         }
                                     });
                                 });
-                                console.log(`Successfully assigned UUIDs to ${rows.length} legacy sessions.`);
+                                console.log(`[PAWSE / Database] Successfully assigned UUIDs to ${rows.length} legacy sessions.`);
                             } else {
                                 db.run("CREATE UNIQUE INDEX IF NOT EXISTS idx_session_uuid ON session(uuid);");
                             }
                         });
                     });
-                    console.log("Session database is ready.");
+                    console.log("[PAWSE / Database] Session database is ready.");
                 });
             });
         });
