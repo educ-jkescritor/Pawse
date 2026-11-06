@@ -70,6 +70,8 @@ let pendingModal = null;
 let preSkipState = null;
 let nextPhaseState = null;
 let sessionDate = new Date();
+let targetEndTime = null;
+let lastTickTime = null;
 
 // --- BEHAVIORAL & META STATE TRACKERS (Companion Dialogue Engine) ---
 let isRestoredSession = false;
@@ -671,6 +673,10 @@ function startTimer() {
     }
     updateAudioSettings();
 
+    // Establish wall-clock reference target for drift-free timing across OS sleep
+    targetEndTime = Date.now() + (remainingTime * 1000);
+    lastTickTime = Date.now();
+
     timerId = setInterval(() => {
         let today = new Date().getDate();
         if (today !== sessionDate.getDate()) {
@@ -685,21 +691,42 @@ function startTimer() {
             return;
         }
 
-        remainingTime--;
+        const now = Date.now();
+        const elapsedSec = Math.max(0, Math.floor((now - lastTickTime) / 1000));
 
-        if (tickEnabled && soundEnabled) {
-            // Skip the first 0.15 seconds of the MP3 to bypass "dead air" padding
+        if (elapsedSec > 0) {
+            lastTickTime += elapsedSec * 1000;
+            // Cap credited seconds to remaining phase time so OS sleep does not inflate focus analytics
+            const creditedSec = Math.min(elapsedSec, remainingTime);
+            if (workingTime === true) {
+                actualWork += creditedSec;
+            } else {
+                actualBreak += creditedSec;
+            }
+
+            if (tickEnabled && soundEnabled) {
+                // Active tick audio sync: bypass dead air padding
+                tickAudio.currentTime = 0.10;
+                tickAudio.play().catch(e => {});
+            }
+        }
+
+        // Recompute remaining seconds directly against wall-clock target timestamp
+        remainingTime = Math.max(0, Math.round((targetEndTime - now) / 1000)); /*
+
+
+            // Active tick audio sync: bypass dead air padding
             tickAudio.currentTime = 0.10;
             tickAudio.play().catch(e => {});
         }
 
-        if(workingTime == true) {
-            actualWork++;
+
+
         } else {
-            actualBreak++;
+
         }
 
-        document.getElementById("timer-display").textContent = formatTime(remainingTime);     
+        */ document.getElementById("timer-display").textContent = formatTime(remainingTime);
 
         if(remainingTime <= 0) {
             remainingTime = 0;
@@ -905,6 +932,8 @@ function cancelSkip() {
 }
 
 function pauseTimer() {
+    targetEndTime = null;
+    lastTickTime = null;
     clearInterval(timerId);
     document.getElementById("play-icon").src = "../../assets/icons/play-btn.png";
     isRunning = false;
