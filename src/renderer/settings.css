@@ -18,12 +18,25 @@ html, body {
     box-sizing: border-box;
     background-color: var(--bg-main);
     border-radius: 12px;
-    border: 1px solid var(--stroke-color);
+    border: none;
     overflow: hidden;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.12),
+        0 1px 2px rgba(0, 0, 0, 0.08);
     position: relative;
     display: flex;
     flex-direction: column;
+}
+
+/* Visual border without taking space away from the layout */
+.app-wrapper::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--stroke-color);
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 100;
 }
 
 /* --- PAGE CONTAINER --- */
@@ -80,6 +93,7 @@ p {
 .side-bar.collapsed {
     width: 52px;
     padding: 8px;
+    flex-shrink: 0;
 }
 
 .side-bar.collapsed .app-title,
@@ -93,6 +107,25 @@ p {
 
 .side-bar.collapsed .sidebar-header {
     margin-bottom: 16px;
+}
+
+.side-bar > button,
+.side-bar .utilities > button {
+    transition:
+        padding 0.3s ease,
+        background-color 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.side-bar.collapsed > button,
+.side-bar.collapsed .utilities > button {
+    padding-left: 8.5px;
+    padding-right: 8.5px;
+}
+
+.side-bar > button > img,
+.side-bar .utilities > button > img {
+    flex-shrink: 0;
 }
 
 .side-bar .app-title,
@@ -130,7 +163,7 @@ p {
 }
 
 .side-bar.collapsed .brand-logo {
-    transform: translateX(6px);
+    transform: translateX(5.5px);
 }
 
 .side-bar.collapsed .brand-logo:hover {
@@ -173,7 +206,8 @@ p {
     height: 24px;
     padding: 0;
     border: none;
-    border-radius: 4px;
+    border-radius: 6px;
+    flex-shrink: 0;
     background: transparent;
     display: flex;
     align-items: center;
@@ -189,8 +223,8 @@ p {
 .side-bar button.sidebar-menu-btn img,
 #dock-btn img {
     image-rendering: pixelated;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     object-fit: contain;
     pointer-events: none;
     -webkit-user-drag: none;
@@ -199,7 +233,7 @@ p {
 .side-bar button.sidebar-dock-btn:hover,
 .side-bar button.sidebar-menu-btn:hover,
 #dock-btn:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: #dfdfdf;
 }
 
 .side-bar button.sidebar-dock-btn::after,
@@ -210,10 +244,10 @@ p {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     background-repeat: no-repeat;
-    background-size: 24px 24px;
+    background-size: 20px 20px;
     background-position: center;
     background-image: url('../assets/icons/dock-btn-click.png');
     image-rendering: pixelated;
@@ -619,7 +653,7 @@ p {
 .graph {
     width: 100%;
     flex: 1; /* Stretch to exactly fill the remaining height instead of a fixed height */
-    padding: 12px 16px 16px 16px; /* 12px top offsets the 4px header padding, 16px bottom ensures equal breathing room */
+    padding: 8px 16px 12px 16px; /* 12px top offsets the 4px header padding, 16px bottom ensures equal breathing room */
     border-radius: 8px;
     border: 1px solid var(--stroke-color);
     background: #FFFFFF;
@@ -702,11 +736,11 @@ p {
 
 .calendar-popup {
     position: absolute;
-    top: calc(100%);
+    top: calc(100% - 3px);
     right: 0;
     width: 120px;
     background: #FFFFFF;
-    border-radius: 12px;
+    border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--stroke-color);
     z-index: 15;
@@ -715,7 +749,7 @@ p {
 }
 
 .calendar-popup {
-    padding: 8px;
+    padding: 4px 6px;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -1579,25 +1613,6 @@ p {
 #update-btn.btn-action:active {
     border-color: #1F70A8;
     background-color: #1F70A8;
-    color: #FFFFFF;
-}
-
-/* Restart Anyway (Destructive: restarting ends the running focus session) */
-#update-btn.btn-danger {
-    border: 1px solid var(--sys-red-solid);
-    background-color: var(--sys-red-solid);
-    color: #FFFFFF;
-}
-
-#update-btn.btn-danger:hover {
-    border-color: var(--sys-red-hover);
-    background-color: var(--sys-red-hover);
-    color: #FFFFFF;
-}
-
-#update-btn.btn-danger:active {
-    border-color: var(--sys-red-active);
-    background-color: var(--sys-red-active);
     color: #FFFFFF;
 }
 
