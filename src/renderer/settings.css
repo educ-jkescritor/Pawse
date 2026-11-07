@@ -93,6 +93,7 @@ p {
 .side-bar.collapsed {
     width: 52px;
     padding: 8px;
+    flex-shrink: 0;
 }
 
 .side-bar.collapsed .app-title,
@@ -106,6 +107,25 @@ p {
 
 .side-bar.collapsed .sidebar-header {
     margin-bottom: 16px;
+}
+
+.side-bar > button,
+.side-bar .utilities > button {
+    transition:
+        padding 0.3s ease,
+        background-color 0.15s ease,
+        border-color 0.15s ease;
+}
+
+.side-bar.collapsed > button,
+.side-bar.collapsed .utilities > button {
+    padding-left: 8.5px;
+    padding-right: 8.5px;
+}
+
+.side-bar > button > img,
+.side-bar .utilities > button > img {
+    flex-shrink: 0;
 }
 
 .side-bar .app-title,
@@ -143,7 +163,7 @@ p {
 }
 
 .side-bar.collapsed .brand-logo {
-    transform: translateX(6px);
+    transform: translateX(5.5px);
 }
 
 .side-bar.collapsed .brand-logo:hover {
