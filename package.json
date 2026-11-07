@@ -49,6 +49,12 @@
     "directories": {
       "output": "dist"
     },
+    "files": [
+      "src/**/*",
+      "package.json",
+      "!**/*.db",
+      "!**/*.db-*"
+    ],
     "win": {
       "target": [
         "nsis",
