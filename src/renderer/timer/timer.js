@@ -684,9 +684,14 @@ function startTimer() {
     updateAudioSettings();
     syncStrictModeButtons();
 
-    // Establish wall-clock reference target for drift-free timing across OS sleep
-    targetEndTime = Date.now() + (remainingTime * 1000);
-    lastTickTime = Date.now();
+    // Timing uses performance.now(), a MONOTONIC clock: unlike Date.now() it cannot be changed by the
+    // user, NTP sync, or timezone/DST changes. With Date.now(), moving the system clock back made the
+    // remaining time grow, and nudging it forward in <15s steps finished sessions early AND credited
+    // the skipped time as focus work. The monotonic clock also does not advance while the OS is
+    // suspended, so sleep time is never counted as work.
+    // (Calendar logic such as the midnight rollover below still uses Date, which is correct for dates.)
+    targetEndTime = performance.now() + (remainingTime * 1000);
+    lastTickTime = performance.now();
 
     timerId = setInterval(() => {
         let today = new Date().getDate();
@@ -702,7 +707,7 @@ function startTimer() {
             return;
         }
 
-        const now = Date.now();
+        const now = performance.now();
         const elapsedSec = Math.max(0, Math.floor((now - lastTickTime) / 1000));
 
         if (elapsedSec > 0) {
@@ -726,7 +731,7 @@ function startTimer() {
             }
         }
 
-        // Recompute remaining seconds directly against wall-clock target timestamp
+        // Recompute remaining seconds directly against the monotonic target timestamp
         remainingTime = Math.max(0, Math.round((targetEndTime - now) / 1000));
         document.getElementById("timer-display").textContent = formatTime(remainingTime);
 
