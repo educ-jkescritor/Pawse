@@ -1,11 +1,19 @@
 let minimizeButton = document.getElementById("minimize-btn");
-minimizeButton.onclick = function minimizeWindow() {
-    window.mainAPI.minimize();
+if (minimizeButton) {
+    minimizeButton.onclick = function minimizeWindow() {
+        if (window.mainAPI && window.mainAPI.minimize) {
+            window.mainAPI.minimize();
+        }
+    };
 }
 
 let closeButton = document.getElementById("close-btn");
-closeButton.onclick = function closeWindow() {
-    window.mainAPI.close();
+if (closeButton) {
+    closeButton.onclick = function closeWindow() {
+        if (window.mainAPI && window.mainAPI.close) {
+            window.mainAPI.close();
+        }
+    };
 }
 
 const sidebar = document.querySelector(".side-bar");
@@ -686,14 +694,13 @@ if (refreshBtn) {
     const handleRefresh = async () => {
         if (isRefreshingAnalytics) return;
         isRefreshingAnalytics = true;
-
         refreshBtn.classList.add("spinning");
         updateDashboardDateTime();
 
         try {
             await loadAnalytics(currentWeeksAgo);
         } catch (err) {
-            console.error("Failed to refresh dashboard analytics:", err);
+            console.error("[PAWSE / Analytics] Failed to refresh dashboard analytics:", err?.message || err);
         } finally {
             // Keep spinning class for the full 500ms CSS animation cycle for smooth UX
             setTimeout(() => {
