@@ -553,6 +553,16 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
 
     const sessionAlertStart = Date.now();
     const ALERT_DURATION_MS = 30000;
+    // Windows re-presents the toast when the OS hides it early, so it stays visible through the alarm.
+    // Limits (respect Do Not Disturb, never flood the Action Center):
+    // - MAX_PRESENTS: 6 covers the 30s alarm at Windows' default 5s banner time.
+    // - MIN_VISIBLE_MS: if Windows closes the toast faster than this, it is being suppressed
+    //   (Do Not Disturb / Focus Assist / notifications restricted). Stop re-presenting; the toast
+    //   stays in the Action Center, and the in-app modal, alarm sound, and taskbar flash still work.
+    //   (Electron has no API to ask Windows whether DND is on, so this is inferred.)
+    const MAX_PRESENTS = 6;
+    const MIN_VISIBLE_MS = 2000;
+    let presentCount = 0;
     const buttonLabel = actionText || 'Continue';
 
     const escapeXml = (str) =>
@@ -666,10 +676,13 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
         // overrides the banner and emits 'timedOut' (or an unlabelled timeout) before our 30s alarm window ends,
         // remove the stale entry from Action Center and re-present the banner so both toast & sound persist.
         const elapsedMs = Date.now() - sessionAlertStart;
+        const visibleMs = Date.now() - notification._shownAt;
         if (
           process.platform === 'win32' &&
           closeReason !== 'userCanceled' &&
-          elapsedMs < ALERT_DURATION_MS - 1500
+          elapsedMs < ALERT_DURATION_MS - 1500 &&
+          presentCount < MAX_PRESENTS &&
+          visibleMs >= MIN_VISIBLE_MS
         ) {
           if (activeNotification === notification) {
             notification._isProgrammaticClose = true;
@@ -681,13 +694,23 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
           return;
         }
 
+        // Suppressed by Windows (closed almost immediately, not by the user): stop re-presenting,
+        // but keep the click handler so the toast still works when clicked later from the Action Center.
+        if (process.platform === 'win32' && closeReason !== 'userCanceled' && visibleMs < MIN_VISIBLE_MS) {
+          console.log('[PAWSE / Notification] Toast suppressed by Windows (likely Do Not Disturb); not re-presenting.');
+          return;
+        }
+
         if (activeNotification === notification) {
           activeNotification = null;
           activeNotificationActivateHandler = null;
         }
 
-        // User explicitly dismissed the notification ('userCanceled' on Windows, or manual close on other OS)
-        if (process.platform !== 'win32' || closeReason === 'userCanceled') {
+        // Only a confirmed user dismissal silences the alarm. Windows reports it as 'userCanceled'.
+        // macOS/Linux report no close reason, and their notifications often close on their own
+        // (expiry, Do Not Disturb), so a close there must NOT stop the alarm; it still stops when the
+        // user clicks the notification or acts in the app, or after the 30s auto-silence.
+        if (process.platform === 'win32' && closeReason === 'userCanceled') {
           const senderWindow = BrowserWindow.fromWebContents(event.sender);
           const targetWin = senderWindow || win;
           if (targetWin && !targetWin.isDestroyed()) {
@@ -697,6 +720,18 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
         }
       });
 
+      // The OS refused to show it (e.g. notifications disabled for Pawse). Don't retry; the in-app
+      // modal and alarm still inform the user.
+      notification.on('failed', (failEvent, error) => {
+        console.error('[PAWSE / Notification] OS refused to show notification:', error || '');
+        if (activeNotification === notification) {
+          activeNotification = null;
+          activeNotificationActivateHandler = null;
+        }
+      });
+
+      presentCount++;
+      notification._shownAt = Date.now();
       notification.show();
     };
 

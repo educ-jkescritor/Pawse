@@ -13,7 +13,7 @@ Rules for how to work live in [`AGENTS.md`](../AGENTS.md). This file is status a
 
 ## Part 1 — Current Status
 
-_Last updated: 2026-11-08_
+_Last updated: 2026-11-08 (A5)_
 
 Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (post-deadline)
 
@@ -27,7 +27,8 @@ Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (
 | A3 | Crash + picking a different cat (or returning after 12 h) lost unsaved work | ✅ | `6c636dd`: menu salvages the snapshot to the DB |
 | A4a | "Restart & Update" ended a running session without warning | ✅ | `4c76f49`: two-click confirm, red "Restart Anyway" |
 | A4b | Quitting while a save was in flight crashed the app on exit (abort, code 134) | ✅ | `4412524`: wait for saves, close DB, 4 s limit |
-| A5 | Windows: notification re-shown in a tight loop when Windows closes it immediately (DND / Focus Assist / notifications off) | ❌ **next** | `src/main/main.js` toast re-present loop has no retry cap |
+| A5 | Windows: notification re-shown in a tight loop when Windows closes it immediately (DND / Focus Assist / notifications off) | ✅ | Fix commit after `5556541`: respect DND (stop if closed < 2 s), cap 6 re-shows, handle `failed`. Simulated: 285 → 1 notification (D13) |
+| A5b | macOS/Linux: any notification close (including auto-expiry or DND) stopped the alarm sound after a few seconds | ✅ | Same commit as A5: only a confirmed user dismissal (Windows `userCanceled`) silences the alarm (D13) |
 | A6 | Linux `.deb`: update check stuck on "Downloading…" forever | ❌ | `autoDownload` is off on non-AppImage Linux, but the UI shows downloading; `download-update` has no handler. Approach not decided (see Part 2, D9) |
 | N1 | Crash while the **final** "Pawsome Job!" modal is open → restore pushes `cycleCount` past 4; the completed Pomodoro is never credited | ❌ | Pre-existing; strict auto-resume makes it trigger without a click. Reproduced 5/5 at L2 |
 | — | Version must be bumped above the latest public release (1.1.0) before releasing | ❌ | `package.json` says 1.0.0 |
@@ -97,6 +98,7 @@ Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (
 | D10 | Restart & Update during a session: first click warns (red "Restart Anyway", one-line message), second click within 6 s restarts | Destructive action needs confirmation; matches industry convention for destructive buttons. Message kept to one line like other Settings descriptions |
 | D11 | Agent docs: `AGENTS.md` is the single source of rules; `CLAUDE.md` / `GEMINI.md` are 1-line pointers; status/history lives here | Every AI tool reads the same rules; rules file stays short because it loads every session |
 | D12 | One fix per commit; agents don't commit unless asked | Reviewable, revertable history |
+| D13 | **Notifications respect Do Not Disturb; the alarm sound does not.** Windows: re-show only if the toast was visible ≥ 2 s, max 6 times; otherwise leave it in the Action Center (click handler kept). macOS/Linux: a notification closing never stops the alarm; it stops on user action or the 30 s auto-silence | Industry standard: apps don't bypass DND, but timers/alarms the user set still ring (Clock apps). Electron can't query DND, so suppression is inferred from a fast close. Only Windows reports *why* a toast closed; on macOS/Linux an auto-expired notification silenced the alarm after ~5 s |
 
 ---
 
@@ -115,6 +117,7 @@ Levels: L0 parse · L1 Jest · L2 sandbox dev · L3 sandbox packaged · L4 manua
 | 2026-11-08 | Save on quit (A4) | L2 | 0/40 lost (20 window close, 20 app quit) | L3, L4 |
 | 2026-11-08 | Exit with DB briefly locked, before fix | L2 (no debugger) | Session saved, but **5/6 aborted on exit** (code 134) | Real antivirus/slow disk |
 | 2026-11-08 | Restart confirmation (A4a) | L2 (update simulator) | Warn → revert after 6 s; second click restarts; no session → one click; red `#E5484D`; one-line message | Real `quitAndInstall` (L3/L4) |
+| 2026-11-08 | Notifications (A5/A5b), before → after. Fake OS notification in the sandbox (no debugger), real session completion | L2 (simulated OS) | Windows DND-like (closed in 0.1 s): **285 → 1** shown, alarm full 30 s · Windows normal (5 s): 6 → 6 · Linux expiry (5 s): alarm stopped at ~5 s → **full 30 s** · user dismiss (Windows): alarm stops (unchanged) · `failed`: 1 show, no retry | **L4: real Focus Assist / DND on Windows, macOS Focus, Linux desktops (GNOME/KDE)**; Action Center click after suppression |
 | 2026-11-08 | Clean shutdown (A4b), after fix | L2 (no debugger) | DB busy 1.5 s: 4/4 clean, saved · normal close 3/3 clean ~10 ms · quit with window open 3/3 clean · DB locked 5 s: 2/2 clean exit ~3 s (save impossible, expected) | **L4: Restart & Update on Windows/macOS with the packaged installer** |
 
 ---
@@ -160,6 +163,10 @@ Newest first. One line per commit.
 
 | Date | Commit | Change |
 | :--- | :--- | :--- |
+| 2026-11-08 | _(this commit)_ | Notifications respect DND; alarm not silenced by auto-closing notifications on macOS/Linux (A5, A5b) |
+| 2026-11-08 | `5556541` | AGENTS.md: link to project log, shutdown rules, new testing rules |
+| 2026-11-08 | `b3decdf` | Add `docs/PROJECT_LOG.md` |
+| 2026-11-08 | `0545c59` | Move `documentation/` to `docs/` |
 | 2026-11-08 | `4412524` | Wait for pending saves and close the database before quitting (A4b) |
 | 2026-11-08 | `4c76f49` | Confirm before Restart & Update during an active session (A4a) |
 | 2026-11-08 | `d2b7a84` | AGENTS.md: testing levels, sandbox recipe, report disclaimer |
