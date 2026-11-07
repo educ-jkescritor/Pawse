@@ -9,7 +9,7 @@ const path = require("path");
 const fs = require("fs");
 const { pathToFileURL } = require("url");
 const iconPath = path.join(__dirname, "../assets/logos/logo.png");
-const { db, generateAnalytics } = require("./database.js");
+const { db, generateAnalytics, closeDatabase } = require("./database.js");
 const { autoUpdater } = require("electron-updater");
 const { randomUUID } = require("crypto");
 
@@ -403,7 +403,15 @@ ipcMain.on('settings-window', (event) => {
   }
 });
 
+// Saves still waiting for SQLite to confirm. Shutdown waits for these (see 'will-quit' below).
+const pendingWrites = new Set();
+
 ipcMain.on('save-session', (event, data) => {
+  let finishWrite;
+  const writeDone = new Promise((resolve) => { finishWrite = resolve; });
+  pendingWrites.add(writeDone);
+  writeDone.then(() => pendingWrites.delete(writeDone));
+
   const uuid = data.uuid || randomUUID();
   const upsertQuery = `INSERT INTO session (
     cat_type, 
@@ -456,6 +464,7 @@ ipcMain.on('save-session', (event, data) => {
         }
       }
     }
+    finishWrite(); // Success or failure, this save is no longer in flight
   });
 });
 
@@ -962,6 +971,35 @@ ipcMain.on('set-launch-on-startup', (event, isEnabled) => {
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
+});
+
+// --- CLEAN SHUTDOWN ---
+// Before the process exits: wait for in-flight session saves, then close SQLite properly.
+// Without this, quitting while a save is still running (busy disk, antivirus, sync tools touching
+// pawse.db) aborted the process during teardown: a crash on quit (exit code 134 in testing).
+// Uses 'will-quit' (not 'before-quit') because it fires AFTER all windows have closed, so the
+// timer's final save from its beforeunload has already been sent. This covers closing the last
+// window, Cmd+Q, and Restart & Update. A time limit makes sure quitting can never hang.
+// The limit must stay ABOVE SQLite's busy_timeout (3000ms in database.js): by then a pending save
+// has either finished or failed on its own, so the database can always be closed cleanly.
+// A shorter limit exits with a save still waiting, which brings back the crash on quit.
+const SHUTDOWN_TIMEOUT_MS = 4000;
+let shutdownStarted = false;
+let shutdownComplete = false;
+
+app.on('will-quit', (event) => {
+  if (shutdownComplete) return; // Second pass: cleanup done, let the app exit
+  event.preventDefault();
+  if (shutdownStarted) return;
+  shutdownStarted = true;
+
+  const cleanup = Promise.allSettled([...pendingWrites]).then(() => closeDatabase());
+  const timeLimit = new Promise((resolve) => setTimeout(resolve, SHUTDOWN_TIMEOUT_MS));
+
+  Promise.race([cleanup, timeLimit]).then(() => {
+    shutdownComplete = true;
+    app.quit();
+  });
 });
 
 app.on('activate', () => {
