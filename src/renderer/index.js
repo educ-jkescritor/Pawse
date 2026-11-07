@@ -3,6 +3,10 @@ if (window.mainAPI && window.mainAPI.resize) {
     window.mainAPI.resize('default');
 }
 
+// No timer can be running while the menu is showing. After a crash, timer.js never gets to
+// reset this flag, which would leave the Strict Mode toggle in Settings locked indefinitely.
+localStorage.setItem('timerRunning', 'false');
+
 if (localStorage.getItem('alwaysOnTop') === 'true') {
     if (window.mainAPI && window.mainAPI.setAlwaysOnTop) {
         window.mainAPI.setAlwaysOnTop(true);
