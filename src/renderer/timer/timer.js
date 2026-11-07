@@ -86,6 +86,15 @@ let wasLongPaused = false;
 let lastSessionOutcome = null; // 'majorBailout' | 'earlyCutoff' | 'completed' | 'redemption' | 'breakSkipped'
 let hadPreviousBailout = false;
 
+// --- STRICT MODE SESSION INTEGRITY ---
+// Strict Mode belongs to the SESSION, not just the current setting. A session that started strict
+// stays strict when restored after a crash, even if the Settings toggle was switched off in between
+// (otherwise force-quit -> toggle off -> resume same cat is a way to escape strict mode).
+let restoredStrictMode = false;
+// True when the OS (sleep/suspend), not the user, paused the timer. In Strict Mode the timer
+// resumes on its own when the system wakes, so sleep can't be used as a manual pause button.
+let autoPausedBySystem = false;
+
 // --- DURABLE EXECUTION ENGINE (Local Persistence) ---
 const savedStateStr = localStorage.getItem('pawseDurableState');
 if (savedStateStr) {
@@ -112,8 +121,13 @@ if (savedStateStr) {
             flushedWorkSeconds = savedState.flushedWorkSeconds || 0;
             flushedBreakSeconds = savedState.flushedBreakSeconds || 0;
             
-            // Crash recovery resumes in a paused state so the user can settle in before hitting Play
-            isRunning = false;
+            restoredStrictMode = savedState.strictMode === true;
+
+            // Crash recovery: normal sessions restore PAUSED so the user can settle in before hitting Play.
+            // Strict sessions resume RUNNING immediately; otherwise force-quit + reopen would be a way to
+            // get the indefinite pause that Strict Mode forbids. (Offline time is still never counted.)
+            const resumeAsStrict = restoredStrictMode || localStorage.getItem('strictMode') === 'true';
+            isRunning = resumeAsStrict;
 
             // Flag session recovery for companion recognition
             isRestoredSession = true;
@@ -150,6 +164,9 @@ setInterval(() => {
         flushedBreakSeconds: flushedBreakSeconds,
         workCount: workCount,
         breakCount: breakCount,
+        // Safe to reference the const declared further down: interval callbacks only run after the
+        // whole script has finished executing, so strictMode is initialized by then (no TDZ).
+        strictMode: strictMode,
         timestamp: Date.now()
     }));
 }, 1000);
@@ -400,7 +417,7 @@ function triggerAmbientThought() {
         const context = {
             actualWork: actualWork,
             wasLongPaused: wasLongPaused,
-            strictMode: (localStorage.getItem('strictMode') === 'true')
+            strictMode: strictMode
         };
 
         let message = "Purr... happy to keep you company.";
@@ -530,7 +547,7 @@ function triggerWelcomeBubble() {
             isRedemption: lastSessionOutcome === 'redemption',
             isRestored: isRestoredSession,
             wasLongPaused: wasLongPaused,
-            strictMode: (localStorage.getItem('strictMode') === 'true')
+            strictMode: strictMode
         };
 
         let message = "Stretch your paws! Break time has begun.";
@@ -671,6 +688,7 @@ function startTimer() {
     clearInterval(timerId);
     document.getElementById("play-icon").src = "../../assets/icons/pause-btn.png";
     isRunning = true;
+    autoPausedBySystem = false;
     if (pauseStartTime) {
         const pauseDuration = (Date.now() - pauseStartTime) / 1000;
         if (pauseDuration >= 180) { // 3 minutes or more
@@ -712,8 +730,16 @@ function startTimer() {
 
         if (elapsedSec > 0) {
             lastTickTime += elapsedSec * 1000;
-            // Sleep Safety: If the system was suspended or frozen for >15s, pause cleanly without counting offline time
+            // Freeze Safety: if the app was frozen for >15s, never count the gap as focus time
             if (elapsedSec > 15) {
+                if (strictMode) {
+                    // Strict Mode: discard the gap and keep running. Pausing here would hand the user a
+                    // pause that Strict Mode forbids (and, before, locked them out of resuming).
+                    targetEndTime = now + (remainingTime * 1000);
+                    lastTickTime = now;
+                    document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                    return;
+                }
                 pauseTimer();
                 document.getElementById("timer-display").textContent = formatTime(remainingTime);
                 return;
@@ -991,7 +1017,8 @@ soundButton.addEventListener("click", () => {
     updateAudioSettings();
 });
 
-const strictMode = localStorage.getItem('strictMode') === 'true';
+// A restored strict session stays strict regardless of the current Settings toggle (see restoredStrictMode)
+const strictMode = localStorage.getItem('strictMode') === 'true' || restoredStrictMode;
 
 function syncStrictModeButtons() {
     if (!controlsReady) return; // Called during load before buttons are bound; init call below handles it
@@ -1096,6 +1123,15 @@ playButton.addEventListener("click", () => {
 
 controlsReady = true; // All button bindings and strictMode now exist
 syncStrictModeButtons();
+
+// Strict Mode exit warning: leaving is always allowed (trapping users just leads to force-quits),
+// but make the cost explicit. The focus time already worked is still recorded on exit.
+if (strictMode) {
+    const exitMessageEl = document.getElementById("exit-modal-message");
+    if (exitMessageEl) {
+        exitMessageEl.textContent = "Strict session: leaving ends it for good and it won't count as a completed Pomodoro. Focus time so far is still saved.";
+    }
+}
 
 skipButton.addEventListener("click", () => {
     skipButton.blur();
@@ -1385,7 +1421,20 @@ if (window.mainAPI && window.mainAPI.onSystemSuspend) {
     window.mainAPI.onSystemSuspend(() => {
         if (isRunning) {
             pauseTimer();
+            autoPausedBySystem = true;
             document.getElementById("timer-display").textContent = formatTime(remainingTime);
+        }
+    });
+}
+
+// Strict Mode: resume automatically when the computer wakes, so sleep can't act as a pause button.
+// Normal mode keeps the timer paused after wake so the user can settle back in.
+// Only resumes a pause the OS caused, never a session-complete modal or alarm waiting for the user.
+// If an OS never sends the wake event, Play stays enabled as a fallback, so the user is never locked out.
+if (window.mainAPI && window.mainAPI.onSystemResume) {
+    window.mainAPI.onSystemResume(() => {
+        if (strictMode && autoPausedBySystem && !isRunning && !pendingModal && !isAlarmPlaying) {
+            startTimer();
         }
     });
 }
