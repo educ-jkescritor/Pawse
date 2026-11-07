@@ -13,7 +13,7 @@ Rules for how to work live in [`AGENTS.md`](../AGENTS.md). This file is status a
 
 ## Part 1 — Current Status
 
-_Last updated: 2026-11-08 (R1)_
+_Last updated: 2026-11-08 (A6)_
 
 Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (post-deadline)
 
@@ -29,7 +29,7 @@ Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (
 | A4b | Quitting while a save was in flight crashed the app on exit (abort, code 134) | ✅ | `4412524`: wait for saves, close DB, 4 s limit |
 | A5 | Windows: notification re-shown in a tight loop when Windows closes it immediately (DND / Focus Assist / notifications off) | ✅ | `3fb78d4`: respect DND (stop if closed < 2 s), cap 6 re-shows, handle `failed`. Simulated: 285 → 1 notification (D13) |
 | A5b | macOS/Linux: any notification close (including auto-expiry or DND) stopped the alarm sound after a few seconds | ✅ | Same commit as A5: only a confirmed user dismissal (Windows `userCanceled`) silences the alarm (D13) |
-| A6 | Linux `.deb`: update check stuck on "Downloading…" forever | ❌ | `autoDownload` is off on non-AppImage Linux, but the UI shows downloading; `download-update` has no handler. Approach not decided (see Part 2, D9) |
+| A6 | Linux `.deb`: update check stuck on "Downloading…" forever | ✅ | _(this commit)_: macOS and `.deb` builds show a **Download** button that opens the GitHub release page; Windows `.exe` and AppImage keep in-app updates (D9) |
 | N1 | Crash while the **final** "Pawsome Job!" modal is open → restore pushes `cycleCount` past 4; the completed Pomodoro is never credited | ❌ | Pre-existing; strict auto-resume makes it trigger without a click. Reproduced 5/5 at L2 |
 | R1 | Windows in-app updates would fail: the installer was named with spaces (`Pawse Setup X.exe`), GitHub's web upload turns spaces into dots, but `latest.yml` points to a dashed name. Confirmed on the published v1.1.0 release | ✅ | `nsis.artifactName = "${productName}-Setup-${version}.${ext}"` (D14) |
 | — | Version must be bumped above the latest public release (1.1.0) before releasing | ❌ | `package.json` says 1.0.0 |
@@ -98,7 +98,7 @@ Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (
 | D6 | Countdown uses `performance.now()`; calendar logic uses `Date` | Monotonic clock is immune to clock changes and doesn't advance during suspend |
 | D7 | Orphaned snapshots are salvaged **on menu load**, kept in place, dated to their last activity | Menu always loads before a timer page can overwrite/discard them; the uuid upsert of running totals makes repeat saves idempotent |
 | D8 | Shutdown: wait for pending saves on `will-quit`, then `closeDatabase()`; limit **4 s, must stay above `busy_timeout` (3 s)** | `before-quit` fires before windows close (would block the timer's final save). A limit shorter than `busy_timeout` exits with a save still waiting → crash on exit |
-| D9 | `.deb` updates: **not decided.** Options: (a) "Download" button opens the GitHub release page *(recommended)*; (b) in-app install via `pkexec`; (c) don't ship `.deb` this release | Needs a product decision |
+| D9 | **Update method per build.** In-app (download, then Restart & Update): Windows `.exe`, Linux AppImage. Manual (**Download** button → latest GitHub release page): macOS (all chips) and Linux `.deb`. Store: unchanged. Decided by `supportsInAppUpdate` in `main.js`; `MAC_IN_APP_UPDATES = false` until macOS builds are signed with an Apple Developer ID | Mac in-app updates require a Developer ID signature. In-app `.deb` install (electron-updater `DebUpdater`, `dpkg` via a sudo prompt) varies by desktop and can't be tested before the deadline. Option (b) remains possible later; option (c) (no `.deb`) was rejected because the AppImage has its own Ubuntu 24.04 issue (P2) |
 | D10 | Restart & Update during a session: first click warns (red "Restart Anyway", one-line message), second click within 6 s restarts | Destructive action needs confirmation; matches industry convention for destructive buttons. Message kept to one line like other Settings descriptions |
 | D11 | Agent docs: `AGENTS.md` is the single source of rules; `CLAUDE.md` / `GEMINI.md` are 1-line pointers; status/history lives here | Every AI tool reads the same rules; rules file stays short because it loads every session |
 | D12 | One fix per commit; agents don't commit unless asked | Reviewable, revertable history |
@@ -123,6 +123,7 @@ Levels: L0 parse · L1 Jest · L2 sandbox dev · L3 sandbox packaged · L4 manua
 | 2026-11-08 | Exit with DB briefly locked, before fix | L2 (no debugger) | Session saved, but **5/6 aborted on exit** (code 134) | Real antivirus/slow disk |
 | 2026-11-08 | Restart confirmation (A4a) | L2 (update simulator) | Warn → revert after 6 s; second click restarts; no session → one click; red `#E5484D`; one-line message | Real `quitAndInstall` (L3/L4) |
 | 2026-11-08 | Notifications (A5/A5b), before → after. Fake OS notification in the sandbox (no debugger), real session completion | L2 (simulated OS) | Windows DND-like (closed in 0.1 s): **285 → 1** shown, alarm full 30 s · Windows normal (5 s): 6 → 6 · Linux expiry (5 s): alarm stopped at ~5 s → **full 30 s** · user dismiss (Windows): alarm stops (unchanged) · `failed`: 1 show, no retry | **L4: real Focus Assist / DND on Windows, macOS Focus, Linux desktops (GNOME/KDE)**; Action Center click after suppression |
+| 2026-11-08 | Update flow per build (A6), dev update simulator in the sandbox, platform faked only for the update decision, "open URL" stubbed | L2 (simulated builds) | `.deb`: Check → "PAWSE v1.1.0 is available." [Download] → release page opened, message "Download page opened in your browser." · macOS: same · AppImage: Restart & Update (unchanged) · Windows: Restart & Update (unchanged) | Real GitHub release check on a packaged `.dmg` and `.deb` (L3/L4) |
 | 2026-11-08 | Installer file name (R1). Published v1.1.0: asset `Pawse.Setup.1.1.0.exe` vs `latest.yml` url `Pawse-Setup-1.1.0.exe` (mismatch). After fix: Windows NSIS build from Linux produced `Pawse-Setup-1.0.0.exe` | L3 (partial: the build stopped at a Wine step, so no `latest.yml` or finished installer) | File name now has no spaces | Full Windows build and an actual update from GitHub (L4, build on Windows) |
 | 2026-11-08 | Clean shutdown (A4b), after fix | L2 (no debugger) | DB busy 1.5 s: 4/4 clean, saved · normal close 3/3 clean ~10 ms · quit with window open 3/3 clean · DB locked 5 s: 2/2 clean exit ~3 s (save impossible, expected) | **L4: Restart & Update on Windows/macOS with the packaged installer** |
 
@@ -149,6 +150,8 @@ Levels: L0 parse · L1 Jest · L2 sandbox dev · L3 sandbox packaged · L4 manua
 - **electron-builder ignores `.gitignore`.** Removing a file in a later commit doesn't remove it from git history or from already-published installers.
 - **Mixed line endings:** `src/renderer/index.js` and `src/renderer/index.css` mix CRLF/LF (`core.autocrlf=true`). Editing tools may normalize the whole file; check `git diff --stat` for whole-file churn.
 - **Version drift:** `package.json` lagged behind the published release.
+- **Never build Windows (or any other OS) installers from Linux/WSL in the repo folder.** `electron-builder --win` rebuilt `node_modules/sqlite3` as a Windows DLL, and `npm start` on Linux then failed with "invalid ELF header". Restore with `npx electron-builder install-app-deps`. If a cross-build is ever needed for a quick check, expect this and restore afterwards.
+- **Faking `process.platform` before Electron starts makes Electron itself hang** (its internals switch to that OS's code). In tests, fake the platform only in the specific lines being tested.
 
 ---
 
@@ -169,7 +172,8 @@ Newest first. One line per commit.
 
 | Date | Commit | Change |
 | :--- | :--- | :--- |
-| 2026-11-08 | _(this commit)_ | Installer file name without spaces so Windows updates find the file (R1) |
+| 2026-11-08 | _(this commit)_ | Download button for macOS and `.deb` updates; in-app updates only on Windows `.exe` and AppImage (A6) |
+| 2026-11-08 | `8814974` | Installer file name without spaces so Windows updates find the file (R1) |
 | 2026-11-08 | `3fb78d4` | Notifications respect DND; alarm not silenced by auto-closing notifications on macOS/Linux (A5, A5b) |
 | 2026-11-08 | `5556541` | AGENTS.md: link to project log, shutdown rules, new testing rules |
 | 2026-11-08 | `b3decdf` | Add `docs/PROJECT_LOG.md` |

@@ -754,9 +754,38 @@ ipcMain.on('close-notification', () => {
 const isWindowsStore = Boolean(process.windowsStore);
 const GITHUB_RELEASES_URL = 'https://github.com/educ-jkescritor/Pawse/releases/latest';
 
+// --- WHICH BUILDS UPDATE INSIDE THE APP ---
+// In-app (download, then "Restart & Update"): Windows installer (.exe) and Linux AppImage.
+// Manual ("Download" button opens the GitHub release page):
+//   - macOS: Mac in-app updates require an Apple Developer ID signature. Flip MAC_IN_APP_UPDATES
+//     to true once builds are signed and notarized.
+//   - Linux .deb (any non-AppImage Linux): installing a system package needs an admin password
+//     prompt that varies by desktop; manual download is predictable everywhere.
+// Microsoft Store builds are updated by the Store.
+const MAC_IN_APP_UPDATES = false;
+const supportsInAppUpdate =
+  !isWindowsStore && (
+    process.platform === 'win32' ||
+    (process.platform === 'linux' && Boolean(process.env.APPIMAGE)) ||
+    (process.platform === 'darwin' && MAC_IN_APP_UPDATES)
+  );
+
 if (!isWindowsStore) {
-  const isLinuxPlatform = process.platform === 'linux';
-  autoUpdater.autoDownload = !isLinuxPlatform || Boolean(process.env.APPIMAGE);
+  // Manual builds only check for updates; nothing is downloaded in the background
+  autoUpdater.autoDownload = supportsInAppUpdate;
+}
+
+// Manual builds: show "Download" instead of a fake "Downloading..." (which used to hang forever on .deb)
+function sendManualUpdateAvailable(version) {
+  const v = version ? `v${version}` : '';
+  sendUpdateStatus(
+    'manual-update',
+    `PAWSE ${v} is available.`.replace(/\s+/g, ' '),
+    'Download',
+    'btn-action',
+    false,
+    version || null
+  );
 }
 
 const MICROSOFT_STORE_PRODUCT_ID = '9N0DQPN61VR6';
@@ -842,6 +871,11 @@ ipcMain.on('check-for-updates', () => {
           '',
           false
         );
+      } else if (!supportsInAppUpdate) {
+        // Simulator follows the same per-build rules as production (e.g. dev on macOS/Linux = manual)
+        const simVersion = '1.1.0';
+        console.log('[PAWSE / AutoUpdater] [Simulator] Update found (v' + simVersion + '). Manual build: offering Download.');
+        sendManualUpdateAvailable(simVersion);
       } else {
         const simVersion = '1.1.0';
         console.log('[PAWSE / AutoUpdater] [Simulator] Update found (v' + simVersion + '). Auto-starting download...');
@@ -889,6 +923,10 @@ ipcMain.on('check-for-updates', () => {
 }); 
 
 autoUpdater.on('update-available', (info) => {
+  if (!supportsInAppUpdate) {
+    sendManualUpdateAvailable(info?.version);
+    return;
+  }
   const v = info && info.version ? `v${info.version}` : '';
   console.log('[PAWSE / AutoUpdater] Update available (' + v + '), auto-downloading...');
   sendUpdateStatus(
@@ -931,6 +969,22 @@ autoUpdater.on('update-downloaded', (info) => {
     'btn-action',
     false,
     info?.version
+  );
+});
+
+// "Download" button on manual-update builds (macOS, Linux .deb): open the latest GitHub release
+// in the browser. In-app builds download automatically, so this does nothing there.
+ipcMain.on('download-update', () => {
+  if (isWindowsStore || supportsInAppUpdate) return;
+  shell.openExternal(GITHUB_RELEASES_URL);
+  const version = currentUpdateStatus.newVersion;
+  sendUpdateStatus(
+    'manual-update',
+    'Download page opened in your browser.',
+    'Download',
+    'btn-action',
+    false,
+    version
   );
 });
 
