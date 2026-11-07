@@ -73,6 +73,12 @@ let sessionDate = new Date();
 let targetEndTime = null;
 let lastTickTime = null;
 
+// Guard for syncStrictModeButtons(): the play/skip button bindings and strictMode are
+// declared further down with let/const, so touching them before that point throws
+// (temporal dead zone). startTimer() can run during load, before the buttons exist.
+// `var` hoists as `undefined` instead of throwing, so this check is always safe.
+var controlsReady = false;
+
 // --- BEHAVIORAL & META STATE TRACKERS (Companion Dialogue Engine) ---
 let isRestoredSession = false;
 let pauseStartTime = null;
@@ -676,6 +682,7 @@ function startTimer() {
         updateCatState();
     }
     updateAudioSettings();
+    syncStrictModeButtons();
 
     // Establish wall-clock reference target for drift-free timing across OS sleep
     targetEndTime = Date.now() + (remainingTime * 1000);
@@ -939,6 +946,7 @@ function pauseTimer() {
         updateCatState();
     }
     updateAudioSettings();
+    syncStrictModeButtons();
 }
 
 function soundControl() {
@@ -981,6 +989,8 @@ soundButton.addEventListener("click", () => {
 const strictMode = localStorage.getItem('strictMode') === 'true';
 
 function syncStrictModeButtons() {
+    if (!controlsReady) return; // Called during load before buttons are bound; init call below handles it
+
     // 1. Skip Button: disabled in Strict Mode OR when session is already at 00:00 (pendingModal staged)
     if (strictMode || pendingModal) {
         skipButton.disabled = true;
@@ -996,8 +1006,10 @@ function syncStrictModeButtons() {
         skipButton.title = "Skip Session (S)";
     }
 
-    // 2. Play Button: disabled during active countdowns in Strict Mode, but enabled at 00:00 (pendingModal) to start next phase
-    if (strictMode && !pendingModal) {
+    // 2. Play Button: Strict Mode blocks PAUSING only. It stays enabled when the timer is paused
+    //    (by OS sleep, a >15s freeze, or crash recovery) so the user can always resume,
+    //    and at 00:00 (pendingModal) so the user can start the next phase.
+    if (strictMode && isRunning && !pendingModal) {
         playButton.disabled = true;
         playButton.style.opacity = "0.5";
         playButton.style.cursor = "not-allowed";
@@ -1006,7 +1018,13 @@ function syncStrictModeButtons() {
         playButton.disabled = false;
         playButton.style.opacity = "";
         playButton.style.cursor = "";
-        playButton.title = pendingModal ? "Start Next Session (Space)" : "Play / Pause (Space)";
+        if (pendingModal) {
+            playButton.title = "Start Next Session (Space)";
+        } else if (strictMode) {
+            playButton.title = "Resume (Space)";
+        } else {
+            playButton.title = "Play / Pause (Space)";
+        }
     }
 }
 
@@ -1050,7 +1068,8 @@ playButton.addEventListener("click", () => {
         return;
     }
 
-    if (strictMode) return;
+    // Strict Mode blocks pausing, never resuming (otherwise an auto-pause from sleep/crash locks the user out)
+    if (strictMode && isRunning) return;
 
     // If an alarm is ringing, clicking play silences it and closes notification
     if (isAlarmPlaying) {
@@ -1070,6 +1089,7 @@ playButton.addEventListener("click", () => {
     }   
 });
 
+controlsReady = true; // All button bindings and strictMode now exist
 syncStrictModeButtons();
 
 skipButton.addEventListener("click", () => {
