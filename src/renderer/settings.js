@@ -1,11 +1,19 @@
 let minimizeButton = document.getElementById("minimize-btn");
-minimizeButton.onclick = function minimizeWindow() {
-    window.mainAPI.minimize();
+if (minimizeButton) {
+    minimizeButton.onclick = function minimizeWindow() {
+        if (window.mainAPI && window.mainAPI.minimize) {
+            window.mainAPI.minimize();
+        }
+    };
 }
 
 let closeButton = document.getElementById("close-btn");
-closeButton.onclick = function closeWindow() {
-    window.mainAPI.close();
+if (closeButton) {
+    closeButton.onclick = function closeWindow() {
+        if (window.mainAPI && window.mainAPI.close) {
+            window.mainAPI.close();
+        }
+    };
 }
 
 const sidebar = document.querySelector(".side-bar");
@@ -686,14 +694,13 @@ if (refreshBtn) {
     const handleRefresh = async () => {
         if (isRefreshingAnalytics) return;
         isRefreshingAnalytics = true;
-
         refreshBtn.classList.add("spinning");
         updateDashboardDateTime();
 
         try {
             await loadAnalytics(currentWeeksAgo);
         } catch (err) {
-            console.error("Failed to refresh dashboard analytics:", err);
+            console.error("[PAWSE / Analytics] Failed to refresh dashboard analytics:", err?.message || err);
         } finally {
             // Keep spinning class for the full 500ms CSS animation cycle for smooth UX
             setTimeout(() => {
@@ -991,8 +998,27 @@ function getIdleVersionMessage(version) {
     return `Current version: ${vStr}`;
 }
 
+// --- RESTART CONFIRMATION DURING AN ACTIVE SESSION ---
+// "Restart & Update" quits the app, which ends a running focus session (it can't be resumed).
+// If a session is running, the first click only warns; a second click within the window restarts.
+const RESTART_CONFIRM_WINDOW_MS = 6000;
+let restartConfirmPending = false;
+let restartConfirmTimer = null;
+
+function cancelRestartConfirm() {
+    restartConfirmPending = false;
+    if (restartConfirmTimer) {
+        clearTimeout(restartConfirmTimer);
+        restartConfirmTimer = null;
+    }
+    if (updateBtn) updateBtn.classList.remove("btn-danger");
+}
+
 function applyUpdateStatus(status) {
     if (!status) return;
+
+    // Any fresh status from the main process replaces a pending restart confirmation
+    cancelRestartConfirm();
 
     if (status.isStore || status.state === "windows-store") {
         isStoreEnvironment = true;
@@ -1073,8 +1099,34 @@ if (updateBtn) {
         }
 
         const currentText = updateBtn.textContent.trim();
-        if (currentText === "Restart & Update" || currentText === "Restart Now") {
-            // Immediate action: trigger app restart/reload directly on click
+        if (currentText === "Restart & Update" || currentText === "Restart Now" || currentText === "Restart Anyway") {
+            // A timer page is open (running, paused, or waiting at a phase modal)
+            const sessionActive = localStorage.getItem('timerRunning') === 'true';
+
+            if (sessionActive && !restartConfirmPending) {
+                // First click during a session: warn instead of restarting
+                const previousText = currentText;
+                const previousMessage = updateMessage ? updateMessage.textContent : "";
+                restartConfirmPending = true;
+                updateBtn.textContent = "Restart Anyway";
+                updateBtn.classList.add("btn-danger"); // Red: destructive confirmation
+                if (updateMessage) {
+                    // One line, like other Settings descriptions; the button text says what to do next
+                    updateMessage.textContent = "Restarting will end your current focus session.";
+                }
+                restartConfirmTimer = setTimeout(() => {
+                    // No second click: return to the normal "ready to restart" state
+                    restartConfirmPending = false;
+                    restartConfirmTimer = null;
+                    updateBtn.classList.remove("btn-danger");
+                    updateBtn.textContent = previousText;
+                    if (updateMessage) updateMessage.textContent = previousMessage;
+                }, RESTART_CONFIRM_WINDOW_MS);
+                return;
+            }
+
+            // No session running, or the user confirmed with a second click
+            cancelRestartConfirm();
             window.mainAPI.restartApp();
         } else {
             // "Check for Updates" or "Retry"

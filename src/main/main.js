@@ -1,5 +1,12 @@
-const { app, BrowserWindow, ipcMain, shell, nativeTheme, screen, Notification } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, nativeTheme, screen, Notification, powerMonitor } = require("electron");
+
+// Production Hygiene: Suppress debug console logs in packaged end-user builds
+if (app.isPackaged) {
+  console.log = () => {};
+  console.debug = () => {};
+}
 const path = require("path");
+const fs = require("fs");
 const { pathToFileURL } = require("url");
 const iconPath = path.join(__dirname, "../assets/logos/logo.png");
 const { db, generateAnalytics } = require("./database.js");
@@ -225,6 +232,19 @@ if (!gotTheLock) {
       }
     });
     
+    // OS Power & Sleep Integration: Pause active timer cleanly when computer suspends
+    powerMonitor.on('suspend', () => {
+      if (win && !win.isDestroyed()) {
+        win.webContents.send('system-suspend');
+      }
+    });
+
+    powerMonitor.on('resume', () => {
+      if (win && !win.isDestroyed()) {
+        win.webContents.send('system-resume');
+      }
+    });
+
     // Automatically re-evaluate frameless window bounds when display scale/orientation/resolution changes
     screen.on('display-metrics-changed', () => {
       if (win && !win.isDestroyed() && !win.isMinimized()) {
@@ -265,6 +285,35 @@ if (!gotTheLock) {
         set.webContents.setVisualZoomLevelLimits(1, 1);
         set.webContents.setZoomLevel(0);
       }
+    });
+
+    // Multi-Display Disconnect Safety: Rescue window back to primary display if its monitor was unplugged
+    screen.on('display-removed', () => {
+      const primaryDisplay = screen.getPrimaryDisplay();
+      const allDisplays = screen.getAllDisplays();
+
+      [win, set].forEach(targetWindow => {
+        if (targetWindow && !targetWindow.isDestroyed()) {
+          const bounds = targetWindow.getBounds();
+
+          // Check if window coordinates are within any currently active display
+          const isVisibleOnAnyDisplay = allDisplays.some(display => {
+            const { x, y, width, height } = display.bounds;
+            return (
+              bounds.x + bounds.width > x &&
+              bounds.x < x + width &&
+              bounds.y + bounds.height > y &&
+              bounds.y < y + height
+            );
+          });
+
+          // If orphaned off-screen, rescue to the primary display's visible work area
+          if (!isVisibleOnAnyDisplay) {
+            const rescuedBounds = clampBoundsToWorkArea(primaryDisplay.workArea, bounds.width, bounds.height);
+            targetWindow.setBounds(rescuedBounds);
+          }
+        }
+      });
     });
   });
 }
@@ -391,9 +440,9 @@ ipcMain.on('save-session', (event, data) => {
     data.date_completed || null
   ], (err) => {
     if (err) {
-      console.log("Error inserting session data:", err.message);
+      console.error("[PAWSE / Session] Failed to save session data:", err.message);
     } else {
-      console.log("Session data saved successfully (progressive upsert).");
+      console.log("[PAWSE / Session] Session data saved successfully (progressive upsert).");
 
       // In development, keep AppData mirrored as backup so both copies stay in sync
       if (!app.isPackaged) {
@@ -433,7 +482,7 @@ ipcMain.handle('load-analytics', async (event, weeksAgo) => {
     const analyticsData = await generateAnalytics(weeksAgo);
     return analyticsData;
   } catch (error) {
-    console.error("Error generating analytics:", error);
+    console.error("[PAWSE / Analytics] Failed to compute analytics:", error?.message || error);
     throw error;
   }
 });
@@ -659,9 +708,11 @@ ipcMain.on('close-notification', () => {
 });
 
 const isWindowsStore = Boolean(process.windowsStore);
+const GITHUB_RELEASES_URL = 'https://github.com/educ-jkescritor/Pawse/releases/latest';
 
 if (!isWindowsStore) {
-  autoUpdater.autoDownload = true;
+  const isLinuxPlatform = process.platform === 'linux';
+  autoUpdater.autoDownload = !isLinuxPlatform || Boolean(process.env.APPIMAGE);
 }
 
 const MICROSOFT_STORE_PRODUCT_ID = '9N0DQPN61VR6';
@@ -723,14 +774,14 @@ ipcMain.on('check-for-updates', () => {
   }
 
   if (!app.isPackaged) {
-    console.log('[AutoUpdater - DEV SIMULATOR] Checking for updates...');
+    console.log('[PAWSE / AutoUpdater] [Simulator] Checking for updates...');
     sendUpdateStatus('checking', 'Looking for the latest version...', 'Checking...', 'btn-loading', true);
     
     setTimeout(() => {
       // Support testing edge cases via env var (e.g. PAWSE_MOCK_UPDATE="up-to-date" or "error")
       const mockMode = (process.env.PAWSE_MOCK_UPDATE || 'available').toLowerCase();
       if (mockMode === 'up-to-date') {
-        console.log('[AutoUpdater - DEV SIMULATOR] Simulated up to date');
+        console.log('[PAWSE / AutoUpdater] [Simulator] Simulated up to date.');
         sendUpdateStatus(
           'up-to-date',
           'Current version: v' + app.getVersion() + '. Checked just now.',
@@ -739,7 +790,7 @@ ipcMain.on('check-for-updates', () => {
           true
         );
       } else if (mockMode === 'error') {
-        console.log('[AutoUpdater - DEV SIMULATOR] Simulated update check error');
+        console.log('[PAWSE / AutoUpdater] [Simulator] Simulated update check error.');
         sendUpdateStatus(
           'error',
           "Couldn't connect. Check your internet and try again.",
@@ -749,7 +800,7 @@ ipcMain.on('check-for-updates', () => {
         );
       } else {
         const simVersion = '1.1.0';
-        console.log('[AutoUpdater - DEV SIMULATOR] Update found (v' + simVersion + '). Auto-starting download...');
+        console.log('[PAWSE / AutoUpdater] [Simulator] Update found (v' + simVersion + '). Auto-starting download...');
         sendUpdateStatus(
           'downloading',
           `Downloading PAWSE v${simVersion}...`,
@@ -760,7 +811,7 @@ ipcMain.on('check-for-updates', () => {
         );
 
         setTimeout(() => {
-          console.log('[AutoUpdater - DEV SIMULATOR] Download complete. Ready to restart.');
+          console.log('[PAWSE / AutoUpdater] [Simulator] Download complete. Ready to restart.');
           sendUpdateStatus(
             'downloaded',
             `PAWSE v${simVersion} is ready. Restart to apply.`,
@@ -777,7 +828,12 @@ ipcMain.on('check-for-updates', () => {
 
   sendUpdateStatus('checking', 'Looking for the latest version...', 'Checking...', 'btn-loading', true);
   autoUpdater.checkForUpdates().catch((err) => {
-    console.error('[AutoUpdater] Check failed:', err?.message || err);
+    console.error('[PAWSE / AutoUpdater] Check failed:', err?.message || err);
+    if (process.platform === 'darwin' && err?.message && err.message.includes('Could not get code signature')) {
+      shell.openExternal(GITHUB_RELEASES_URL);
+      sendUpdateStatus('idle', 'Current version: v' + app.getVersion() + ' • Opened GitHub Releases', 'Check for Updates', '', false);
+      return;
+    }
     sendUpdateStatus(
       'error',
       "Couldn't connect. Check your internet and try again.",
@@ -790,7 +846,7 @@ ipcMain.on('check-for-updates', () => {
 
 autoUpdater.on('update-available', (info) => {
   const v = info && info.version ? `v${info.version}` : '';
-  console.log('[AutoUpdater] Update available (' + v + '), auto-downloading...');
+  console.log('[PAWSE / AutoUpdater] Update available (' + v + '), auto-downloading...');
   sendUpdateStatus(
     'downloading',
     `Downloading PAWSE ${v}...`.trim(),
@@ -812,7 +868,7 @@ autoUpdater.on('update-not-available', () => {
 });
 
 autoUpdater.on('error', (err) => {
-  console.error('[AutoUpdater] Error:', err?.message || err);
+  console.error('[PAWSE / AutoUpdater] Update error:', err?.message || err);
   sendUpdateStatus(
     'error',
     "Couldn't connect. Check your internet and try again.",
@@ -837,7 +893,7 @@ autoUpdater.on('update-downloaded', (info) => {
 ipcMain.on('restart-app', () => {
   if (isWindowsStore) return;
   if (!app.isPackaged) {
-    console.log('[AutoUpdater - DEV SIMULATOR] Restart & Update clicked. Relaunching app immediately...');
+    console.log('[PAWSE / AutoUpdater] [Simulator] Restart & Update clicked. Relaunching app immediately...');
     app.relaunch();
     app.quit();
     return;
@@ -851,22 +907,56 @@ ipcMain.handle('get-version', () => {
 
 ipcMain.handle('get-launch-on-startup', () => {
   try {
+    if (process.platform === 'linux') {
+      const autostartFile = path.join(app.getPath('home'), '.config', 'autostart', 'pawse.desktop');
+      return fs.existsSync(autostartFile);
+    }
     const loginItemSettings = app.getLoginItemSettings();
     return loginItemSettings.openAtLogin;
   } catch (err) {
-    console.error('[LaunchOnStartup] Failed to get login item settings:', err);
+    console.error('[PAWSE / Startup] Failed to get login item settings:', err?.message || err);
     return false;
   }
 });
 
 ipcMain.on('set-launch-on-startup', (event, isEnabled) => {
   try {
+    if (process.platform === 'linux') {
+      const autostartDir = path.join(app.getPath('home'), '.config', 'autostart');
+      const autostartFile = path.join(autostartDir, 'pawse.desktop');
+
+      if (isEnabled) {
+        if (!fs.existsSync(autostartDir)) {
+          fs.mkdirSync(autostartDir, { recursive: true });
+        }
+        const execPath = process.env.APPIMAGE || (app.isPackaged ? app.getPath('exe') : process.execPath);
+        const desktopContent = [
+          '[Desktop Entry]',
+          'Type=Application',
+          'Version=1.0',
+          'Name=Pawse',
+          'Comment=A secure, resilient, and adorable Pomodoro timer',
+          `Exec="${execPath}"`,
+          `Icon=${iconPath}`,
+          'Terminal=false',
+          'StartupNotify=false',
+          'Categories=Utility;'
+        ].join('\n') + '\n';
+
+        fs.writeFileSync(autostartFile, desktopContent, 'utf8');
+      } else {
+        if (fs.existsSync(autostartFile)) {
+          fs.unlinkSync(autostartFile);
+        }
+      }
+    }
+
     app.setLoginItemSettings({
       openAtLogin: Boolean(isEnabled),
       ...(process.platform === 'win32' ? { path: app.isPackaged ? app.getPath('exe') : process.execPath } : {})
     });
   } catch (err) {
-    console.error('[LaunchOnStartup] Failed to set login item settings:', err);
+    console.error('[PAWSE / Startup] Failed to set login item settings:', err?.message || err);
   }
 });
 
@@ -883,4 +973,3 @@ app.on('activate', () => {
     win.focus();
   }
 });
-

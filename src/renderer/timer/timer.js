@@ -30,7 +30,7 @@ if (window.mainAPI && window.mainAPI.loadanalytics) {
             window.CompanionDialogueEngine.init(analytics);
         }
     }).catch(err => {
-        console.warn("Could not load analytics for dialogue engine:", err);
+        console.warn("[PAWSE / Dialogue] Could not load analytics for dialogue engine:", err?.message || err);
     });
 }
 
@@ -70,6 +70,14 @@ let pendingModal = null;
 let preSkipState = null;
 let nextPhaseState = null;
 let sessionDate = new Date();
+let targetEndTime = null;
+let lastTickTime = null;
+
+// Guard for syncStrictModeButtons(): the play/skip button bindings and strictMode are
+// declared further down with let/const, so touching them before that point throws
+// (temporal dead zone). startTimer() can run during load, before the buttons exist.
+// `var` hoists as `undefined` instead of throwing, so this check is always safe.
+var controlsReady = false;
 
 // --- BEHAVIORAL & META STATE TRACKERS (Companion Dialogue Engine) ---
 let isRestoredSession = false;
@@ -78,13 +86,26 @@ let wasLongPaused = false;
 let lastSessionOutcome = null; // 'majorBailout' | 'earlyCutoff' | 'completed' | 'redemption' | 'breakSkipped'
 let hadPreviousBailout = false;
 
+// --- STRICT MODE SESSION INTEGRITY ---
+// Strict Mode belongs to the SESSION, not just the current setting. A session that started strict
+// stays strict when restored after a crash, even if the Settings toggle was switched off in between
+// (otherwise force-quit -> toggle off -> resume same cat is a way to escape strict mode).
+let restoredStrictMode = false;
+// True when the OS (sleep/suspend), not the user, paused the timer. In Strict Mode the timer
+// resumes on its own when the system wakes, so sleep can't be used as a manual pause button.
+let autoPausedBySystem = false;
+
 // --- DURABLE EXECUTION ENGINE (Local Persistence) ---
 const savedStateStr = localStorage.getItem('pawseDurableState');
 if (savedStateStr) {
     try {
         const savedState = JSON.parse(savedStateStr);
         // Only restore if the saved state belongs to the exact same cat companion
-        if (savedState.catType === catType) {
+        // Stale Session Protection: Discard crash snapshot if older than 12 hours
+        const MAX_STALE_SESSION_MS = 12 * 60 * 60 * 1000;
+        if (savedState.timestamp && (Date.now() - savedState.timestamp > MAX_STALE_SESSION_MS)) {
+            localStorage.removeItem('pawseDurableState');
+        } else if (savedState.catType === catType) {
             // Freeze exact remaining time on crash recovery (do not subtract offline elapsed seconds)
             remainingTime = savedState.remainingTime;
             
@@ -100,8 +121,13 @@ if (savedStateStr) {
             flushedWorkSeconds = savedState.flushedWorkSeconds || 0;
             flushedBreakSeconds = savedState.flushedBreakSeconds || 0;
             
-            // Crash recovery resumes in a paused state so the user can settle in before hitting Play
-            isRunning = false;
+            restoredStrictMode = savedState.strictMode === true;
+
+            // Crash recovery: normal sessions restore PAUSED so the user can settle in before hitting Play.
+            // Strict sessions resume RUNNING immediately; otherwise force-quit + reopen would be a way to
+            // get the indefinite pause that Strict Mode forbids. (Offline time is still never counted.)
+            const resumeAsStrict = restoredStrictMode || localStorage.getItem('strictMode') === 'true';
+            isRunning = resumeAsStrict;
 
             // Flag session recovery for companion recognition
             isRestoredSession = true;
@@ -138,6 +164,9 @@ setInterval(() => {
         flushedBreakSeconds: flushedBreakSeconds,
         workCount: workCount,
         breakCount: breakCount,
+        // Safe to reference the const declared further down: interval callbacks only run after the
+        // whole script has finished executing, so strictMode is initialized by then (no TDZ).
+        strictMode: strictMode,
         timestamp: Date.now()
     }));
 }, 1000);
@@ -388,7 +417,7 @@ function triggerAmbientThought() {
         const context = {
             actualWork: actualWork,
             wasLongPaused: wasLongPaused,
-            strictMode: (localStorage.getItem('strictMode') === 'true')
+            strictMode: strictMode
         };
 
         let message = "Purr... happy to keep you company.";
@@ -518,7 +547,7 @@ function triggerWelcomeBubble() {
             isRedemption: lastSessionOutcome === 'redemption',
             isRestored: isRestoredSession,
             wasLongPaused: wasLongPaused,
-            strictMode: (localStorage.getItem('strictMode') === 'true')
+            strictMode: strictMode
         };
 
         let message = "Stretch your paws! Break time has begun.";
@@ -659,6 +688,7 @@ function startTimer() {
     clearInterval(timerId);
     document.getElementById("play-icon").src = "../../assets/icons/pause-btn.png";
     isRunning = true;
+    autoPausedBySystem = false;
     if (pauseStartTime) {
         const pauseDuration = (Date.now() - pauseStartTime) / 1000;
         if (pauseDuration >= 180) { // 3 minutes or more
@@ -670,6 +700,16 @@ function startTimer() {
         updateCatState();
     }
     updateAudioSettings();
+    syncStrictModeButtons();
+
+    // Timing uses performance.now(), a MONOTONIC clock: unlike Date.now() it cannot be changed by the
+    // user, NTP sync, or timezone/DST changes. With Date.now(), moving the system clock back made the
+    // remaining time grow, and nudging it forward in <15s steps finished sessions early AND credited
+    // the skipped time as focus work. The monotonic clock also does not advance while the OS is
+    // suspended, so sleep time is never counted as work.
+    // (Calendar logic such as the midnight rollover below still uses Date, which is correct for dates.)
+    targetEndTime = performance.now() + (remainingTime * 1000);
+    lastTickTime = performance.now();
 
     timerId = setInterval(() => {
         let today = new Date().getDate();
@@ -685,21 +725,41 @@ function startTimer() {
             return;
         }
 
-        remainingTime--;
+        const now = performance.now();
+        const elapsedSec = Math.max(0, Math.floor((now - lastTickTime) / 1000));
 
-        if (tickEnabled && soundEnabled) {
-            // Skip the first 0.15 seconds of the MP3 to bypass "dead air" padding
-            tickAudio.currentTime = 0.10;
-            tickAudio.play().catch(e => {});
+        if (elapsedSec > 0) {
+            lastTickTime += elapsedSec * 1000;
+            // Freeze Safety: if the app was frozen for >15s, never count the gap as focus time
+            if (elapsedSec > 15) {
+                if (strictMode) {
+                    // Strict Mode: discard the gap and keep running. Pausing here would hand the user a
+                    // pause that Strict Mode forbids (and, before, locked them out of resuming).
+                    targetEndTime = now + (remainingTime * 1000);
+                    lastTickTime = now;
+                    document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                    return;
+                }
+                pauseTimer();
+                document.getElementById("timer-display").textContent = formatTime(remainingTime);
+                return;
+            }
+            if (workingTime === true) {
+                actualWork += elapsedSec;
+            } else {
+                actualBreak += elapsedSec;
+            }
+
+            if (tickEnabled && soundEnabled) {
+                // Active tick audio sync: bypass dead air padding
+                tickAudio.currentTime = 0.10;
+                tickAudio.play().catch(e => {});
+            }
         }
 
-        if(workingTime == true) {
-            actualWork++;
-        } else {
-            actualBreak++;
-        }
-
-        document.getElementById("timer-display").textContent = formatTime(remainingTime);     
+        // Recompute remaining seconds directly against the monotonic target timestamp
+        remainingTime = Math.max(0, Math.round((targetEndTime - now) / 1000));
+        document.getElementById("timer-display").textContent = formatTime(remainingTime);
 
         if(remainingTime <= 0) {
             remainingTime = 0;
@@ -875,10 +935,10 @@ function cancelSkip() {
 
     // Reset skip outcome since skip was cancelled
     lastSessionOutcome = null;
+    nextPhaseState = null;
 
     const restored = preSkipState;
     preSkipState = null;
-    nextPhaseState = null;
 
     hideModal(modalOverlay, () => {
         pendingModal = null;
@@ -905,6 +965,8 @@ function cancelSkip() {
 }
 
 function pauseTimer() {
+    targetEndTime = null;
+    lastTickTime = null;
     clearInterval(timerId);
     document.getElementById("play-icon").src = "../../assets/icons/play-btn.png";
     isRunning = false;
@@ -915,6 +977,7 @@ function pauseTimer() {
         updateCatState();
     }
     updateAudioSettings();
+    syncStrictModeButtons();
 }
 
 function soundControl() {
@@ -954,9 +1017,12 @@ soundButton.addEventListener("click", () => {
     updateAudioSettings();
 });
 
-const strictMode = localStorage.getItem('strictMode') === 'true';
+// A restored strict session stays strict regardless of the current Settings toggle (see restoredStrictMode)
+const strictMode = localStorage.getItem('strictMode') === 'true' || restoredStrictMode;
 
 function syncStrictModeButtons() {
+    if (!controlsReady) return; // Called during load before buttons are bound; init call below handles it
+
     // 1. Skip Button: disabled in Strict Mode OR when session is already at 00:00 (pendingModal staged)
     if (strictMode || pendingModal) {
         skipButton.disabled = true;
@@ -972,8 +1038,10 @@ function syncStrictModeButtons() {
         skipButton.title = "Skip Session (S)";
     }
 
-    // 2. Play Button: disabled during active countdowns in Strict Mode, but enabled at 00:00 (pendingModal) to start next phase
-    if (strictMode && !pendingModal) {
+    // 2. Play Button: Strict Mode blocks PAUSING only. It stays enabled when the timer is paused
+    //    (by OS sleep, a >15s freeze, or crash recovery) so the user can always resume,
+    //    and at 00:00 (pendingModal) so the user can start the next phase.
+    if (strictMode && isRunning && !pendingModal) {
         playButton.disabled = true;
         playButton.style.opacity = "0.5";
         playButton.style.cursor = "not-allowed";
@@ -982,7 +1050,13 @@ function syncStrictModeButtons() {
         playButton.disabled = false;
         playButton.style.opacity = "";
         playButton.style.cursor = "";
-        playButton.title = pendingModal ? "Start Next Session (Space)" : "Play / Pause (Space)";
+        if (pendingModal) {
+            playButton.title = "Start Next Session (Space)";
+        } else if (strictMode) {
+            playButton.title = "Resume (Space)";
+        } else {
+            playButton.title = "Play / Pause (Space)";
+        }
     }
 }
 
@@ -1026,7 +1100,8 @@ playButton.addEventListener("click", () => {
         return;
     }
 
-    if (strictMode) return;
+    // Strict Mode blocks pausing, never resuming (otherwise an auto-pause from sleep/crash locks the user out)
+    if (strictMode && isRunning) return;
 
     // If an alarm is ringing, clicking play silences it and closes notification
     if (isAlarmPlaying) {
@@ -1046,7 +1121,17 @@ playButton.addEventListener("click", () => {
     }   
 });
 
+controlsReady = true; // All button bindings and strictMode now exist
 syncStrictModeButtons();
+
+// Strict Mode exit warning: leaving is always allowed (trapping users just leads to force-quits),
+// but make the cost explicit. The focus time already worked is still recorded on exit.
+if (strictMode) {
+    const exitMessageEl = document.getElementById("exit-modal-message");
+    if (exitMessageEl) {
+        exitMessageEl.textContent = "Strict session: leaving ends it for good and it won't count as a completed Pomodoro. Focus time so far is still saved.";
+    }
+}
 
 skipButton.addEventListener("click", () => {
     skipButton.blur();
@@ -1327,6 +1412,29 @@ if (window.mainAPI && window.mainAPI.onNotificationClosed) {
         stopAlarmSound();
         if (window.mainAPI.flashFrame) {
             window.mainAPI.flashFrame(false);
+        }
+    });
+}
+
+// Automatically pause active countdown when the computer enters sleep/suspend
+if (window.mainAPI && window.mainAPI.onSystemSuspend) {
+    window.mainAPI.onSystemSuspend(() => {
+        if (isRunning) {
+            pauseTimer();
+            autoPausedBySystem = true;
+            document.getElementById("timer-display").textContent = formatTime(remainingTime);
+        }
+    });
+}
+
+// Strict Mode: resume automatically when the computer wakes, so sleep can't act as a pause button.
+// Normal mode keeps the timer paused after wake so the user can settle back in.
+// Only resumes a pause the OS caused, never a session-complete modal or alarm waiting for the user.
+// If an OS never sends the wake event, Play stays enabled as a fallback, so the user is never locked out.
+if (window.mainAPI && window.mainAPI.onSystemResume) {
+    window.mainAPI.onSystemResume(() => {
+        if (strictMode && autoPausedBySystem && !isRunning && !pendingModal && !isAlarmPlaying) {
+            startTimer();
         }
     });
 }
