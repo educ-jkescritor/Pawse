@@ -15,6 +15,14 @@ Rules for how to work live in [`AGENTS.md`](../AGENTS.md). This file is status a
 
 _Last updated: 2026-11-08 (A6)_
 
+**Next up (agreed path to release):**
+1. **N1:** crash during the final "Pawsome Job!" modal loses the Pomodoro (small fix + L2 test)
+2. **README:** remove overclaims ("exact" recovery, cat facts, "lightweight")
+3. **Version bump** above 1.1.0 (required, or users get no update)
+4. **Per-OS manual checklist (L4)** written into this log → developer tests Windows, macOS, Linux → release, replacing the old v1.1.0 assets
+
+After release: R2 icon (needs a designer asset), then the 💤 items below.
+
 Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (post-deadline)
 
 ### Release blockers (deadline)
