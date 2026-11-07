@@ -72,6 +72,11 @@
     /* --- SYSTEM ALERTS (Green) --- */
     --sys-green-solid: #4CAF50;
 
+    /* --- SYSTEM ALERTS (Red: destructive actions) --- */
+    --sys-red-solid: #E5484D;
+    --sys-red-hover: #CE3A3F;
+    --sys-red-active: #B22F34;
+
     /* --- CLASSIC TIMER (Green) --- */
     --theme-classic-solid: #CFE58A;
     --theme-classic-light: #ECFEA9;

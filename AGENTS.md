@@ -55,6 +55,7 @@ UI changes must fit these exact sizes with no scrollbars or overflow.
 4. **Preserve comments, author credits, and docstrings.** Document new IPC channels, schema changes, and time/state math.
 5. **Reference files with relative paths** (e.g. `src/main/main.js:406`), never machine-specific absolute paths.
 6. **Verify, don't assume.** Prove behavior in the running app (§7), and report honestly what was and wasn't tested.
+7. **Explain plainly.** When describing a bug or change to the developer: say what the app's user experiences first, then the technical reason briefly. Keep it short, and end with one clear decision or question.
 
 ---
 
@@ -120,14 +121,58 @@ UI changes must fit these exact sizes with no scrollbars or overflow.
 
 ## 7. Testing & Verification
 
-- `npm test` runs Jest. **Most tests re-implement logic inline instead of importing the real modules**, so passing tests do not prove the app works. Don't cite them as proof of a renderer change.
-- Verify behavior in the **real app**:
-  - Manual: `npm start`; DevTools (`Ctrl+Shift+I`, dev builds only) → Sources ⏸ for 20 s simulates a freeze.
-  - Crash simulation: `pkill -9 -f "electron/dist/electron"` (Linux/WSL) or `taskkill /F /IM electron.exe` (Windows), then wait 10–15 s **before** killing so localStorage reaches disk.
-  - Automated: run a copy of `src/` + `package.json` (with a `node_modules` symlink) from a temp directory, launched with `--user-data-dir=<temp> --remote-debugging-port=<port>` (plus `--inspect=<port>` for the main process), and drive it over the Chrome DevTools Protocol. This keeps the user's dev DB and settings untouched.
-  - When killing test processes by pattern, make sure the pattern can't match your own shell command (e.g. `pkill -f "port=933[3]"`).
-- Always test **both strict and normal mode**, and check that existing behavior didn't change.
-- Think in **state × event** pairs. States: work running, break running, paused, mid-set modal / alarm, final modal, mini-mode waiting at 00:00. Events: crash, sleep/wake, freeze, clock change, midnight, quit, update restart, settings change.
+### 7.1 Current state of the repo's tests (read this first)
+- `npm test` runs Jest (62 tests). **They copy logic inline instead of importing the real modules**, and `tests/integration/database.test.js` builds its own schema instead of loading `src/main/database.js`. If `timer.js` breaks, these tests still pass.
+- There are **no end-to-end (E2E) tests and no CI**.
+- So **"tests pass" does not mean "the app works."** Never present Jest results as proof of a behavior change.
+- Industry standard (planned, post-deadline): unit tests that import real modules, an integration test against the real `database.js`, Playwright `_electron` E2E tests in `tests/e2e/`, and CI running them on Windows, macOS, and Linux.
+
+### 7.2 Test levels: what each proves
+
+| Level | What it is | Proves | Does NOT prove |
+| :--- | :--- | :--- | :--- |
+| **L0** | `node --check <file>` | The file parses | Any behavior |
+| **L1** | Jest (`npm test`) | The copied logic is correct | That the real app works (§7.1) |
+| **L2** | Sandbox, dev mode (§7.4) | Real app behavior on the agent's OS (usually Linux/WSL) | Packaged build; other OSes |
+| **L3** | Sandbox, packaged build (`npx electron-builder --dir`) | The build users get, on the agent's OS | Windows/macOS timing and OS integrations |
+| **L4** | Manual on the target OS with the real installer | Production behavior | Only as reliable as the steps followed |
+
+### 7.3 Rules when the developer asks for a test
+1. **Run the highest level you can** (normally L2, L3 for packaging or startup changes) without asking. Don't stop at L0/L1.
+2. **Never touch the developer's real data.** No real `pawse.db`, no real app profile. Always use the sandbox.
+3. **For fixes, test before AND after.** Reproduce the bug first, then show it gone with the same steps.
+4. **Timing and race bugs: repeat and report a rate** (e.g. 20 runs, "3/20 failed"), never a single pass/fail. A sandbox pass does not prove a race is gone on slower machines.
+5. **Test both strict and normal mode**, and confirm existing behavior didn't change (regression check).
+6. **If L4 is needed** (Windows/macOS-specific behavior, installers, notifications, auto-update, launch on startup), give the developer exact numbered manual steps and the expected result.
+7. **Report honestly** with the standard disclaimer (§7.5). Include failures and any test-harness problems, not just successes.
+8. Test scripts go in a temp/scratch directory, not the repo, until `tests/e2e/` exists.
+
+### 7.4 Sandbox recipe (L2/L3)
+1. **Copy the app:** create a temp dir, copy `src/` and `package.json`, and symlink `node_modules` to the repo's. For L3, run `npx electron-builder --linux --dir -c.directories.output=<temp>` and use `<temp>/linux-unpacked/`.
+2. **Launch isolated:** `env -u ELECTRON_RUN_AS_NODE <app>/node_modules/electron/dist/electron . --user-data-dir=<temp-profile> --remote-debugging-port=9333 --inspect=9334`
+   - `--user-data-dir` gives a fresh localStorage and, for packaged builds, a fresh `userData/pawse.db` (verified: `app.getPath('userData')` returns the given directory). In dev mode the DB is `<copy>/pawse.db`, inside the copy, not the repo.
+   - Wait 2–3 s after launch before querying; inspector calls made before the app is ready can return nothing.
+3. **Drive the renderer** over the Chrome DevTools Protocol: `GET http://127.0.0.1:9333/json` → the page's `webSocketDebuggerUrl` → `Runtime.evaluate`. Top-level `let`/`const` in `timer.js` (e.g. `cycleCount`, `isRunning`) can be read by name. Node 22 has a global `WebSocket`, so no packages are needed.
+4. **Drive the main process** over the Node inspector (port 9334), e.g. simulate OS sleep/wake:
+   `process.mainModule.require('electron').BrowserWindow.getAllWindows()[0].webContents.send('system-suspend')`
+5. **Simulate events:**
+   - Freeze: CDP `Debugger.pause` for 20 s, then `Debugger.resume`
+   - Crash: `pkill -9` on the launched Electron (wait 10–15 s first; localStorage writes to disk in batches)
+   - Clock change: override `Date.now` in the page
+   - Normal close: click the real UI (✕ → confirm), don't kill
+6. **Check results** by reading the sandbox DB with `sqlite3` (read-only) and/or `localStorage`.
+7. **Clean up:** kill all launched processes and leave no stray Electron running. Make kill patterns unable to match your own shell command line (e.g. `pkill -9 -f "remote-debugging-port=933[3]"`). Matching your own command kills the test runner.
+8. Use a **fresh profile directory per run** so runs don't affect each other.
+
+Think in **state × event** pairs when choosing scenarios. States: work running, break running, paused, mid-set modal / alarm, final modal, mini-mode waiting at 00:00. Events: crash, sleep/wake, freeze, clock change, midnight, quit, update restart, settings change.
+
+### 7.5 Standard disclaimer for every test report
+End every test report with the level reached and what was not covered, for example:
+
+> **Verified at L2** (sandbox, dev mode, Linux/WSL), 20/20 runs passed, strict and normal mode.
+> **Not verified:** packaged build (L3), Windows and macOS (L4). Jest (L1) does not cover this code path.
+
+Never describe a change as "production-ready" or "fully tested" unless L4 was done on every affected OS.
 
 ---
 
@@ -170,5 +215,5 @@ Known open issues (check before "fixing" adjacent code):
 - [ ] The timer still restores correctly after a hard kill (strict and normal).
 - [ ] Works offline; no new network calls or secrets.
 - [ ] UI fits the fixed window sizes; uses existing CSS tokens (`--text-black`, `--sys-blue-*`, `--theme-*`) and fonts (`Pixelify Sans` for timer/headers, `Inter` for body).
-- [ ] Verified in the running app, not just with Jest.
+- [ ] Verified in the running app (L2+), not just with Jest; test report includes the §7.5 disclaimer.
 - [ ] One fix per commit; explicit paths staged; no line-ending churn.
