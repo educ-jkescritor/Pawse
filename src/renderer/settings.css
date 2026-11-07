@@ -168,11 +168,15 @@ p {
 
 .side-bar.collapsed .brand-logo:hover {
     content: url('../assets/icons/dock-btn.png');
-    background-color: rgba(0, 0, 0, 0.05);
+    padding: 2px;
+    border-radius: 6px;
+    background-color: #E7E7E9;
 }
 
 .side-bar.collapsed .brand-logo:active {
     content: url('../assets/icons/dock-btn-click.png');
+    padding: 2px;
+    border-radius: 6px;
     background-color: rgba(0, 0, 0, 0.08);
 }
 
@@ -233,7 +237,7 @@ p {
 .side-bar button.sidebar-dock-btn:hover,
 .side-bar button.sidebar-menu-btn:hover,
 #dock-btn:hover {
-    background-color: #dfdfdf;
+    background-color: #E7E7E9;
 }
 
 .side-bar button.sidebar-dock-btn::after,
