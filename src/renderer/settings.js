@@ -1099,6 +1099,11 @@ if (updateBtn) {
         }
 
         const currentText = updateBtn.textContent.trim();
+        if (currentText === "Download") {
+            // Manual-update builds (macOS, Linux .deb): open the release page in the browser
+            if (window.mainAPI && window.mainAPI.downloadUpdate) window.mainAPI.downloadUpdate();
+            return;
+        }
         if (currentText === "Restart & Update" || currentText === "Restart Now" || currentText === "Restart Anyway") {
             // A timer page is open (running, paused, or waiting at a phase modal)
             const sessionActive = localStorage.getItem('timerRunning') === 'true';

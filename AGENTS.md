@@ -1,12 +1,14 @@
 # PAWSE — Agent Guidelines & Repository Rules
 
-Guidelines for **any AI coding agent** (Claude, Gemini, Codex, Cursor, Copilot, etc.) working on the **PAWSE** codebase. Read this whole file before changing code. `CLAUDE.md` and `GEMINI.md` only point here; this file is the single source of truth.
+Guidelines for **any AI coding agent** (Claude, Gemini, Codex, Cursor, Copilot, etc.) working on the **PAWSE** codebase. Read this whole file before changing code. `CLAUDE.md` and `GEMINI.md` only point here; this file is the single source of truth for **rules**.
+
+> **Project memory:** before starting any work, also read **Parts 1–4 of [`docs/PROJECT_LOG.md`](docs/PROJECT_LOG.md)** (current status, decisions, test results, lessons). It carries context across sessions and across AI tools. Read Part 5 when touching an area with history. After each fix, update the log in the same commit (see §9).
 
 ---
 
 ## 1. Project Overview
 
-PAWSE is a cross-platform (Windows, macOS, Linux) Electron desktop Pomodoro app with animated pixel-art cat companions, local durable session state, and local SQLite analytics. Everything runs offline; there is **no cloud sync on `main`** (see §8).
+PAWSE is a cross-platform (Windows, macOS, Linux) Electron desktop Pomodoro app with animated pixel-art cat companions, local durable session state, and local SQLite analytics. Everything runs offline; there is **no cloud sync on `main`** (see §4).
 
 | Companion | `?cat=` key | DB `cat_type` | Work / Short / Long |
 | :--- | :--- | :--- | :--- |
@@ -33,6 +35,9 @@ A full set is 4 work cycles; the long break comes after the 4th work session.
 | `src/assets/` | Sprites, sounds, fonts, icons |
 | `start.js` | Dev launcher (`npm start`); strips `ELECTRON_RUN_AS_NODE` |
 | `tests/` | Jest unit/integration tests (see §7 for their limits) |
+| `docs/PROJECT_LOG.md` | Project memory: status board, decisions, test results, lessons, fix changelog |
+| `docs/Project_Report.pdf` | Project report (not packaged) |
+| `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` | Agent rules (this file) and 1-line pointers to it; must stay at the repo root |
 
 **Windows:** one main window shows *either* the menu *or* the timer (never both); settings is a second window.
 
@@ -51,11 +56,13 @@ UI changes must fit these exact sizes with no scrollbars or overflow.
 
 1. **Read the code you are changing and its callers.** Do not refactor broadly or delete working code without explaining why and getting confirmation.
 2. **Check `git status` first.** If earlier fixes are still uncommitted, raise it before starting new work (see §9).
+   **Check `docs/PROJECT_LOG.md` Part 1** for the issue's status, related decisions (Part 2), and known traps (Part 4) before proposing a fix.
 3. **Stack is fixed:** vanilla HTML/CSS/JS + CommonJS. Do not add frameworks, bundlers, or UI libraries unless the user explicitly asks.
 4. **Preserve comments, author credits, and docstrings.** Document new IPC channels, schema changes, and time/state math.
 5. **Reference files with relative paths** (e.g. `src/main/main.js:406`), never machine-specific absolute paths.
 6. **Verify, don't assume.** Prove behavior in the running app (§7), and report honestly what was and wasn't tested.
-7. **Explain plainly.** When describing a bug or change to the developer: say what the app's user experiences first, then the technical reason briefly. Keep it short, and end with one clear decision or question.
+7. **Explain plainly.** When describing a bug or change to the developer: say what the app's user experiences first, then the technical reason briefly. Keep it short, and end with one clear decision or question. When a discussion branches, re-orient with a short "main task / side path / decision now" summary.
+8. **Give a time estimate** before running anything that takes longer than about a minute (test batches, builds, history reviews).
 
 ---
 
@@ -67,6 +74,8 @@ UI changes must fit these exact sizes with no scrollbars or overflow.
 - Navigation is blocked; external links only via `setWindowOpenHandler` → `shell.openExternal()` for the allowlisted hosts (GitHub, LinkedIn). Deny everything else.
 - All SQL is parameterized (`?` placeholders). Never build SQL by string concatenation.
 - **Never commit or package secrets or personal data:** `.env*`, keys, `config.js`, `*session*.json`, `*.db*`. Removing a file in a later commit does **not** remove it from git history.
+- **This repo is public.** Docs (including `docs/PROJECT_LOG.md`) must not contain secrets, IDs, emails, personal data, or machine paths. Describe security incidents in general terms.
+- **Cloud sync is not on `main`.** Supabase sync existed on older branches. If it's reintroduced: guest (`email = 'guest'`) data must never sync, sync must be incremental via `uuid` + `is_synced`, keys must not be committed, and RLS must be enabled on every table.
 
 ---
 
@@ -114,7 +123,13 @@ UI changes must fit these exact sizes with no scrollbars or overflow.
 - Strict mode auto-resumes on `system-resume`, but only for OS-caused pauses (`autoPausedBySystem`), never over a pending modal or ringing alarm.
 - Exiting is always allowed; the honest cost is shown in the exit modal.
 
-### 6.6 JavaScript gotcha in `timer.js`: temporal dead zone
+### 6.6 Shutdown sequence (`src/main/main.js`)
+- Session saves are tracked in `pendingWrites` until SQLite confirms them.
+- On **`will-quit`** (fires after all windows have closed, so the timer's final `beforeunload` save is already sent), the app waits for pending saves, calls `closeDatabase()`, then quits. Don't move this to `before-quit`: that fires before windows close and would close the DB before the timer's last save.
+- `SHUTDOWN_TIMEOUT_MS` (4 s) **must stay above SQLite's `busy_timeout` (3 s)**. Exiting with a save still waiting on a lock aborts the process (crash on quit).
+- "Restart & Update" during a session needs a second click to confirm (red **Restart Anyway**, `btn-danger`). Destructive buttons use `--sys-red-*` tokens.
+
+### 6.7 JavaScript gotcha in `timer.js`: temporal dead zone
 `startTimer()` can run during page load, **before** the `let`/`const` button bindings and `strictMode` are declared further down. Touching them early throws. `syncStrictModeButtons()` is guarded by `var controlsReady`. Callbacks (intervals, timeouts, IPC events) run after the script finishes and are safe. Keep this in mind when calling UI helpers from timer functions.
 
 ---
@@ -145,7 +160,9 @@ UI changes must fit these exact sizes with no scrollbars or overflow.
 5. **Test both strict and normal mode**, and confirm existing behavior didn't change (regression check).
 6. **If L4 is needed** (Windows/macOS-specific behavior, installers, notifications, auto-update, launch on startup), give the developer exact numbered manual steps and the expected result.
 7. **Report honestly** with the standard disclaimer (§7.5). Include failures and any test-harness problems, not just successes.
-8. Test scripts go in a temp/scratch directory, not the repo, until `tests/e2e/` exists.
+8. Test scripts go in a temp/scratch directory, not the repo, until `tests/e2e/` exists. **Write each script to a file first, then run it in a separate command** (see the kill-pattern trap in §7.4 step 7).
+9. **Re-measure suspicious results without debuggers attached** before calling them bugs: test tooling (polling, inspector sessions) can create fake symptoms such as a "slow exit".
+10. **Record results** in `docs/PROJECT_LOG.md` Part 3.
 
 ### 7.4 Sandbox recipe (L2/L3)
 1. **Copy the app:** create a temp dir, copy `src/` and `package.json`, and symlink `node_modules` to the repo's. For L3, run `npx electron-builder --linux --dir -c.directories.output=<temp>` and use `<temp>/linux-unpacked/`.
@@ -161,7 +178,8 @@ UI changes must fit these exact sizes with no scrollbars or overflow.
    - Clock change: override `Date.now` in the page
    - Normal close: click the real UI (✕ → confirm), don't kill
 6. **Check results** by reading the sandbox DB with `sqlite3` (read-only) and/or `localStorage`.
-7. **Clean up:** kill all launched processes and leave no stray Electron running. Make kill patterns unable to match your own shell command line (e.g. `pkill -9 -f "remote-debugging-port=933[3]"`). Matching your own command kills the test runner.
+7. **Clean up:** kill all launched processes and leave no stray Electron running. Make kill patterns unable to match your own shell command line (e.g. `pkill -9 -f "remote-debugging-port=933[3]"`). Matching your own command kills the test runner, and that includes text inside a heredoc in the same command.
+   - To simulate a busy database, hold a lock from a second connection (`BEGIN EXCLUSIVE`, commit after N ms). To time shutdown precisely, log `will-quit` / `process.on('exit')` from an instrumented copy of `main.js` in the sandbox (never in the repo).
 8. Use a **fresh profile directory per run** so runs don't affect each other.
 
 Think in **state × event** pairs when choosing scenarios. States: work running, break running, paused, mid-set modal / alarm, final modal, mini-mode waiting at 00:00. Events: crash, sleep/wake, freeze, clock change, midnight, quit, update restart, settings change.
@@ -176,22 +194,14 @@ Never describe a change as "production-ready" or "fully tested" unless L4 was do
 
 ---
 
-## 8. Platform Notes & Known Open Issues
+## 8. Platform Notes & Known Issues
 
-Platform notes:
+Platform behavior to keep in mind when changing window, notification, or packaging code:
 - **Linux/Wayland:** `alwaysOnTop`, window positioning, and `flashFrame` are ignored. AppImage needs `libfuse2` and hits the Chromium sandbox restriction on Ubuntu 24.04+.
 - **macOS:** builds are unsigned and not notarized, so downloaded builds won't open and auto-update needs signing. Floating widgets don't follow across Spaces.
 - **Windows:** NSIS installer is unsigned (SmartScreen warning). In the Store (MSIX) build, launch on startup needs a `StartupTask` manifest entry. Verify toast activation in the Store build.
 
-Known open issues (check before "fixing" adjacent code):
-- Crash while the **final** "Pawsome Job!" modal is open → restore pushes `cycleCount` past 4 and the pomodoro is never credited.
-- After a restore, the fish counter shows 0 until the next phase change.
-- The last save on quit (`beforeunload` → fire-and-forget IPC) can lose the race with app exit; "Restart & Update" doesn't warn mid-session.
-- `.deb` updater gets stuck on "Downloading…" (`autoDownload` is off and `download-update` has no handler).
-- The Windows toast re-present loop has no retry cap (Focus Assist / DND).
-- No logging or crash handling in packaged builds; `console.log` is silenced.
-- Midnight rollover is only checked while the timer is ticking.
-- Supabase sync existed on `feature/supabase-integration` / `release/v1.1.0` but is **not on `main`**. If it's reintroduced: guest (`email = 'guest'`) data must never sync, sync must be incremental via `uuid` + `is_synced`, keys must not be committed, and RLS must be enabled on every table.
+**Known open issues are tracked in [`docs/PROJECT_LOG.md`](docs/PROJECT_LOG.md) Part 1**, not here. Check it before "fixing" adjacent code, so status lives in one place.
 
 ---
 
@@ -202,7 +212,8 @@ Known open issues (check before "fixing" adjacent code):
 - **Stage explicit paths only.** Never `git add -A` / `git add .`: the working tree can contain `pawse.db`, build output, or secrets.
 - Before committing, run `git status` and `git diff --stat`, and confirm only the intended files and lines changed.
 - Commit message style: lowercase conventional prefix, e.g. `fix: ...`, `feat: ...`, `task: ...`, `update: ...`.
-- **Line endings:** `src/renderer/index.js` has **mixed CRLF/LF** and `core.autocrlf=true` is set. Editors and agent tools may normalize the whole file, making the diff show every line changed. If `git diff --stat` shows whole-file churn, restore the original endings before committing.
+- **Update `docs/PROJECT_LOG.md` in the same commit as each fix:** Part 1 (status), Part 3 (test results), Part 6 (changelog line). A fix commit can't reference its own hash; write the hash on the next commit or leave it for the developer.
+- **Line endings:** `src/renderer/index.js` and `src/renderer/index.css` have **mixed CRLF/LF** and `core.autocrlf=true` is set. Editors and agent tools may normalize the whole file, making the diff show every line changed. If `git diff --stat` shows whole-file churn, restore the original endings before committing.
 - Work on a branch, not `main`. Don't rewrite published history without explicit approval.
 
 ---
@@ -217,3 +228,4 @@ Known open issues (check before "fixing" adjacent code):
 - [ ] UI fits the fixed window sizes; uses existing CSS tokens (`--text-black`, `--sys-blue-*`, `--theme-*`) and fonts (`Pixelify Sans` for timer/headers, `Inter` for body).
 - [ ] Verified in the running app (L2+), not just with Jest; test report includes the §7.5 disclaimer.
 - [ ] One fix per commit; explicit paths staged; no line-ending churn.
+- [ ] `docs/PROJECT_LOG.md` updated (status, test results, changelog); nothing private in it.

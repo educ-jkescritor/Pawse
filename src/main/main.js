@@ -9,7 +9,7 @@ const path = require("path");
 const fs = require("fs");
 const { pathToFileURL } = require("url");
 const iconPath = path.join(__dirname, "../assets/logos/logo.png");
-const { db, generateAnalytics } = require("./database.js");
+const { db, generateAnalytics, closeDatabase } = require("./database.js");
 const { autoUpdater } = require("electron-updater");
 const { randomUUID } = require("crypto");
 
@@ -403,7 +403,15 @@ ipcMain.on('settings-window', (event) => {
   }
 });
 
+// Saves still waiting for SQLite to confirm. Shutdown waits for these (see 'will-quit' below).
+const pendingWrites = new Set();
+
 ipcMain.on('save-session', (event, data) => {
+  let finishWrite;
+  const writeDone = new Promise((resolve) => { finishWrite = resolve; });
+  pendingWrites.add(writeDone);
+  writeDone.then(() => pendingWrites.delete(writeDone));
+
   const uuid = data.uuid || randomUUID();
   const upsertQuery = `INSERT INTO session (
     cat_type, 
@@ -456,6 +464,7 @@ ipcMain.on('save-session', (event, data) => {
         }
       }
     }
+    finishWrite(); // Success or failure, this save is no longer in flight
   });
 });
 
@@ -544,6 +553,16 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
 
     const sessionAlertStart = Date.now();
     const ALERT_DURATION_MS = 30000;
+    // Windows re-presents the toast when the OS hides it early, so it stays visible through the alarm.
+    // Limits (respect Do Not Disturb, never flood the Action Center):
+    // - MAX_PRESENTS: 6 covers the 30s alarm at Windows' default 5s banner time.
+    // - MIN_VISIBLE_MS: if Windows closes the toast faster than this, it is being suppressed
+    //   (Do Not Disturb / Focus Assist / notifications restricted). Stop re-presenting; the toast
+    //   stays in the Action Center, and the in-app modal, alarm sound, and taskbar flash still work.
+    //   (Electron has no API to ask Windows whether DND is on, so this is inferred.)
+    const MAX_PRESENTS = 6;
+    const MIN_VISIBLE_MS = 2000;
+    let presentCount = 0;
     const buttonLabel = actionText || 'Continue';
 
     const escapeXml = (str) =>
@@ -657,10 +676,13 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
         // overrides the banner and emits 'timedOut' (or an unlabelled timeout) before our 30s alarm window ends,
         // remove the stale entry from Action Center and re-present the banner so both toast & sound persist.
         const elapsedMs = Date.now() - sessionAlertStart;
+        const visibleMs = Date.now() - notification._shownAt;
         if (
           process.platform === 'win32' &&
           closeReason !== 'userCanceled' &&
-          elapsedMs < ALERT_DURATION_MS - 1500
+          elapsedMs < ALERT_DURATION_MS - 1500 &&
+          presentCount < MAX_PRESENTS &&
+          visibleMs >= MIN_VISIBLE_MS
         ) {
           if (activeNotification === notification) {
             notification._isProgrammaticClose = true;
@@ -672,13 +694,23 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
           return;
         }
 
+        // Suppressed by Windows (closed almost immediately, not by the user): stop re-presenting,
+        // but keep the click handler so the toast still works when clicked later from the Action Center.
+        if (process.platform === 'win32' && closeReason !== 'userCanceled' && visibleMs < MIN_VISIBLE_MS) {
+          console.log('[PAWSE / Notification] Toast suppressed by Windows (likely Do Not Disturb); not re-presenting.');
+          return;
+        }
+
         if (activeNotification === notification) {
           activeNotification = null;
           activeNotificationActivateHandler = null;
         }
 
-        // User explicitly dismissed the notification ('userCanceled' on Windows, or manual close on other OS)
-        if (process.platform !== 'win32' || closeReason === 'userCanceled') {
+        // Only a confirmed user dismissal silences the alarm. Windows reports it as 'userCanceled'.
+        // macOS/Linux report no close reason, and their notifications often close on their own
+        // (expiry, Do Not Disturb), so a close there must NOT stop the alarm; it still stops when the
+        // user clicks the notification or acts in the app, or after the 30s auto-silence.
+        if (process.platform === 'win32' && closeReason === 'userCanceled') {
           const senderWindow = BrowserWindow.fromWebContents(event.sender);
           const targetWin = senderWindow || win;
           if (targetWin && !targetWin.isDestroyed()) {
@@ -688,6 +720,18 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
         }
       });
 
+      // The OS refused to show it (e.g. notifications disabled for Pawse). Don't retry; the in-app
+      // modal and alarm still inform the user.
+      notification.on('failed', (failEvent, error) => {
+        console.error('[PAWSE / Notification] OS refused to show notification:', error || '');
+        if (activeNotification === notification) {
+          activeNotification = null;
+          activeNotificationActivateHandler = null;
+        }
+      });
+
+      presentCount++;
+      notification._shownAt = Date.now();
       notification.show();
     };
 
@@ -710,9 +754,38 @@ ipcMain.on('close-notification', () => {
 const isWindowsStore = Boolean(process.windowsStore);
 const GITHUB_RELEASES_URL = 'https://github.com/educ-jkescritor/Pawse/releases/latest';
 
+// --- WHICH BUILDS UPDATE INSIDE THE APP ---
+// In-app (download, then "Restart & Update"): Windows installer (.exe) and Linux AppImage.
+// Manual ("Download" button opens the GitHub release page):
+//   - macOS: Mac in-app updates require an Apple Developer ID signature. Flip MAC_IN_APP_UPDATES
+//     to true once builds are signed and notarized.
+//   - Linux .deb (any non-AppImage Linux): installing a system package needs an admin password
+//     prompt that varies by desktop; manual download is predictable everywhere.
+// Microsoft Store builds are updated by the Store.
+const MAC_IN_APP_UPDATES = false;
+const supportsInAppUpdate =
+  !isWindowsStore && (
+    process.platform === 'win32' ||
+    (process.platform === 'linux' && Boolean(process.env.APPIMAGE)) ||
+    (process.platform === 'darwin' && MAC_IN_APP_UPDATES)
+  );
+
 if (!isWindowsStore) {
-  const isLinuxPlatform = process.platform === 'linux';
-  autoUpdater.autoDownload = !isLinuxPlatform || Boolean(process.env.APPIMAGE);
+  // Manual builds only check for updates; nothing is downloaded in the background
+  autoUpdater.autoDownload = supportsInAppUpdate;
+}
+
+// Manual builds: show "Download" instead of a fake "Downloading..." (which used to hang forever on .deb)
+function sendManualUpdateAvailable(version) {
+  const v = version ? `v${version}` : '';
+  sendUpdateStatus(
+    'manual-update',
+    `PAWSE ${v} is available.`.replace(/\s+/g, ' '),
+    'Download',
+    'btn-action',
+    false,
+    version || null
+  );
 }
 
 const MICROSOFT_STORE_PRODUCT_ID = '9N0DQPN61VR6';
@@ -798,6 +871,11 @@ ipcMain.on('check-for-updates', () => {
           '',
           false
         );
+      } else if (!supportsInAppUpdate) {
+        // Simulator follows the same per-build rules as production (e.g. dev on macOS/Linux = manual)
+        const simVersion = '1.1.0';
+        console.log('[PAWSE / AutoUpdater] [Simulator] Update found (v' + simVersion + '). Manual build: offering Download.');
+        sendManualUpdateAvailable(simVersion);
       } else {
         const simVersion = '1.1.0';
         console.log('[PAWSE / AutoUpdater] [Simulator] Update found (v' + simVersion + '). Auto-starting download...');
@@ -845,6 +923,10 @@ ipcMain.on('check-for-updates', () => {
 }); 
 
 autoUpdater.on('update-available', (info) => {
+  if (!supportsInAppUpdate) {
+    sendManualUpdateAvailable(info?.version);
+    return;
+  }
   const v = info && info.version ? `v${info.version}` : '';
   console.log('[PAWSE / AutoUpdater] Update available (' + v + '), auto-downloading...');
   sendUpdateStatus(
@@ -887,6 +969,22 @@ autoUpdater.on('update-downloaded', (info) => {
     'btn-action',
     false,
     info?.version
+  );
+});
+
+// "Download" button on manual-update builds (macOS, Linux .deb): open the latest GitHub release
+// in the browser. In-app builds download automatically, so this does nothing there.
+ipcMain.on('download-update', () => {
+  if (isWindowsStore || supportsInAppUpdate) return;
+  shell.openExternal(GITHUB_RELEASES_URL);
+  const version = currentUpdateStatus.newVersion;
+  sendUpdateStatus(
+    'manual-update',
+    'Download page opened in your browser.',
+    'Download',
+    'btn-action',
+    false,
+    version
   );
 });
 
@@ -962,6 +1060,35 @@ ipcMain.on('set-launch-on-startup', (event, isEnabled) => {
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
+});
+
+// --- CLEAN SHUTDOWN ---
+// Before the process exits: wait for in-flight session saves, then close SQLite properly.
+// Without this, quitting while a save is still running (busy disk, antivirus, sync tools touching
+// pawse.db) aborted the process during teardown: a crash on quit (exit code 134 in testing).
+// Uses 'will-quit' (not 'before-quit') because it fires AFTER all windows have closed, so the
+// timer's final save from its beforeunload has already been sent. This covers closing the last
+// window, Cmd+Q, and Restart & Update. A time limit makes sure quitting can never hang.
+// The limit must stay ABOVE SQLite's busy_timeout (3000ms in database.js): by then a pending save
+// has either finished or failed on its own, so the database can always be closed cleanly.
+// A shorter limit exits with a save still waiting, which brings back the crash on quit.
+const SHUTDOWN_TIMEOUT_MS = 4000;
+let shutdownStarted = false;
+let shutdownComplete = false;
+
+app.on('will-quit', (event) => {
+  if (shutdownComplete) return; // Second pass: cleanup done, let the app exit
+  event.preventDefault();
+  if (shutdownStarted) return;
+  shutdownStarted = true;
+
+  const cleanup = Promise.allSettled([...pendingWrites]).then(() => closeDatabase());
+  const timeLimit = new Promise((resolve) => setTimeout(resolve, SHUTDOWN_TIMEOUT_MS));
+
+  Promise.race([cleanup, timeLimit]).then(() => {
+    shutdownComplete = true;
+    app.quit();
+  });
 });
 
 app.on('activate', () => {

@@ -62,6 +62,9 @@
       ],
       "icon": "src/assets/logos/logo.png"
     },
+    "nsis": {
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
     "mac": {
       "category": "public.app-category.productivity",
       "target": [

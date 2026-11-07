@@ -335,4 +335,16 @@ function generateAnalytics(weeksAgo = 0) {
     });
 }
 
-module.exports = { db, generateAnalytics };
+// Close the connection cleanly during app shutdown. node-sqlite3 runs queued statements before
+// closing, so this also lets an in-flight save finish. Exiting with the connection still open
+// (and a write waiting on a lock) aborts the process during teardown (crash on quit).
+function closeDatabase() {
+    return new Promise((resolve) => {
+        db.close((err) => {
+            if (err) console.error("[PAWSE / Database] Failed to close database:", err.message);
+            resolve();
+        });
+    });
+}
+
+module.exports = { db, generateAnalytics, closeDatabase };
