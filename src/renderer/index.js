@@ -7,6 +7,49 @@ if (window.mainAPI && window.mainAPI.resize) {
 // reset this flag, which would leave the Strict Mode toggle in Settings locked indefinitely.
 localStorage.setItem('timerRunning', 'false');
 
+// --- ORPHANED SESSION SALVAGE (Durable Execution safety net) ---
+// Between phase transitions, in-progress work lives only in localStorage ('pawseDurableState').
+// timer.js only uses that snapshot to RESUME the same cat within 12h; picking a different cat
+// overwrites it within 1s, and a stale (>12h) snapshot is deleted. Either way the work was lost.
+// The menu always loads before any timer page, so we persist the snapshot to SQLite here first.
+// This is safe to repeat: save-session upserts by uuid with running TOTALS (not increments),
+// so saving the same snapshot again just rewrites the same row. The snapshot is intentionally
+// left in place so same-cat resume keeps working and later flushes update the same row.
+(function salvageOrphanedSession() {
+    if (!window.mainAPI || !window.mainAPI.savesession) return;
+
+    let saved = null;
+    try {
+        saved = JSON.parse(localStorage.getItem('pawseDurableState'));
+    } catch (e) {
+        return; // Corrupt snapshot: nothing recoverable
+    }
+    if (!saved || typeof saved !== 'object' || !saved.sessionUuid) return;
+    if (!['orange', 'tuxedo', 'black'].includes(saved.catType)) return;
+
+    const workSeconds = Math.max(0, Math.floor(Number(saved.actualWork) || 0));
+    const breakSeconds = Math.max(0, Math.floor(Number(saved.actualBreak) || 0));
+    if (workSeconds === 0 && breakSeconds === 0) return;
+
+    // Credit the work to when it last happened (not "now"), so a crash on Monday night
+    // reopened on Tuesday still counts toward Monday's total and streak.
+    const lastActive = new Date(Number(saved.timestamp));
+    const dateCompleted = isNaN(lastActive.getTime())
+        ? null
+        : lastActive.toISOString().replace('T', ' ').substring(0, 19);
+
+    window.mainAPI.savesession({
+        cat_type: `${saved.catType}_cat`,
+        uuid: String(saved.sessionUuid),
+        total_work_seconds: workSeconds,
+        total_break_seconds: breakSeconds,
+        total_work: Math.max(0, Math.floor(Number(saved.workCount) || 0)),
+        total_break: Math.max(0, Math.floor(Number(saved.breakCount) || 0)),
+        total_pomodoro: 0, // MAX() in the upsert keeps any pomodoro already recorded for this uuid
+        date_completed: dateCompleted
+    });
+})();
+
 if (localStorage.getItem('alwaysOnTop') === 'true') {
     if (window.mainAPI && window.mainAPI.setAlwaysOnTop) {
         window.mainAPI.setAlwaysOnTop(true);
