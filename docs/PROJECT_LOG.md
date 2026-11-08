@@ -13,13 +13,13 @@ Rules for how to work live in [`AGENTS.md`](../AGENTS.md). This file is status a
 
 ## Part 1 — Current Status
 
-_Last updated: 2026-11-09 (release plan)_
+_Last updated: 2026-11-09 (release checklist)_
 
 **Next up (agreed path to release):**
 1. ~~**N1:** crash during the final "Pawsome Job!" modal loses the Pomodoro~~ ✅ done
 2. ~~**README:** remove overclaims~~ ✅ done
 3. ~~Version bump~~ not needed: **v1.0.0 is the first official release** (D16)
-4. **Per-OS manual checklist (L4)** written into this log → developer tests Windows, macOS, Linux → release v1.0.0 following D16 (delete the old v1.1.0 release and tags first)
+4. **Manual testing (L4):** checklist written in [`docs/RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md) for Windows, macOS, and Linux. **Not run yet.** Windows can be tested now; macOS and real-Linux testing are **deferred** (no test machines). Run at least Windows before publishing v1.0.0 following D16 (delete the old v1.1.0 release and tags first)
 
 After release: R2 icon (needs a designer asset), then the 💤 items below.
 
@@ -44,6 +44,7 @@ Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (
 | R2 | App icon `logo.png` is 370×350 (not square, small). macOS wants ≥ 512×512 (1024×1024 standard); Windows wants square | ❌ | Needs a square 1024×1024 PNG |
 | R3 | Microsoft Store tile images: no `build/appx/` assets, so the Store package may use electron-builder placeholders | ❌ | Check the Store listing |
 | R4 | Intel (x64) macOS build has never been run | ❌ | L4 on an Intel Mac |
+| R5 | **Manual testing (L4) not done on any OS yet.** Every fix so far is verified only at L2 (Linux/WSL, dev mode) | ❌ | Run `docs/RELEASE_CHECKLIST.md`: Windows (machine available), macOS and real Linux (deferred, no machines). Record results in the checklist and in Part 3 |
 | — | README overclaims ("exact elapsed-time" recovery, cat facts on petting, "lightweight") | ✅ | `7e39326`: recovery section rewritten to match the code (time frozen, salvage to stats, strict resumes running, finished sets saved at completion, last few seconds may be lost); cat facts → companion dialogue; per-platform update behavior; Strict Mode blocks pausing and skipping; settings size 736; `docs/` folder; per-OS build commands; Node 20+. Version badge stays 1.0.0. Still open: missing `LICENSE` file (Q8) |
 
 ### Fixed along the way
@@ -188,7 +189,8 @@ Newest first. One line per commit.
 
 | Date | Commit | Change |
 | :--- | :--- | :--- |
-| 2026-11-09 | _(this commit)_ | Release plan: first official release is v1.0.0; GitHub cleanup and upload steps (D16) |
+| 2026-11-09 | _(this commit)_ | Add `docs/RELEASE_CHECKLIST.md` (manual tests for Windows, macOS, Linux); testing deferred and tracked as R5 |
+| 2026-11-09 | `83dbeeb` | Release plan: first official release is v1.0.0; GitHub cleanup and upload steps (D16) |
 | 2026-11-08 | `7e39326` | README: match the app's actual behavior (recovery, dialogue, updates per platform, strict mode, builds per OS) |
 | 2026-11-08 | `125d970` | Credit the Pomodoro when the set completes and retire the snapshot; menu credits old finished snapshots (N1) |
 | 2026-11-08 | `01711d2` | Project log: next steps |

@@ -36,6 +36,7 @@ A full set is 4 work cycles; the long break comes after the 4th work session.
 | `start.js` | Dev launcher (`npm start`); strips `ELECTRON_RUN_AS_NODE` |
 | `tests/` | Jest unit/integration tests (see §7 for their limits) |
 | `docs/PROJECT_LOG.md` | Project memory: status board, decisions, test results, lessons, fix changelog |
+| `docs/RELEASE_CHECKLIST.md` | Manual (L4) test steps per OS to run before each release, with a results table |
 | `docs/Project_Report.pdf` | Project report (not packaged) |
 | `AGENTS.md` / `CLAUDE.md` / `GEMINI.md` | Agent rules (this file) and 1-line pointers to it; must stay at the repo root |
 
@@ -87,6 +88,7 @@ UI changes must fit these exact sizes with no scrollbars or overflow.
 - `sqlite3` is a **native module**: build each OS/arch on that OS (no cross-building from WSL). `.node` binaries must stay in `app.asar.unpacked`.
 - **Versioning:** the app version lives in `package.json` (and `package-lock.json`). **v1.0.0 is the first official release.** The existing GitHub release **v1.1.0** and the tags **v1.0.0** / **v1.1.0** are earlier test builds. After v1.0.0 ships, every new release must be **higher** than the last published one, or the auto-updater won't offer it. Update the README version badge with each bump.
 - **Publishing a release** (see `docs/PROJECT_LOG.md` D16):
+  0. **Run `docs/RELEASE_CHECKLIST.md`** on every OS you can, and record results there. Don't describe an OS as tested unless its section was run.
   1. **First time only:** delete the old test release **v1.1.0** and the tags **v1.1.0** and **v1.0.0** on GitHub. Otherwise installed copies of 1.0.0 would be offered the old 1.1.0 test build as an "update".
   2. Build **each OS on that OS**: Windows `npm run build:exe`, macOS `npm run build:mac` (both chips in **one** command, so `latest-mac.yml` lists both), Linux `npm run build:linux`. The Store `.appx` goes to the Microsoft Store, not GitHub.
   3. Create **one** GitHub release for the version and upload **all** files from each `dist/`: installers, `.blockmap` files, and `latest.yml` / `latest-mac.yml` / `latest-linux.yml`. The updater reads these `.yml` files; without them "Check for Updates" fails.
