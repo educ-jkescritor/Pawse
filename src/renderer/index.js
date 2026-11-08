@@ -38,6 +38,12 @@ localStorage.setItem('timerRunning', 'false');
         ? null
         : lastActive.toISOString().replace('T', ' ').substring(0, 19);
 
+    // A snapshot at "cycle 4, break over, 00:00" is a set that completed naturally while the final
+    // "Pawsome Job!" modal was open (snapshots written by older versions). Credit the Pomodoro and
+    // retire the snapshot instead of letting the timer resume it past cycle 4.
+    // (A skipped final break keeps its remaining time, so it never matches.)
+    const setFinished = Number(saved.cycleCount) >= 4 && saved.workingTime === false && Number(saved.remainingTime) <= 0;
+
     window.mainAPI.savesession({
         cat_type: `${saved.catType}_cat`,
         uuid: String(saved.sessionUuid),
@@ -45,9 +51,11 @@ localStorage.setItem('timerRunning', 'false');
         total_break_seconds: breakSeconds,
         total_work: Math.max(0, Math.floor(Number(saved.workCount) || 0)),
         total_break: Math.max(0, Math.floor(Number(saved.breakCount) || 0)),
-        total_pomodoro: 0, // MAX() in the upsert keeps any pomodoro already recorded for this uuid
+        total_pomodoro: setFinished ? 1 : 0, // MAX() in the upsert keeps any pomodoro already recorded for this uuid
         date_completed: dateCompleted
     });
+
+    if (setFinished) localStorage.removeItem('pawseDurableState');
 })();
 
 if (localStorage.getItem('alwaysOnTop') === 'true') {

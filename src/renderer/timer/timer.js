@@ -69,6 +69,11 @@ let alarmTimeoutId = null;
 let pendingModal = null;
 let preSkipState = null;
 let nextPhaseState = null;
+// True once all 4 cycles complete naturally. The result is saved at that moment (not when the user
+// clicks "Return to Menu"), and the durable snapshot stops: a finished set must never be resumed.
+// Before: a crash while the final modal was open restored the set at 00:00, pushed cycleCount past 4,
+// and the completed Pomodoro was never credited.
+let setFinished = false;
 let sessionDate = new Date();
 let targetEndTime = null;
 let lastTickTime = null;
@@ -144,6 +149,7 @@ if (savedStateStr) {
 
 // Continuously save state (Fault Tolerance)
 setInterval(() => {
+    if (setFinished) return; // Finished set: already saved, nothing to resume
     let durableRemaining = remainingTime;
     let durableWorking = workingTime;
     if (nextPhaseState && remainingTime <= 0) {
@@ -853,6 +859,15 @@ function handleSessionComplete(isManualSkip = false) {
 
         if (cycleCount === 4) {
             nextPhaseState = null;
+
+            if (!isManualSkip) {
+                // Natural completion: credit the Pomodoro now and retire the crash snapshot, so a crash
+                // while this modal is open loses nothing. The button's save below repeats this harmlessly
+                // (the upsert keeps MAX(total_pomodoro)). Skipping the final break earns no credit.
+                flushSessionData(true);
+                setFinished = true;
+                localStorage.removeItem('pawseDurableState');
+            }
 
             const title = isManualSkip ? "Finish Session?" : "Pawsome Job!";
             const message = isManualSkip
