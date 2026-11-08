@@ -85,7 +85,13 @@ UI changes must fit these exact sizes with no scrollbars or overflow.
 - `package.json` → `build.files` is an **allowlist** (`src/**/*`, `package.json`, excluding `*.db*`). electron-builder does **not** read `.gitignore`. Keep the allowlist; never switch back to "include everything". After build changes, verify with:
   `npx @electron/asar list dist/<platform>-unpacked/resources/app.asar | grep -v node_modules`
 - `sqlite3` is a **native module**: build each OS/arch on that OS (no cross-building from WSL). `.node` binaries must stay in `app.asar.unpacked`.
-- **Versioning:** the latest public release is **v1.1.0**, but `package.json` says `1.0.0`. The next release must be **higher than 1.1.0**, or the auto-updater won't offer it.
+- **Versioning:** the app version lives in `package.json` (and `package-lock.json`). **v1.0.0 is the first official release.** The existing GitHub release **v1.1.0** and the tags **v1.0.0** / **v1.1.0** are earlier test builds. After v1.0.0 ships, every new release must be **higher** than the last published one, or the auto-updater won't offer it. Update the README version badge with each bump.
+- **Publishing a release** (see `docs/PROJECT_LOG.md` D16):
+  1. **First time only:** delete the old test release **v1.1.0** and the tags **v1.1.0** and **v1.0.0** on GitHub. Otherwise installed copies of 1.0.0 would be offered the old 1.1.0 test build as an "update".
+  2. Build **each OS on that OS**: Windows `npm run build:exe`, macOS `npm run build:mac` (both chips in **one** command, so `latest-mac.yml` lists both), Linux `npm run build:linux`. The Store `.appx` goes to the Microsoft Store, not GitHub.
+  3. Create **one** GitHub release for the version and upload **all** files from each `dist/`: installers, `.blockmap` files, and `latest.yml` / `latest-mac.yml` / `latest-linux.yml`. The updater reads these `.yml` files; without them "Check for Updates" fails.
+  4. Publish it as a **normal release** (not a draft or pre-release). The updater ignores drafts and pre-releases.
+- **How update checks work:** electron-builder bakes `app-update.yml` (where to look: this GitHub repo, from the `publish` setting) into the installed app. On "Check for Updates", each OS downloads only its own `latest*.yml` from the newest release and compares versions.
 - Windows Store builds (`process.windowsStore`) are updated by the Store; electron-updater is skipped there.
 
 ---

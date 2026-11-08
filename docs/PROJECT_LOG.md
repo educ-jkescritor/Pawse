@@ -13,13 +13,13 @@ Rules for how to work live in [`AGENTS.md`](../AGENTS.md). This file is status a
 
 ## Part 1 — Current Status
 
-_Last updated: 2026-11-08 (README)_
+_Last updated: 2026-11-09 (release plan)_
 
 **Next up (agreed path to release):**
 1. ~~**N1:** crash during the final "Pawsome Job!" modal loses the Pomodoro~~ ✅ done
 2. ~~**README:** remove overclaims~~ ✅ done
-3. **Version bump** above 1.1.0 (required, or users get no update)
-4. **Per-OS manual checklist (L4)** written into this log → developer tests Windows, macOS, Linux → release, replacing the old v1.1.0 assets
+3. ~~Version bump~~ not needed: **v1.0.0 is the first official release** (D16)
+4. **Per-OS manual checklist (L4)** written into this log → developer tests Windows, macOS, Linux → release v1.0.0 following D16 (delete the old v1.1.0 release and tags first)
 
 After release: R2 icon (needs a designer asset), then the 💤 items below.
 
@@ -30,7 +30,7 @@ Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (
 | ID | Issue (user impact) | Status | Commits / notes |
 | :--- | :--- | :--- | :--- |
 | A1 | Builds packed everything in the project folder (including a local dev DB) into `app.asar` | ✅ | `a1b7d0d`: `build.files` allowlist |
-| A1b | An older public release contained bundled credential/session files | ⏳ | Credentials revoked and RLS verified. **Still to do:** replace the old release assets with a clean build at the next release |
+| A1b | An older public release contained bundled credential/session files | ⏳ | Credentials revoked and RLS verified. **Still to do:** delete the old v1.1.0 release and the v1.1.0 / v1.0.0 tags before publishing v1.0.0 (D16) |
 | A2 | Strict Mode: after sleep/crash the timer was paused with Play disabled (user locked out) | ✅ | `9ea9609`, `117bcbd` |
 | A3 | Crash + picking a different cat (or returning after 12 h) lost unsaved work | ✅ | `6c636dd`: menu salvages the snapshot to the DB |
 | A4a | "Restart & Update" ended a running session without warning | ✅ | `4c76f49`: two-click confirm, red "Restart Anyway" |
@@ -40,11 +40,11 @@ Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (
 | A6 | Linux `.deb`: update check stuck on "Downloading…" forever | ✅ | `61ccd47`: macOS and `.deb` builds show a **Download** button that opens the GitHub release page; Windows `.exe` and AppImage keep in-app updates (D9) |
 | N1 | Crash while the **final** "Pawsome Job!" modal is open → restore pushes `cycleCount` past 4; the completed Pomodoro is never credited | ✅ | `125d970`: the Pomodoro is saved when the set completes naturally (not on "Return to Menu"), and the crash snapshot is retired so a finished set is never resumed. The menu also credits old-style "cycle 4, 00:00" snapshots (D15) |
 | R1 | Windows in-app updates would fail: the installer was named with spaces (`Pawse Setup X.exe`), GitHub's web upload turns spaces into dots, but `latest.yml` points to a dashed name. Confirmed on the published v1.1.0 release | ✅ | `nsis.artifactName = "${productName}-Setup-${version}.${ext}"` (D14) |
-| — | Version must be bumped above the latest public release (1.1.0) before releasing | ❌ | `package.json` says 1.0.0 |
+| — | Release version | ✅ | No bump: the GitHub v1.1.0 release was a test build, so the first official release is **v1.0.0** after the old release and tags are deleted (D16) |
 | R2 | App icon `logo.png` is 370×350 (not square, small). macOS wants ≥ 512×512 (1024×1024 standard); Windows wants square | ❌ | Needs a square 1024×1024 PNG |
 | R3 | Microsoft Store tile images: no `build/appx/` assets, so the Store package may use electron-builder placeholders | ❌ | Check the Store listing |
 | R4 | Intel (x64) macOS build has never been run | ❌ | L4 on an Intel Mac |
-| — | README overclaims ("exact elapsed-time" recovery, cat facts on petting, "lightweight") | ✅ | _(this commit)_: recovery section rewritten to match the code (time frozen, salvage to stats, strict resumes running, finished sets saved at completion, last few seconds may be lost); cat facts → companion dialogue; per-platform update behavior; Strict Mode blocks pausing and skipping; settings size 736; `docs/` folder; per-OS build commands; Node 20+. Still open: version badge (step 3), missing `LICENSE` file (Q8) |
+| — | README overclaims ("exact elapsed-time" recovery, cat facts on petting, "lightweight") | ✅ | `7e39326`: recovery section rewritten to match the code (time frozen, salvage to stats, strict resumes running, finished sets saved at completion, last few seconds may be lost); cat facts → companion dialogue; per-platform update behavior; Strict Mode blocks pausing and skipping; settings size 736; `docs/` folder; per-OS build commands; Node 20+. Version badge stays 1.0.0. Still open: missing `LICENSE` file (Q8) |
 
 ### Fixed along the way
 | ID | Issue | Commit |
@@ -112,6 +112,7 @@ Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (
 | D10 | Restart & Update during a session: first click warns (red "Restart Anyway", one-line message), second click within 6 s restarts | Destructive action needs confirmation; matches industry convention for destructive buttons. Message kept to one line like other Settings descriptions |
 | D11 | Agent docs: `AGENTS.md` is the single source of rules; `CLAUDE.md` / `GEMINI.md` are 1-line pointers; status/history lives here | Every AI tool reads the same rules; rules file stays short because it loads every session |
 | D12 | One fix per commit; agents don't commit unless asked | Reviewable, revertable history |
+| D16 | **First official release is v1.0.0.** Before publishing: delete the GitHub release v1.1.0 and the tags v1.1.0 / v1.0.0 (earlier test builds). Publish **one** release containing every OS's files plus `latest.yml` / `latest-mac.yml` / `latest-linux.yml`, as a normal (non-draft, non-pre-release) release. Steps in `AGENTS.md` §5 | The updater offers the newest published release; a leftover 1.1.0 would be offered to 1.0.0 users as an "update" back to the old test build (with known bugs and bundled private files). Each OS reads only its own `latest*.yml`, so one release serves all three |
 | D15 | A naturally completed set is **saved at completion** (`flushSessionData(true)`), the crash snapshot stops (`setFinished`), and the menu treats a "cycle ≥ 4, break, 00:00" snapshot as finished (credit + remove). Skipping the final break still earns no Pomodoro | A finished set must not be resumable, and the result must not depend on clicking "Return to Menu". Repeat saves are safe (`MAX(total_pomodoro)`) |
 | D14 | Installer file names never contain spaces (`nsis.artifactName`). Release formats stay as-is: Windows `.exe` + Store `.appx`; macOS `.dmg` + `.zip` (arm64 and x64); Linux AppImage + `.deb`. No `.rpm`/Snap/Flatpak until users ask | The updater matches files by exact name, and GitHub's web upload rewrites spaces. The current format set matches common Electron apps; each extra format adds build/test/support cost. A universal macOS `.dmg` (one file for both chips, ~2× size) is an optional later improvement |
 | D13 | **Notifications respect Do Not Disturb; the alarm sound does not.** Windows: re-show only if the toast was visible ≥ 2 s, max 6 times; otherwise leave it in the Action Center (click handler kept). macOS/Linux: a notification closing never stops the alarm; it stops on user action or the 30 s auto-silence | Industry standard: apps don't bypass DND, but timers/alarms the user set still ring (Clock apps). Electron can't query DND, so suppression is inferred from a fast close. Only Windows reports *why* a toast closed; on macOS/Linux an auto-expired notification silenced the alarm after ~5 s |
@@ -187,7 +188,8 @@ Newest first. One line per commit.
 
 | Date | Commit | Change |
 | :--- | :--- | :--- |
-| 2026-11-08 | _(this commit)_ | README: match the app's actual behavior (recovery, dialogue, updates per platform, strict mode, builds per OS) |
+| 2026-11-09 | _(this commit)_ | Release plan: first official release is v1.0.0; GitHub cleanup and upload steps (D16) |
+| 2026-11-08 | `7e39326` | README: match the app's actual behavior (recovery, dialogue, updates per platform, strict mode, builds per OS) |
 | 2026-11-08 | `125d970` | Credit the Pomodoro when the set completes and retire the snapshot; menu credits old finished snapshots (N1) |
 | 2026-11-08 | `01711d2` | Project log: next steps |
 | 2026-11-08 | `61ccd47` | Download button for macOS and `.deb` updates; in-app updates only on Windows `.exe` and AppImage (A6) |
