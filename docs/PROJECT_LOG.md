@@ -13,11 +13,11 @@ Rules for how to work live in [`AGENTS.md`](../AGENTS.md). This file is status a
 
 ## Part 1 — Current Status
 
-_Last updated: 2026-11-08 (N1)_
+_Last updated: 2026-11-08 (README)_
 
 **Next up (agreed path to release):**
 1. ~~**N1:** crash during the final "Pawsome Job!" modal loses the Pomodoro~~ ✅ done
-2. **README:** remove overclaims ("exact" recovery, cat facts, "lightweight")
+2. ~~**README:** remove overclaims~~ ✅ done
 3. **Version bump** above 1.1.0 (required, or users get no update)
 4. **Per-OS manual checklist (L4)** written into this log → developer tests Windows, macOS, Linux → release, replacing the old v1.1.0 assets
 
@@ -38,13 +38,13 @@ Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (
 | A5 | Windows: notification re-shown in a tight loop when Windows closes it immediately (DND / Focus Assist / notifications off) | ✅ | `3fb78d4`: respect DND (stop if closed < 2 s), cap 6 re-shows, handle `failed`. Simulated: 285 → 1 notification (D13) |
 | A5b | macOS/Linux: any notification close (including auto-expiry or DND) stopped the alarm sound after a few seconds | ✅ | Same commit as A5: only a confirmed user dismissal (Windows `userCanceled`) silences the alarm (D13) |
 | A6 | Linux `.deb`: update check stuck on "Downloading…" forever | ✅ | `61ccd47`: macOS and `.deb` builds show a **Download** button that opens the GitHub release page; Windows `.exe` and AppImage keep in-app updates (D9) |
-| N1 | Crash while the **final** "Pawsome Job!" modal is open → restore pushes `cycleCount` past 4; the completed Pomodoro is never credited | ✅ | _(this commit)_: the Pomodoro is saved when the set completes naturally (not on "Return to Menu"), and the crash snapshot is retired so a finished set is never resumed. The menu also credits old-style "cycle 4, 00:00" snapshots (D15) |
+| N1 | Crash while the **final** "Pawsome Job!" modal is open → restore pushes `cycleCount` past 4; the completed Pomodoro is never credited | ✅ | `125d970`: the Pomodoro is saved when the set completes naturally (not on "Return to Menu"), and the crash snapshot is retired so a finished set is never resumed. The menu also credits old-style "cycle 4, 00:00" snapshots (D15) |
 | R1 | Windows in-app updates would fail: the installer was named with spaces (`Pawse Setup X.exe`), GitHub's web upload turns spaces into dots, but `latest.yml` points to a dashed name. Confirmed on the published v1.1.0 release | ✅ | `nsis.artifactName = "${productName}-Setup-${version}.${ext}"` (D14) |
 | — | Version must be bumped above the latest public release (1.1.0) before releasing | ❌ | `package.json` says 1.0.0 |
 | R2 | App icon `logo.png` is 370×350 (not square, small). macOS wants ≥ 512×512 (1024×1024 standard); Windows wants square | ❌ | Needs a square 1024×1024 PNG |
 | R3 | Microsoft Store tile images: no `build/appx/` assets, so the Store package may use electron-builder placeholders | ❌ | Check the Store listing |
 | R4 | Intel (x64) macOS build has never been run | ❌ | L4 on an Intel Mac |
-| — | README overclaims ("exact elapsed-time" recovery, cat facts on petting, "lightweight") | ❌ | Recovery freezes time and can lose the last ~15 s on a hard kill |
+| — | README overclaims ("exact elapsed-time" recovery, cat facts on petting, "lightweight") | ✅ | _(this commit)_: recovery section rewritten to match the code (time frozen, salvage to stats, strict resumes running, finished sets saved at completion, last few seconds may be lost); cat facts → companion dialogue; per-platform update behavior; Strict Mode blocks pausing and skipping; settings size 736; `docs/` folder; per-OS build commands; Node 20+. Still open: version badge (step 3), missing `LICENSE` file (Q8) |
 
 ### Fixed along the way
 | ID | Issue | Commit |
@@ -187,7 +187,8 @@ Newest first. One line per commit.
 
 | Date | Commit | Change |
 | :--- | :--- | :--- |
-| 2026-11-08 | _(this commit)_ | Credit the Pomodoro when the set completes and retire the snapshot; menu credits old finished snapshots (N1) |
+| 2026-11-08 | _(this commit)_ | README: match the app's actual behavior (recovery, dialogue, updates per platform, strict mode, builds per OS) |
+| 2026-11-08 | `125d970` | Credit the Pomodoro when the set completes and retire the snapshot; menu credits old finished snapshots (N1) |
 | 2026-11-08 | `01711d2` | Project log: next steps |
 | 2026-11-08 | `61ccd47` | Download button for macOS and `.deb` updates; in-app updates only on Windows `.exe` and AppImage (A6) |
 | 2026-11-08 | `8814974` | Installer file name without spaces so Windows updates find the file (R1) |

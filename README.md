@@ -33,21 +33,21 @@
 
 **PAWSE** is a companion-driven desktop Pomodoro productivity application engineered to turn focused work into an engaging, habit-forming experience through animated pixel-art feline companions. 
 
-Unlike traditional browser or mobile timers that lose progress upon accidental closure or background suspension, PAWSE is architected with **Local Durable Execution** (crash-resilient continuous state tracking) and **enterprise-grade Electron DevSecOps hardening** (OS-level sandboxing, context isolation, strict Content Security Policy, and SQL injection immunity). Built entirely with lightweight Vanilla web standards and CommonJS, PAWSE ensures near-instant startup, zero runtime bloat, and offline-first reliability.
+Unlike traditional browser or mobile timers that lose progress upon accidental closure or background suspension, PAWSE is architected with **Local Durable Execution** (crash-resilient continuous state tracking) and **Electron security hardening** (OS-level sandboxing, context isolation, strict Content Security Policy, and parameterized SQL). Built with frameworkless Vanilla web standards and CommonJS, PAWSE runs fully offline.
 
 ---
 
 ## 🌟 Key Features
 
 - **🐾 3 Unique Companion Cadences:** Choose between Tux, Ginger, and Void—each tuned with mathematically balanced work/break cycles, bespoke visual themes, and distinct meow sound effects.
-- **🔄 Local Durable Execution:** Continuous sub-second mathematical state synchronization guarantees that if the application or system abruptly closes, reboots, or sleeps, timer state seamlessly recovers with exact elapsed-time deduction.
+- **🔄 Local Durable Execution:** The timer saves its state every second. If the app crashes or the computer shuts down unexpectedly, your unsaved focus time is recovered into your stats, and picking the same companion resumes the session where it stopped (time spent closed is never counted as focus). The timer also pauses safely when the computer sleeps.
 - **🪟 4 Adaptive Window Modes:** Effortlessly switch between Standard, Settings & Analytics, Minimalist Floating Timer, and Companion Desk-Pet widgets via frameless IPC window transforms.
 - **📊 Local Analytics & Lifetime Statistics:** Automatically tracks daily focus streaks, 7-day weekly activity distributions, personal best focus records, total work/break sessions, and companion popularity in a local, zero-leak SQLite database.
 - **🐟 Fish-Treat Gamification:** Complete 4 work sessions to earn fish treats for your feline partner and unlock long rejuvenating breaks.
-- **🐱 Interactive Break Petting & Feline Trivia:** Click to pet your companion during breaks to hear soothing purrs and uncover delightful cat facts.
+- **🐱 Interactive Break Petting & Companion Dialogue:** Click to pet your companion during breaks for a meow and a playful animation. Your companion also chats in speech bubbles that react to how your session went (finishing strong, skipping early, coming back after a long pause).
 - **🎵 Automated Ambient Audio Engine:** Smooth transitions between focused background purring, gentle interval ticking, and alert bells with volume controls.
-- **⚡ In-App Seamless Updates:** Built-in update engine powered by `electron-updater` checking GitHub Releases for one-click download and restart installation.
-- **🔒 Enforced Focus (Strict Mode):** Optional workflow lock preventing session skipping to preserve deep focus momentum.
+- **⚡ Built-In Updates:** Checks GitHub Releases from Settings. On Windows (installer) and Linux (AppImage), updates download and install with one click (**Restart & Update**). On macOS and Linux (`.deb`), a **Download** button opens the latest release page.
+- **🔒 Enforced Focus (Strict Mode):** Optional lock that prevents pausing and skipping once a session starts. If the computer sleeps or the app closes unexpectedly, the strict session resumes automatically, and you can always leave a session from the exit dialog.
 - **🛡️ DevSecOps-Grade Security:** 100% sandboxed Chromium renderer with zero Node.js process exposure, strict Content Security Policy (CSP), and parameterized SQL operations.
 
 ---
@@ -71,11 +71,11 @@ PAWSE dynamically changes shape to suit your working environment. Toggle views u
 ```
 ┌─────────────────────────┐  ┌────────────────────────────────────────────────────────┐
 │      Standard Mode      │  │                   Settings & Dashboard                 │
-│       (310 x 430)       │  │                       (720 x 430)                      │
+│       (310 x 430)       │  │                       (736 x 430)                      │
 │                         │  │                                                        │
 │   🐱 Companion Sprite   │  │   📊 Overall Focus Time & Session Stats                │
 │   ⏱️ Digital Timer Display│  │   🐱 Companion Preferences & Audio Volumes             │
-│   ▶️ Play / Skip / Options │  │   ⚙️ Account & Application Controls                     │
+│   ▶️ Play / Skip / Options │  │   ⚙️ Application Settings & Updates                    │
 └─────────────────────────┘  └────────────────────────────────────────────────────────┘
 
         ┌─────────────────────────┐         ┌─────────────────────────┐
@@ -86,7 +86,7 @@ PAWSE dynamically changes shape to suit your working environment. Toggle views u
 ```
 
 1. **Standard Mode (310 x 430):** The primary view displaying the full companion sprite animation, digital countdown display, fish reward tracker, and controls.
-2. **Settings & Analytics Dashboard (720 x 430):** An independent management dashboard displaying overall work hours, break minutes, completed cycles, audio sliders, and companion picker.
+2. **Settings & Analytics Dashboard (736 x 430):** An independent management dashboard displaying overall work hours, break minutes, completed cycles, audio sliders, and companion picker.
 3. **Timer-Only HUD (240 x 100):** A compact floating widget that tucks neatly into the corner of your workspace for uninterrupted multitasking.
 4. **Cat-Only Desk Pet (240 x 240):** Turns your companion into an animated pixel desk pet to keep you company during study and relaxation.
 
@@ -94,31 +94,33 @@ PAWSE dynamically changes shape to suit your working environment. Toggle views u
 
 ## 🔄 Local Durable Execution
 
-A core engineering highlight of PAWSE is its crash-proof timer architecture. Traditional web-based timers freeze or reset if the tab suspends or the window is closed. PAWSE implements **Local Durable Execution**:
+A core engineering highlight of PAWSE is its crash-resilient timer. Traditional web-based timers reset if the window is closed unexpectedly. PAWSE implements **Local Durable Execution**:
 
 ```mermaid
 flowchart TD
-    A["Active Timer Tick (1s Interval)"] --> B["Capture State Snapshot<br/>(remainingTime, cycleCount, timestamp)"]
-    B --> C["Atomic Commit to localStorage<br/>('pawseDurableState')"]
-    
-    D["System Crash / App Restart / OS Sleep"] --> E["App Cold Boot (timer.js)"]
-    E --> F{"Does 'pawseDurableState'<br/>Exist?"}
-    F -- No --> G["Initialize Fresh Companion Session"]
-    F -- Yes --> H["Compute Delta: Δt = now - snapshot.timestamp"]
-    H --> I{"Was Timer Running?"}
-    I -- No --> J["Resume with Exact Stored Time"]
-    I -- Yes --> K{"Δt >= remainingTime?"}
-    K -- Yes --> L["Auto-Transition to Next Cycle<br/>(Deduct Overrun)"]
-    K -- No --> M["Deduct Elapsed Seconds<br/>(remainingTime - Δt) & Resume Seamlessly"]
+    A["Active Timer Tick (1s Interval)"] --> B["Capture State Snapshot<br/>(remainingTime, cycleCount, focus totals, strict mode)"]
+    B --> C["Write to localStorage<br/>('pawseDurableState')"]
+
+    D["Crash / Force Quit / Power Loss"] --> E["App Restart: Companion Menu (index.js)"]
+    E --> F{"Unsaved snapshot<br/>found?"}
+    F -- No --> G["Normal start"]
+    F -- Yes --> H["Save its focus time to the<br/>SQLite stats (no progress lost)"]
+    H --> I{"Same companion picked<br/>within 12 hours?"}
+    I -- No --> G
+    I -- Yes --> J["Resume at the stored remaining time<br/>(time spent closed is not counted)"]
+    J --> K{"Strict Mode<br/>session?"}
+    K -- No --> L["Resume paused: press Play when ready"]
+    K -- Yes --> M["Resume running, still strict"]
 ```
 
-### The Recovery Algorithm
-1. Every second, `src/renderer/timer/timer.js` writes the current companion mode, cycle state, remaining seconds, and high-resolution UNIX `timestamp` to `localStorage`.
-2. Upon startup, `timer.js` evaluates whether an active session snapshot exists.
-3. If detected, it calculates offline elapsed time:
-   $$\Delta t = \lfloor t_{\text{current}} - t_{\text{snapshot}} \rfloor$$
-4. If $\Delta t < t_{\text{remaining}}$, the clock automatically syncs forward to the exact second without user intervention.
-5. If $\Delta t \ge t_{\text{remaining}}$, PAWSE triggers cycle transition logic, awards session completion, and begins the next appropriate interval cleanly.
+### The Recovery Rules
+1. Every second, `src/renderer/timer/timer.js` saves the companion, cycle, remaining time, focus totals, and Strict Mode state to `localStorage`.
+2. On restart, the companion menu (`index.js`) first saves any unsaved focus time from that snapshot to the local database, so your stats and streaks keep it even if you pick a different companion.
+3. Picking the **same** companion within 12 hours resumes the session at the time it stopped. Time while the app was closed is **not** counted as focus, so the countdown continues exactly where you left it.
+4. A completed set (all 4 cycles) is saved the moment it finishes, so it's never lost and never resumed.
+5. The timer uses a monotonic clock, so changing the system clock can't speed it up or slow it down. When the computer sleeps, the timer pauses (Strict Mode resumes it automatically on wake).
+
+> **Note:** after a hard crash, the last few seconds before the crash may not be recovered.
 
 ---
 
@@ -159,7 +161,7 @@ flowchart TD
 
 ```
 pawse/
-├── documentation/            # Project reports and design documentation
+├── docs/                     # Project report and the project log (status, decisions, test results)
 ├── src/
 │   ├── assets/               # Pixel-art sprites, avatars, icons, fonts, and sound effects
 │   │   ├── fonts/            # Inter & Pixelify Sans TrueType fonts
@@ -181,13 +183,20 @@ pawse/
 │       ├── settings.js       # Analytics aggregation, audio volume engine, theme updates
 │       ├── titlebar.js       # Frameless custom titlebar window controls & IPC dispatch
 │       └── timer/            # Core Pomodoro execution environment
+│           ├── dialogueData.js   # Companion speech-bubble lines
+│           ├── dialogueEngine.js # Picks what the companion says based on your session
 │           ├── timer.css     # Timer-specific HUD and widget styles
 │           ├── timer.html    # Timer view markup
 │           └── timer.js      # Pomodoro state machine & local durable execution logic
+├── tests/                    # Jest unit and integration tests
+├── AGENTS.md                 # Guidelines for AI coding assistants (CLAUDE.md / GEMINI.md point here)
 ├── package.json              # Dependencies, build metadata, and npm scripts
-├── pawse.db                  # Local SQLite database (development mode)
 ├── README.md                 # Project documentation
 └── start.js                  # Clean environment bootstrapper for Electron development
+
+# pawse.db (your local SQLite database) is created automatically on first run:
+# in the project folder during development, and in the OS user-data folder when installed.
+# It is never committed or packaged.
 ```
 
 ---
@@ -209,7 +218,7 @@ PAWSE enforces a zero-trust, defence-in-depth architecture across all Electron c
 
 ## 💾 Database Schema & Migration Readiness
 
-PAWSE uses a local SQLite3 database (`pawse.db`) created automatically in the user data directory. To ensure 100% forward-compatibility with future releases (such as cloud synchronization via Supabase), the database incorporates an **automated zero-downtime migration engine**:
+PAWSE uses a local SQLite3 database (`pawse.db`) created automatically in the user data directory. To stay compatible with future releases (such as optional cloud synchronization), the database **migrates itself automatically** on startup:
 
 ```sql
 CREATE TABLE IF NOT EXISTS session (
@@ -221,26 +230,26 @@ CREATE TABLE IF NOT EXISTS session (
   total_work INTEGER,
   total_break INTEGER,
   total_pomodoro INTEGER,
-  date_completed TEXT,
+  date_completed DATETIME DEFAULT CURRENT_TIMESTAMP,
   is_synced INTEGER DEFAULT 0,
   uuid TEXT UNIQUE
 );
 ```
 
 - **Cloud Isolation:** In guest mode, `email` defaults to `'guest'` and sync flags remain strictly local.
-- **Deduplication:** Every completed session is stamped with a cryptographically secure UUID (`crypto.randomUUID()`) to prevent duplicate records during migrations.
+- **Deduplication:** Every session is stamped with a cryptographically secure UUID (`crypto.randomUUID()`), so saving the same session again updates one row instead of creating duplicates.
 - **Self-Healing Schema:** On boot, `database.js` queries table `PRAGMA table_info(session)` and automatically executes `ALTER TABLE` to backfill any missing columns and populate UUIDs for legacy rows.
 
 ---
 
 ## 🛠 Technology Stack
 
-- **Runtime & Desktop Framework:** [Electron](https://www.electronjs.org/) (v42.4.0)
+- **Runtime & Desktop Framework:** [Electron](https://www.electronjs.org/) (v42)
 - **Engine / Backend:** [Node.js](https://nodejs.org/) (CommonJS module architecture)
-- **Local Persistence:** [SQLite3](https://www.sqlite.org/) (v6.0.1)
-- **Frontend Architecture:** Pure Vanilla HTML5, CSS3, JavaScript (No heavy frameworks; zero bundle overhead)
+- **Local Persistence:** [SQLite3](https://www.sqlite.org/) (`sqlite3` v6)
+- **Frontend Architecture:** Pure Vanilla HTML5, CSS3, JavaScript (no frameworks or bundlers)
 - **Typography:** Pixelify Sans (digital displays, headers) & Inter (UI typography, dashboards)
-- **Packaging & Distribution:** [electron-builder](https://www.electron.build/) (NSIS installer for Windows)
+- **Packaging & Distribution:** [electron-builder](https://www.electron.build/): Windows installer (`.exe`) and Microsoft Store package, macOS `.dmg` (Apple Silicon and Intel), Linux AppImage and `.deb`
 
 ---
 
@@ -248,7 +257,7 @@ CREATE TABLE IF NOT EXISTS session (
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (Version 16.x, 18.x, or 20.x recommended)
+- [Node.js](https://nodejs.org/) (Version 20 LTS or newer)
 - [npm](https://www.npmjs.com/) (bundled with Node.js)
 - [Git](https://git-scm.com/)
 
@@ -270,15 +279,18 @@ CREATE TABLE IF NOT EXISTS session (
    npm start
    ```
 
-### Building the Distributable (Windows NSIS)
+### Building the Distributables
 
-To package PAWSE into a standalone Windows installer executable (`.exe`):
+Build each platform **on that operating system** (PAWSE uses a native SQLite module, so cross-building from another OS produces broken packages):
 
-```bash
-npm run build
-```
+| Platform | Command | Output |
+| :--- | :--- | :--- |
+| Windows | `npm run build:exe` | Installer (`.exe`) |
+| Windows (Microsoft Store) | `npm run build:store` | `.appx` package |
+| macOS | `npm run build:mac` | `.dmg` and `.zip` for Apple Silicon and Intel |
+| Linux | `npm run build:linux` | AppImage and `.deb` |
 
-The compiled installer and unpackaged binaries will be located inside the `dist/` directory.
+The compiled packages are placed in the `dist/` directory.
 
 ---
 
