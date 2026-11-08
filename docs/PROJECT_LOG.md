@@ -13,7 +13,7 @@ Rules for how to work live in [`AGENTS.md`](../AGENTS.md). This file is status a
 
 ## Part 1 — Current Status
 
-_Last updated: 2026-11-09 (release checklist)_
+_Last updated: 2026-11-09 (red button restored)_
 
 **Next up (agreed path to release):**
 1. ~~**N1:** crash during the final "Pawsome Job!" modal loses the Pomodoro~~ ✅ done
@@ -33,7 +33,7 @@ Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (
 | A1b | An older public release contained bundled credential/session files | ⏳ | Credentials revoked and RLS verified. **Still to do:** delete the old v1.1.0 release and the v1.1.0 / v1.0.0 tags before publishing v1.0.0 (D16) |
 | A2 | Strict Mode: after sleep/crash the timer was paused with Play disabled (user locked out) | ✅ | `9ea9609`, `117bcbd` |
 | A3 | Crash + picking a different cat (or returning after 12 h) lost unsaved work | ✅ | `6c636dd`: menu salvages the snapshot to the DB |
-| A4a | "Restart & Update" ended a running session without warning | ✅ | `4c76f49`: two-click confirm, red "Restart Anyway" |
+| A4a | "Restart & Update" ended a running session without warning | ✅ | `4c76f49`: two-click confirm, red "Restart Anyway". The red styles were accidentally deleted by `06d15c2` (sidebar update) and restored in _(this commit)_ |
 | A4b | Quitting while a save was in flight crashed the app on exit (abort, code 134) | ✅ | `4412524`: wait for saves, close DB, 4 s limit |
 | A5 | Windows: notification re-shown in a tight loop when Windows closes it immediately (DND / Focus Assist / notifications off) | ✅ | `3fb78d4`: respect DND (stop if closed < 2 s), cap 6 re-shows, handle `failed`. Simulated: 285 → 1 notification (D13) |
 | A5b | macOS/Linux: any notification close (including auto-expiry or DND) stopped the alarm sound after a few seconds | ✅ | Same commit as A5: only a confirmed user dismissal (Windows `userCanceled`) silences the alarm (D13) |
@@ -139,6 +139,8 @@ Levels: L0 parse · L1 Jest · L2 sandbox dev · L3 sandbox packaged · L4 manua
 | 2026-11-08 | Final-modal crash (N1), before → after. Sandbox jumps to "3 cycles done, final break ending" and completes naturally; SIGKILL with the final modal open, then reopen | L2 (no debugger) | Before: `pomodoro 0`. After: **`pomodoro 1`** in normal and strict (3/3) · normal finish credits once, normal + strict · skip final break: work saved, `pomodoro 0` (unchanged) · old-style snapshot credited by the menu and removed · separate probe: snapshot removal at completion reached disk; after crash + reopen, no snapshot (fresh start) | The N1 harness reopened onto an early stale snapshot in every run; dedicated probes did not reproduce this, so it is treated as a harness artifact (cause not found). It exposed N8. Not verified: L3/L4 |
 | 2026-11-08 | localStorage durability (N3), counter written every second, SIGKILL at 60 s | L2 | Menu page 58/60 survived; timer page 56/59 (snapshot) and 57/60 (probe), also across set completion | Other OSes; power loss |
 | 2026-11-08 | Update flow per build (A6), dev update simulator in the sandbox, platform faked only for the update decision, "open URL" stubbed | L2 (simulated builds) | `.deb`: Check → "PAWSE v1.1.0 is available." [Download] → release page opened, message "Download page opened in your browser." · macOS: same · AppImage: Restart & Update (unchanged) · Windows: Restart & Update (unchanged) | Real GitHub release check on a packaged `.dmg` and `.deb` (L3/L4) |
+| 2026-11-09 | Red "Restart Anyway" after restoring the deleted styles (regression from `06d15c2`). Sandbox with simulated AppImage so the dev updater shows Restart & Update; session running | L2 | Before click: blue `rgb(53, 166, 241)` · first click: **red `rgb(229, 72, 77)`**, "Restarting will end your current focus session." · after 6.5 s: back to blue | Windows dev/installer visual check (L4) |
+| 2026-11-09 | Windows installer build from PowerShell (`npm run build:exe`, electron-builder 25.1.8) | L3 on Windows (build only) | `Pawse-Setup-1.0.0.exe`, `.blockmap`, and `latest.yml` (url matches the file name, R1 confirmed); `app.asar` contains only `package.json` and `src/` (A1 confirmed). Needed Windows Developer Mode for the winCodeSign symlink step | Installing and running it (checklist, R5) |
 | 2026-11-08 | Installer file name (R1). Published v1.1.0: asset `Pawse.Setup.1.1.0.exe` vs `latest.yml` url `Pawse-Setup-1.1.0.exe` (mismatch). After fix: Windows NSIS build from Linux produced `Pawse-Setup-1.0.0.exe` | L3 (partial: the build stopped at a Wine step, so no `latest.yml` or finished installer) | File name now has no spaces | Full Windows build and an actual update from GitHub (L4, build on Windows) |
 | 2026-11-08 | Clean shutdown (A4b), after fix | L2 (no debugger) | DB busy 1.5 s: 4/4 clean, saved · normal close 3/3 clean ~10 ms · quit with window open 3/3 clean · DB locked 5 s: 2/2 clean exit ~3 s (save impossible, expected) | **L4: Restart & Update on Windows/macOS with the packaged installer** |
 
@@ -167,6 +169,9 @@ Levels: L0 parse · L1 Jest · L2 sandbox dev · L3 sandbox packaged · L4 manua
 - **electron-builder ignores `.gitignore`.** Removing a file in a later commit doesn't remove it from git history or from already-published installers.
 - **Mixed line endings:** `src/renderer/index.js` and `src/renderer/index.css` mix CRLF/LF (`core.autocrlf=true`). Editing tools may normalize the whole file; check `git diff --stat` for whole-file churn.
 - **Version drift:** `package.json` lagged behind the published release.
+- **Editing from an older copy of a file silently deletes newer changes.** `06d15c2` (sidebar styling) removed the red "Restart Anyway" styles added in `4c76f49`. Before committing, read the **full** `git diff` (not just the lines you meant to change) and look for unexpected deletions.
+- **The terminal decides the platform, not the folder.** Building in WSL inside `/mnt/c/...` is a Linux build (needs Wine for Windows targets). Build Windows installers from PowerShell/Command Prompt. The Windows folder is a **git worktree** of the WSL repo (its `.git` points to a Linux path), so run git from WSL and builds from PowerShell (`powershell.exe -Command "..."` works from bash).
+- **Windows builds with electron-builder 25 need symlink rights** to extract the winCodeSign toolkit ("A required privilege is not held by the client"). Turn on **Settings → System → For developers → Developer Mode** (once), or run the first build as Administrator.
 - **Never build Windows (or any other OS) installers from Linux/WSL in the repo folder.** `electron-builder --win` rebuilt `node_modules/sqlite3` as a Windows DLL, and `npm start` on Linux then failed with "invalid ELF header". Restore with `npx electron-builder install-app-deps`. If a cross-build is ever needed for a quick check, expect this and restore afterwards.
 - **Faking `process.platform` before Electron starts makes Electron itself hang** (its internals switch to that OS's code). In tests, fake the platform only in the specific lines being tested.
 
@@ -189,7 +194,8 @@ Newest first. One line per commit.
 
 | Date | Commit | Change |
 | :--- | :--- | :--- |
-| 2026-11-09 | _(this commit)_ | Add `docs/RELEASE_CHECKLIST.md` (manual tests for Windows, macOS, Linux); testing deferred and tracked as R5 |
+| 2026-11-09 | _(this commit)_ | Restore the red "Restart Anyway" styles deleted by `06d15c2` (A4a regression) |
+| 2026-11-09 | `872a8f8` | Add `docs/RELEASE_CHECKLIST.md` (manual tests for Windows, macOS, Linux); testing deferred and tracked as R5 |
 | 2026-11-09 | `83dbeeb` | Release plan: first official release is v1.0.0; GitHub cleanup and upload steps (D16) |
 | 2026-11-08 | `7e39326` | README: match the app's actual behavior (recovery, dialogue, updates per platform, strict mode, builds per OS) |
 | 2026-11-08 | `125d970` | Credit the Pomodoro when the set completes and retire the snapshot; menu credits old finished snapshots (N1) |

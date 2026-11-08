@@ -1616,6 +1616,25 @@ p {
     color: #FFFFFF;
 }
 
+/* Restart Anyway (Destructive: restarting ends the running focus session) */
+#update-btn.btn-danger {
+    border: 1px solid var(--sys-red-solid);
+    background-color: var(--sys-red-solid);
+    color: #FFFFFF;
+}
+
+#update-btn.btn-danger:hover {
+    border-color: var(--sys-red-hover);
+    background-color: var(--sys-red-hover);
+    color: #FFFFFF;
+}
+
+#update-btn.btn-danger:active {
+    border-color: var(--sys-red-active);
+    background-color: var(--sys-red-active);
+    color: #FFFFFF;
+}
+
 /* Checking & Downloading */
 #update-btn.btn-loading {
     border-color: #9E9E9E;
