@@ -1151,3 +1151,64 @@ window.addEventListener('keydown', (e) => {
         }
     }
 });
+
+// Interface click sounds for the settings window.
+const settingsClickAudios = {
+    titlebar: new Audio('../assets/sounds/click-titlebar-button.mp3'),
+    button: new Audio('../assets/sounds/click-button.mp3')
+};
+
+Object.values(settingsClickAudios).forEach(audio => {
+    audio.preload = 'auto';
+    audio.volume = 0.3;
+
+    // Report missing files or unsupported audio formats.
+    audio.addEventListener('error', () => {
+        console.error('Unable to load click sound:', audio.src, audio.error);
+    });
+});
+
+document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return;
+
+    // Read the saved Interface Sounds preference on every click.
+    if (localStorage.getItem('clickSound') === 'false') return;
+
+    const button = event.target.closest('button');
+
+    // In collapsed mode, the logo acts as the dock button.
+    const collapsedDock = event.target.closest(
+        '.side-bar.collapsed .brand-logo'
+    );
+
+    if (!button && !collapsedDock) return;
+
+    if (
+        button &&
+        (
+            button.matches(':disabled') ||
+            button.getAttribute('aria-disabled') === 'true'
+        )
+    ) {
+        return;
+    }
+
+    const isTitlebar = Boolean(
+        collapsedDock ||
+        button?.closest(
+            '.main-window-controls, .settings-window-controls'
+        ) ||
+        button?.matches(
+            '#dock-btn, .sidebar-dock-btn, .sidebar-menu-btn'
+        )
+    );
+
+    const audio = isTitlebar
+        ? settingsClickAudios.titlebar
+        : settingsClickAudios.button;
+
+    audio.currentTime = 0;
+    audio.play().catch(error => {
+        console.warn('Click sound could not play:', error);
+    });
+}, { capture: true });

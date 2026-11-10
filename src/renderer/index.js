@@ -251,3 +251,44 @@ window.addEventListener('keydown', (e) => {
         confirmButton.click();
     }
 });
+
+// Home-screen button sounds.
+const homeClickAudios = {
+    titlebar: new Audio('../assets/sounds/click-titlebar-button.mp3'),
+    button: new Audio('../assets/sounds/click-button.mp3')
+};
+
+Object.values(homeClickAudios).forEach(audio => {
+    audio.preload = 'auto';
+    audio.volume = 0.3;
+
+    audio.addEventListener('error', () => {
+        console.error('Unable to load click sound:', audio.src, audio.error);
+    });
+});
+
+document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return;
+
+    // Follow the Interface Sounds toggle in Settings.
+    if (localStorage.getItem('clickSound') === 'false') return;
+
+    const button = event.target.closest('button');
+
+    if (
+        !button ||
+        button.matches(':disabled') ||
+        button.getAttribute('aria-disabled') === 'true'
+    ) {
+        return;
+    }
+
+    const audio = button.closest('.main-window-controls')
+        ? homeClickAudios.titlebar
+        : homeClickAudios.button;
+
+    audio.currentTime = 0;
+    audio.play().catch(error => {
+        console.warn('Click sound could not play:', error);
+    });
+}, { capture: true });

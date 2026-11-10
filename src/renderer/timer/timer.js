@@ -221,6 +221,50 @@ const meowAudios = {
 };
 Object.values(meowAudios).forEach(audio => audio.volume = 0.3); // Lowered click/meow volume
 
+// Button click sounds
+const titlebarClickAudio = new Audio(
+    '../../assets/sounds/click-titlebar-button.mp3'
+);
+
+const buttonClickAudio = new Audio(
+    '../../assets/sounds/click-button.mp3'
+);
+
+[titlebarClickAudio, buttonClickAudio].forEach(audio => {
+    audio.preload = 'auto';
+    audio.volume = 0.3; // Button sound volume: 0 to 1
+});
+
+// One listener handles existing and dynamically added buttons.
+document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return;
+
+    const button = event.target.closest('button');
+
+    if (
+        !button ||
+        button.matches(':disabled') ||
+        button.getAttribute('aria-disabled') === 'true'
+    ) {
+        return;
+    }
+
+    // Follow the Interface Sounds setting and timer's master mute.
+    if (
+        localStorage.getItem('clickSound') === 'false' ||
+        !soundEnabled
+    ) {
+        return;
+    }
+
+    const audio = button.closest('.main-window-controls')
+        ? titlebarClickAudio
+        : buttonClickAudio;
+
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+}, { capture: true });
+
 function updateAudioSettings() {
     const soundIcon = document.getElementById("sound-icon");
     if (soundIcon) {
@@ -946,6 +990,9 @@ soundButton.addEventListener("click", () => {
     ambientAudio.muted = !soundEnabled;
     purrAudio.muted = !soundEnabled;
     alarmAudio.muted = !soundEnabled;
+    titlebarClickAudio.muted = !soundEnabled;
+    buttonClickAudio.muted = !soundEnabled;
+    
     for (let key in meowAudios) {
         meowAudios[key].muted = !soundEnabled;
     }
