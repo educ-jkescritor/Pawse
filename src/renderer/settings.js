@@ -1162,53 +1162,115 @@ Object.values(settingsClickAudios).forEach(audio => {
     audio.preload = 'auto';
     audio.volume = 0.3;
 
-    // Report missing files or unsupported audio formats.
     audio.addEventListener('error', () => {
         console.error('Unable to load click sound:', audio.src, audio.error);
     });
 });
 
+function playSettingsClick(type = 'button') {
+    // Only the Interface Sounds setting controls these sounds.
+    if (localStorage.getItem('clickSound') === 'false') return;
+
+    const audio = settingsClickAudios[type];
+    audio.currentTime = 0;
+
+    audio.play().catch(error => {
+        console.warn('Click sound could not play:', error);
+    });
+}
+
+// Buttons, dashboard refresh, and the collapsed dock.
 document.addEventListener('click', (event) => {
     if (!(event.target instanceof Element)) return;
 
-    // Read the saved Interface Sounds preference on every click.
-    if (localStorage.getItem('clickSound') === 'false') return;
-
-    const button = event.target.closest('button');
-
-    // In collapsed mode, the logo acts as the dock button.
-    const collapsedDock = event.target.closest(
-        '.side-bar.collapsed .brand-logo'
+    const control = event.target.closest(
+        'button, #refresh-btn, .side-bar.collapsed .brand-logo, .calendar-week'
     );
 
-    if (!button && !collapsedDock) return;
-
     if (
-        button &&
-        (
-            button.matches(':disabled') ||
-            button.getAttribute('aria-disabled') === 'true'
-        )
+        !control ||
+        control.matches(':disabled, .future-week') ||
+        control.getAttribute('aria-disabled') === 'true'
     ) {
         return;
     }
 
     const isTitlebar = Boolean(
-        collapsedDock ||
-        button?.closest(
-            '.main-window-controls, .settings-window-controls'
-        ) ||
-        button?.matches(
-            '#dock-btn, .sidebar-dock-btn, .sidebar-menu-btn'
+        control.closest('.main-window-controls, .settings-window-controls') ||
+        control.matches(
+            '#dock-btn, .sidebar-dock-btn, .sidebar-menu-btn, ' +
+            '.side-bar.collapsed .brand-logo'
         )
     );
 
-    const audio = isTitlebar
-        ? settingsClickAudios.titlebar
-        : settingsClickAudios.button;
+    playSettingsClick(isTitlebar ? 'titlebar' : 'button');
+}, { capture: true });
 
-    audio.currentTime = 0;
-    audio.play().catch(error => {
-        console.warn('Click sound could not play:', error);
-    });
+// Toggles: play once when their checked state changes.
+// Using "change" avoids duplicate sounds from clicking the label.
+document.addEventListener('change', (event) => {
+    const input = event.target;
+
+    if (
+        !(input instanceof HTMLInputElement) ||
+        !input.matches('input[type="checkbox"]') ||
+        input.disabled
+    ) {
+        return;
+    }
+
+    // Apply this toggle's new state before deciding whether to play.
+    if (input.classList.contains('click-toggle')) {
+        localStorage.setItem('clickSound', String(input.checked));
+    }
+
+    playSettingsClick();
+});
+
+// Sliders: one sound when pressing the track or thumb,
+// rather than repeated sounds throughout a drag.
+document.addEventListener('pointerdown', (event) => {
+    const input = event.target;
+
+    if (
+        event.button !== 0 ||
+        !(input instanceof HTMLInputElement) ||
+        !input.matches('input[type="range"]') ||
+        input.disabled
+    ) {
+        return;
+    }
+
+    playSettingsClick();
+});
+
+// Keyboard feedback for sliders and the dashboard refresh icon.
+document.addEventListener('keydown', (event) => {
+    if (event.repeat || !(event.target instanceof Element)) return;
+
+    const control = event.target;
+
+    if (
+        control.matches(':disabled') ||
+        control.getAttribute('aria-disabled') === 'true'
+    ) {
+        return;
+    }
+
+    const sliderKeys = [
+        'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+        'Home', 'End', 'PageUp', 'PageDown'
+    ];
+
+    if (
+        control.matches('input[type="range"]') &&
+        sliderKeys.includes(event.key)
+    ) {
+        playSettingsClick();
+    } else if (
+        control.matches('#refresh-btn') &&
+        (event.key === 'Enter' || event.key === ' ')
+    ) {
+        playSettingsClick();
+    }
 }, { capture: true });
