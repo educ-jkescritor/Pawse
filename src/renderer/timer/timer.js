@@ -250,10 +250,7 @@ document.addEventListener('click', (event) => {
     }
 
     // Follow the Interface Sounds setting and timer's master mute.
-    if (
-        localStorage.getItem('clickSound') === 'false' ||
-        !soundEnabled
-    ) {
+    if (localStorage.getItem('clickSound') === 'false') {
         return;
     }
 
@@ -990,8 +987,6 @@ soundButton.addEventListener("click", () => {
     ambientAudio.muted = !soundEnabled;
     purrAudio.muted = !soundEnabled;
     alarmAudio.muted = !soundEnabled;
-    titlebarClickAudio.muted = !soundEnabled;
-    buttonClickAudio.muted = !soundEnabled;
     
     for (let key in meowAudios) {
         meowAudios[key].muted = !soundEnabled;
