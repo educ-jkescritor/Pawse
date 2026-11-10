@@ -215,9 +215,9 @@ alarmAudio.volume = 0.2; // Lowered default volume to prevent ear strain
 
 // Meow sounds (often acts as button click feedback)
 const meowAudios = {
-    'orange_cat': new Audio('../../assets/sounds/ginger-meow.mp3'),
+    'orange_cat': new Audio('../../assets/sounds/ginger-break-new.mp3'),
     'tuxedo_cat': new Audio('../../assets/sounds/tux-meow.mp3'),
-    'black_cat': new Audio('../../assets/sounds/void-meow.mp3')
+    'black_cat': new Audio('../../assets/sounds/void-break-new.mp3')
 };
 Object.values(meowAudios).forEach(audio => audio.volume = 0.3); // Lowered click/meow volume
 
