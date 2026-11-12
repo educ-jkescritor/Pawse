@@ -403,6 +403,11 @@ ipcMain.on('settings-window', (event) => {
   }
 });
 
+// SAVE RULE: a session's totals only ever grow (they reset only at midnight, which starts a new uuid).
+// So on conflict the upsert keeps the LARGER value for every total. A crash backup can be older than
+// what is already saved (Chromium writes localStorage to disk only about once a minute); replacing
+// would roll the stats back (seen: 3600 s -> 1 s). COALESCE guards legacy NULLs, since SQLite's
+// MAX() returns NULL if any argument is NULL.
 // Saves still waiting for SQLite to confirm. Shutdown waits for these (see 'will-quit' below).
 const pendingWrites = new Set();
 
@@ -428,11 +433,11 @@ ipcMain.on('save-session', (event, data) => {
     ?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), 0
   )
   ON CONFLICT(uuid) DO UPDATE SET
-    total_work_seconds = excluded.total_work_seconds,
-    total_break_seconds = excluded.total_break_seconds,
-    total_work = excluded.total_work,
-    total_break = excluded.total_break,
-    total_pomodoro = MAX(session.total_pomodoro, excluded.total_pomodoro),
+    total_work_seconds = MAX(COALESCE(session.total_work_seconds, 0), COALESCE(excluded.total_work_seconds, 0)),
+    total_break_seconds = MAX(COALESCE(session.total_break_seconds, 0), COALESCE(excluded.total_break_seconds, 0)),
+    total_work = MAX(COALESCE(session.total_work, 0), COALESCE(excluded.total_work, 0)),
+    total_break = MAX(COALESCE(session.total_break, 0), COALESCE(excluded.total_break, 0)),
+    total_pomodoro = MAX(COALESCE(session.total_pomodoro, 0), COALESCE(excluded.total_pomodoro, 0)),
     date_completed = COALESCE(excluded.date_completed, session.date_completed, CURRENT_TIMESTAMP),
     is_synced = 0`;
 
