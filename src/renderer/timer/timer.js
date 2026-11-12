@@ -888,14 +888,24 @@ function handleSessionComplete(isManualSkip = false) {
                 !isManualSkip
             );
         }
-    } else {     
+    } else {
         if (!isManualSkip) {
             breakCount++;
         }
-        cycleCount++;
-        updateSessionCounter();
+        // The break's cycle counts when the break is really over:
+        // - Natural ending: the timer ran out, so count it now (as before).
+        // - Manual skip: the modal only ASKS ("End Break Early?" / "Finish Session?"), so nothing changes
+        //   until the user confirms. Counting it on the Skip click left the crash backup in a mixed state
+        //   (still in the break, cycle already counted); a crash while the modal was open then resumed one
+        //   cycle ahead, and the long break could end at "5 cycles" (N7). Cancel now has nothing to undo.
+        const completedCycles = cycleCount + 1;
+        const commitCompletedCycle = () => {
+            cycleCount = completedCycles;
+            updateSessionCounter();
+        };
+        if (!isManualSkip) commitCompletedCycle();
 
-        if (cycleCount === 4) {
+        if (completedCycles === 4) {
             nextPhaseState = null;
 
             if (!isManualSkip) {
@@ -910,13 +920,14 @@ function handleSessionComplete(isManualSkip = false) {
             const title = isManualSkip ? "Finish Session?" : "Pawsome Job!";
             const message = isManualSkip
                 ? "Ready to wrap up this session early? Confirm to save your time and head back."
-                : `You successfully finished ${cycleCount} cycles! Your progress is saved. Take a well-deserved rest!`;
+                : `You successfully finished ${completedCycles} cycles! Your progress is saved. Take a well-deserved rest!`;
 
             showModal(
                 title,
                 message,
                 "Return to Menu",
                 function () {
+                    if (isManualSkip) commitCompletedCycle(); // Confirmed: now the skipped break's cycle counts
                     flushSessionData(!isManualSkip);
                     clearDurableSnapshot();
                     window.location.replace("../index.html");
@@ -929,13 +940,14 @@ function handleSessionComplete(isManualSkip = false) {
             const title = isManualSkip ? "End Break Early?" : "Ready to Focus?";
             const message = isManualSkip
                 ? `Feeling energized already? Take a deep breath and jump right back into the next cycle!`
-                : `You’ve successfully completed ${cycleCount} cycle(s)! Let's keep the strong momentum going.`;
+                : `You’ve successfully completed ${completedCycles} cycle(s)! Let's keep the strong momentum going.`;
 
             showModal(
                 title,
                 message,
                 "Start Work",
                 function () {
+                    if (isManualSkip) commitCompletedCycle(); // Confirmed: now the skipped break's cycle counts
                     flushSessionData(false);
                     workingTime = true;
                     remainingTime = catConfig.workTime;
