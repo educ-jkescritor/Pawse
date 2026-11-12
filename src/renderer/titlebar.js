@@ -1,3 +1,10 @@
+// Clears the session crash backup in both places it is kept (localStorage and the main-process file).
+// Named differently from timer.js's clearDurableSnapshot() because both scripts load on the timer page.
+function clearCrashBackup() {
+    localStorage.removeItem('pawseDurableState');
+    if (window.mainAPI && window.mainAPI.clearDurableState) window.mainAPI.clearDurableState();
+}
+
 let settingsButton = document.getElementById("hub-btn") || document.getElementById("menu-btn");
 if (settingsButton !== null) {
     settingsButton.onclick = function settingsWindow() {
@@ -21,7 +28,7 @@ if (closeButton !== null) {
         }
         
         // Otherwise (Main Menu, Settings), close immediately
-        localStorage.removeItem('pawseDurableState');
+        clearCrashBackup();
         if (window.mainAPI && window.mainAPI.close) {
             window.mainAPI.close();
         } else {
@@ -39,7 +46,7 @@ if (homeButton !== null) {
             exitModal.classList.remove("hidden");
             return;
         }
-        localStorage.removeItem('pawseDurableState');
+        clearCrashBackup();
         if (window.mainAPI && window.mainAPI.resize) {
             window.mainAPI.resize('default');
         }

@@ -8,7 +8,10 @@ if (window.mainAPI && window.mainAPI.resize) {
 localStorage.setItem('timerRunning', 'false');
 
 // --- ORPHANED SESSION SALVAGE (Durable Execution safety net) ---
-// Between phase transitions, in-progress work lives only in localStorage ('pawseDurableState').
+// Between phase transitions, in-progress work lives only in the crash backup: a main-process file
+// (written every second, ~1 s old after a crash) and localStorage ('pawseDurableState', which Chromium
+// writes to disk only about once a minute, or left behind by older versions). Once the file exists it is
+// the authority ({"cleared":true} = no backup); localStorage is used only when no file exists at all.
 // timer.js only uses that snapshot to RESUME the same cat within 12h; picking a different cat
 // overwrites it within 1s, and a stale (>12h) snapshot is deleted. Either way the work was lost.
 // The menu always loads before any timer page, so we persist the snapshot to SQLite here first.
@@ -18,11 +21,23 @@ localStorage.setItem('timerRunning', 'false');
 (function salvageOrphanedSession() {
     if (!window.mainAPI || !window.mainAPI.savesession) return;
 
+    // Read the crash backup (same rule as timer.js's readDurableSnapshot): the file is the authority
+    // once it exists; localStorage only when no file exists (backup left by an older version).
     let saved = null;
+    let fileResult = null;
     try {
-        saved = JSON.parse(localStorage.getItem('pawseDurableState'));
-    } catch (e) {
-        return; // Corrupt snapshot: nothing recoverable
+        fileResult = window.mainAPI.readDurableState ? window.mainAPI.readDurableState() : null;
+    } catch (e) { fileResult = null; }
+    if (fileResult && fileResult.exists) {
+        try {
+            const state = fileResult.json ? JSON.parse(fileResult.json) : null;
+            saved = state && !state.cleared ? state : null;
+        } catch (e) { saved = null; }
+    } else {
+        try {
+            const json = localStorage.getItem('pawseDurableState');
+            saved = json ? JSON.parse(json) : null;
+        } catch (e) { saved = null; } // Corrupt snapshot: nothing recoverable
     }
     if (!saved || typeof saved !== 'object' || !saved.sessionUuid) return;
     if (!['orange', 'tuxedo', 'black'].includes(saved.catType)) return;
@@ -55,7 +70,10 @@ localStorage.setItem('timerRunning', 'false');
         date_completed: dateCompleted
     });
 
-    if (setFinished) localStorage.removeItem('pawseDurableState');
+    if (setFinished) {
+        localStorage.removeItem('pawseDurableState');
+        if (window.mainAPI.clearDurableState) window.mainAPI.clearDurableState();
+    }
 })();
 
 if (localStorage.getItem('alwaysOnTop') === 'true') {

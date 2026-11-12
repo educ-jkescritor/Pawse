@@ -7,6 +7,12 @@ contextBridge.exposeInMainWorld('mainAPI', {
     resize: (mode) => ipcRenderer.send('resize-window', mode),
     close: () => ipcRenderer.send('close-window'),
     savesession: (data) => ipcRenderer.send('save-session', data),
+    // Crash backup file (see 'durable-*' handlers in main.js). read is synchronous: the timer needs
+    // the snapshot before its first line of restore logic runs; the file is small and read once per page.
+    // readDurableState() returns { exists, json }.
+    writeDurableState: (json) => ipcRenderer.send('durable-write', json),
+    readDurableState: () => ipcRenderer.sendSync('durable-read'),
+    clearDurableState: () => ipcRenderer.send('durable-clear'),
     setAlwaysOnTop: (isAlwaysOnTop) => ipcRenderer.send('set-always-on-top', isAlwaysOnTop),
     loadanalytics: (weeksAgo) => ipcRenderer.invoke('load-analytics', weeksAgo),
     restoreWindow: () => ipcRenderer.send('restore-window'),

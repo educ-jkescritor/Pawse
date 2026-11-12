@@ -403,6 +403,68 @@ ipcMain.on('settings-window', (event) => {
   }
 });
 
+// --- CRASH BACKUP FILE (durable session snapshot) ---
+// The timer sends its session snapshot here every second; it is written straight to a file in the
+// user-data folder. Before, the snapshot lived only in localStorage, which Chromium writes to disk
+// only about once a minute, so after a crash the restored session could be up to a minute behind.
+// Writes go to a temp file first and are then renamed over the real file, so a crash in the middle
+// of a write can never leave a half-written (corrupt) snapshot.
+// IPC channels (via preload.js): 'durable-write' (async), 'durable-read' (sync, small file, read once
+// at page load), 'durable-clear' (async).
+// The file is the AUTHORITY once it exists: clearing writes a {"cleared":true} marker instead of
+// deleting it. Otherwise, after "finish set / go Home -> crash within a minute", the page would fall
+// back to the localStorage copy, whose deletion Chromium had not written to disk yet, and resurrect an
+// already-ended session. Pages fall back to localStorage only when no file exists at all (first launch
+// after updating from a version that kept the backup only in localStorage).
+const DURABLE_STATE_FILE = path.join(app.getPath('userData'), 'durable-state.json');
+const DURABLE_STATE_MAX_CHARS = 64 * 1024;
+
+ipcMain.on('durable-write', (event, json) => {
+  if (typeof json !== 'string' || json.length === 0 || json.length > DURABLE_STATE_MAX_CHARS) return;
+  try { JSON.parse(json); } catch (e) { return; } // Only store valid JSON
+  const tmpFile = DURABLE_STATE_FILE + '.tmp';
+  try {
+    fs.writeFileSync(tmpFile, json, 'utf8');
+    fs.renameSync(tmpFile, DURABLE_STATE_FILE);
+  } catch (err) {
+    // Rare (e.g. antivirus briefly locking the file on Windows): fall back to a direct write
+    try { fs.writeFileSync(DURABLE_STATE_FILE, json, 'utf8'); } catch (err2) {
+      console.error('[PAWSE / Durable] Failed to write crash backup:', err2?.message || err2);
+    }
+  }
+});
+
+// Returns { exists, json }: exists=false means no file at all (pages may then fall back to an older
+// version's localStorage backup); json=null with exists=true means the file is unreadable or corrupt.
+ipcMain.on('durable-read', (event) => {
+  let json;
+  try {
+    json = fs.readFileSync(DURABLE_STATE_FILE, 'utf8');
+  } catch (err) {
+    event.returnValue = { exists: false, json: null };
+    return;
+  }
+  try {
+    JSON.parse(json); // Don't hand a corrupt file to the page
+    event.returnValue = { exists: true, json };
+  } catch (err) {
+    event.returnValue = { exists: true, json: null };
+  }
+});
+
+ipcMain.on('durable-clear', () => {
+  const marker = JSON.stringify({ cleared: true, timestamp: Date.now() });
+  const tmpFile = DURABLE_STATE_FILE + '.tmp';
+  try {
+    fs.writeFileSync(tmpFile, marker, 'utf8');
+    fs.renameSync(tmpFile, DURABLE_STATE_FILE);
+  } catch (err) {
+    try { fs.writeFileSync(DURABLE_STATE_FILE, marker, 'utf8'); } catch (err2) {
+      console.error('[PAWSE / Durable] Failed to clear crash backup:', err2?.message || err2);
+    }
+  }
+});
+
 // SAVE RULE: a session's totals only ever grow (they reset only at midnight, which starts a new uuid).
 // So on conflict the upsert keeps the LARGER value for every total. A crash backup can be older than
 // what is already saved (Chromium writes localStorage to disk only about once a minute); replacing

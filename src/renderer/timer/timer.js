@@ -48,7 +48,7 @@ window.addEventListener('beforeunload', () => {
         window.mainAPI.flashFrame(false);
     }
     flushSessionData();
-    localStorage.removeItem('pawseDurableState'); // Clear the durable state on exit to avoid stale data
+    clearDurableSnapshot(); // Clear the durable state on exit to avoid stale data
 });
 
 let remainingTime = catConfig.workTime;
@@ -100,16 +100,54 @@ let restoredStrictMode = false;
 // resumes on its own when the system wakes, so sleep can't be used as a manual pause button.
 let autoPausedBySystem = false;
 
-// --- DURABLE EXECUTION ENGINE (Local Persistence) ---
-const savedStateStr = localStorage.getItem('pawseDurableState');
-if (savedStateStr) {
+// --- CRASH BACKUP STORAGE ---
+// The session snapshot is kept in two places:
+//  1. A file written by the main process every second ('durable-*' IPC in main.js). It reaches disk
+//     right away, so after a crash it is at most ~1 s old.
+//  2. localStorage ('pawseDurableState'), still read by the Settings dashboard for live session time
+//     and possibly left behind by older versions. Chromium writes localStorage to disk only about
+//     once a minute, so after a crash this copy can be up to a minute behind.
+// Reading: once the file exists it is the authority ({"cleared":true} means "no backup"), because a
+// cleared localStorage copy may not have reached disk yet and would resurrect an ended session.
+// Only when no file exists at all (first launch after updating from an older version) is the
+// localStorage copy used. Clearing writes the "cleared" marker and removes the localStorage copy.
+function readDurableSnapshot() {
+    let result = null;
     try {
-        const savedState = JSON.parse(savedStateStr);
+        result = window.mainAPI && window.mainAPI.readDurableState ? window.mainAPI.readDurableState() : null;
+    } catch (e) { result = null; }
+    if (result && result.exists) {
+        try {
+            const state = result.json ? JSON.parse(result.json) : null;
+            return state && !state.cleared ? state : null;
+        } catch (e) { return null; }
+    }
+    try {
+        const json = localStorage.getItem('pawseDurableState');
+        return json ? JSON.parse(json) : null;
+    } catch (e) { return null; }
+}
+
+function writeDurableSnapshot(json) {
+    localStorage.setItem('pawseDurableState', json);
+    if (window.mainAPI && window.mainAPI.writeDurableState) window.mainAPI.writeDurableState(json);
+}
+
+function clearDurableSnapshot() {
+    localStorage.removeItem('pawseDurableState');
+    if (window.mainAPI && window.mainAPI.clearDurableState) window.mainAPI.clearDurableState();
+}
+
+// --- DURABLE EXECUTION ENGINE (Local Persistence) ---
+const savedSnapshot = readDurableSnapshot();
+if (savedSnapshot) {
+    try {
+        const savedState = savedSnapshot;
         // Only restore if the saved state belongs to the exact same cat companion
         // Stale Session Protection: Discard crash snapshot if older than 12 hours
         const MAX_STALE_SESSION_MS = 12 * 60 * 60 * 1000;
         if (savedState.timestamp && (Date.now() - savedState.timestamp > MAX_STALE_SESSION_MS)) {
-            localStorage.removeItem('pawseDurableState');
+            clearDurableSnapshot();
         } else if (savedState.catType === catType) {
             // Freeze exact remaining time on crash recovery (do not subtract offline elapsed seconds)
             remainingTime = savedState.remainingTime;
@@ -157,7 +195,7 @@ setInterval(() => {
         durableWorking = nextPhaseState.workingTime;
     }
 
-    localStorage.setItem('pawseDurableState', JSON.stringify({
+    writeDurableSnapshot(JSON.stringify({
         catType: catType,
         sessionUuid: sessionUuid,
         remainingTime: durableRemaining,
@@ -866,7 +904,7 @@ function handleSessionComplete(isManualSkip = false) {
                 // (the upsert keeps MAX(total_pomodoro)). Skipping the final break earns no credit.
                 flushSessionData(true);
                 setFinished = true;
-                localStorage.removeItem('pawseDurableState');
+                clearDurableSnapshot();
             }
 
             const title = isManualSkip ? "Finish Session?" : "Pawsome Job!";
@@ -880,7 +918,7 @@ function handleSessionComplete(isManualSkip = false) {
                 "Return to Menu",
                 function () {
                     flushSessionData(!isManualSkip);
-                    localStorage.removeItem('pawseDurableState');
+                    clearDurableSnapshot();
                     window.location.replace("../index.html");
                 },
                 !isManualSkip
@@ -1481,7 +1519,7 @@ if (exitConfirmBtn) {
         if (window.mainAPI && window.mainAPI.flashFrame) {
             window.mainAPI.flashFrame(false);
         }
-        localStorage.removeItem('pawseDurableState');
+        clearDurableSnapshot();
         if (window.mainAPI && window.mainAPI.resize) {
             window.mainAPI.resize('default');
         }
