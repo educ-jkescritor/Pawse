@@ -13,13 +13,14 @@ Rules for how to work live in [`AGENTS.md`](../AGENTS.md). This file is status a
 
 ## Part 1 — Current Status
 
-_Last updated: 2026-11-09 (red button restored)_
+_Last updated: 2026-11-12 (regression audit)_
 
 **Next up (agreed path to release):**
 1. ~~**N1:** crash during the final "Pawsome Job!" modal loses the Pomodoro~~ ✅ done
 2. ~~**README:** remove overclaims~~ ✅ done
 3. ~~Version bump~~ not needed: **v1.0.0 is the first official release** (D16)
 4. **Manual testing (L4):** checklist written in [`docs/RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md) for Windows, macOS, and Linux. **Not run yet.** Windows can be tested now; macOS and real-Linux testing are **deferred** (no test machines). Run at least Windows before publishing v1.0.0 following D16 (delete the old v1.1.0 release and tags first)
+5. **Recommended before release (from the 2026-11-12 audit):** fix **N8** (saves can roll stored focus time back), and correct the crash-recovery wording in `README.md` and `AGENTS.md` §6.2 to "up to about a minute" (N3)
 
 After release: R2 icon (needs a designer asset), then the 💤 items below.
 
@@ -59,12 +60,12 @@ Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (
 | ID | Issue | Status |
 | :--- | :--- | :--- |
 | N2 | After any restore, the fish (cycle) counter shows 0 until the next phase change | ❌ |
-| N3 | Chromium batches localStorage writes: a hard kill loses the last few seconds of progress. **Re-measured 2026-11-08: ~2–3 s** (58/60 and 56/59 writes survived a SIGKILL after 60 s, including on the timer page and across set completion). The earlier "~13–16 s" figure came from runs killed soon after launch | 💤 Low impact. `AGENTS.md` §6.2 still says ~15 s (update it) |
+| N3 | Chromium saves localStorage to disk only **about once a minute** (plus once right after a page loads). A hard crash restores the session backup as of the last disk save, so **up to ~1 minute of the current session can be lost** (more in the first minute after opening a timer). **Corrected 2026-11-12:** the earlier "~2–3 s" figure came from a probe that happened to stop right after a save. Completed phases are saved straight to SQLite and are not affected | ❌ Docs wrong: `README.md` says "last few seconds", `AGENTS.md` §6.2 says "~15 s". Real fix: write the snapshot to a file via the main process (atomic write) instead of localStorage |
 | N4 | Exit modal says "Your progress won't be saved", but focus time **is** saved on exit (normal mode copy) | ❌ |
 | N5 | Dashboard `loadAnalytics` has no error handling: a failed query leaves it blank/stale | ❌ |
 | N6 | Fast week navigation: responses can arrive out of order and draw the wrong week | ❌ |
 | N7 | Crash while the **skip** confirmation modal of a break is open: `cycleCount` was already incremented, so the restored session is one cycle ahead (found by reading the code, not reproduced) | ❌ |
-| N8 | A save always **overwrites** the session's totals, even with older, smaller values. Seen in testing: a stale snapshot salvaged by the menu turned 3600 s of saved work into 1 s. Fix idea: `MAX()` for the four totals in the upsert (totals only grow per uuid) | ❌ |
+| N8 | A save always **overwrites** the session's totals, even with older, smaller values. **Confirmed 2026-11-12 in a realistic flow:** crash on the final screen → on reopen the menu salvaged a backup up to a minute old (N3) and rolled the stored work from 3600 s back to 1 s (the Pomodoro credit itself survives via `MAX`). Any crash within about a minute after a phase is saved can roll that phase's stored time back by up to ~1 minute (more right after opening a timer). Fix: `MAX()` for the four totals in the upsert (totals only grow per uuid) | ❌ **Recommended before release** |
 | A9 | Upsert overwrites `date_completed` with the latest save time | ❌ |
 | A10 | Midnight rollover is only checked while the timer is ticking | ❌ |
 | A12 | DB open/migration failures are silent; no schema version (`user_version`) | 💤 |
@@ -137,8 +138,10 @@ Levels: L0 parse · L1 Jest · L2 sandbox dev · L3 sandbox packaged · L4 manua
 | 2026-11-08 | Restart confirmation (A4a) | L2 (update simulator) | Warn → revert after 6 s; second click restarts; no session → one click; red `#E5484D`; one-line message | Real `quitAndInstall` (L3/L4) |
 | 2026-11-08 | Notifications (A5/A5b), before → after. Fake OS notification in the sandbox (no debugger), real session completion | L2 (simulated OS) | Windows DND-like (closed in 0.1 s): **285 → 1** shown, alarm full 30 s · Windows normal (5 s): 6 → 6 · Linux expiry (5 s): alarm stopped at ~5 s → **full 30 s** · user dismiss (Windows): alarm stops (unchanged) · `failed`: 1 show, no retry | **L4: real Focus Assist / DND on Windows, macOS Focus, Linux desktops (GNOME/KDE)**; Action Center click after suppression |
 | 2026-11-08 | Final-modal crash (N1), before → after. Sandbox jumps to "3 cycles done, final break ending" and completes naturally; SIGKILL with the final modal open, then reopen | L2 (no debugger) | Before: `pomodoro 0`. After: **`pomodoro 1`** in normal and strict (3/3) · normal finish credits once, normal + strict · skip final break: work saved, `pomodoro 0` (unchanged) · old-style snapshot credited by the menu and removed · separate probe: snapshot removal at completion reached disk; after crash + reopen, no snapshot (fresh start) | The N1 harness reopened onto an early stale snapshot in every run; dedicated probes did not reproduce this, so it is treated as a harness artifact (cause not found). It exposed N8. Not verified: L3/L4 |
-| 2026-11-08 | localStorage durability (N3), counter written every second, SIGKILL at 60 s | L2 | Menu page 58/60 survived; timer page 56/59 (snapshot) and 57/60 (probe), also across set completion | Other OSes; power loss |
+| 2026-11-08 | localStorage durability (N3), counter written every second, SIGKILL at 60 s | L2 | Menu page 58/60 survived; timer page 56/59 (snapshot) and 57/60 (probe), also across set completion | Other OSes; power loss | **Superseded 2026-11-12:** those counts were taken right after a disk save; see the save-timing row above.
 | 2026-11-08 | Update flow per build (A6), dev update simulator in the sandbox, platform faked only for the update decision, "open URL" stubbed | L2 (simulated builds) | `.deb`: Check → "PAWSE v1.1.0 is available." [Download] → release page opened, message "Download page opened in your browser." · macOS: same · AppImage: Restart & Update (unchanged) · Windows: Restart & Update (unchanged) | Real GitHub release check on a packaged `.dmg` and `.deb` (L3/L4) |
+| 2026-11-12 | **Regression audit** of all fixes since the audit (`33e7df0..8d6a188`): (1) every fix's key code still present at HEAD; (2) overlapping fixes read together (timer restore/strict/monotonic/finished set, menu salvage, shutdown + restart + updates + notifications); (3) backward compatibility; (4) `test-branch` vs `test-windows`; (5) 13 L2 scenarios re-run together | L2 (instrumented sandbox, no debugger) | **No conflicts or regressions between fixes.** All present; branches identical (`8d6a188`); upsert SQL and localStorage keys unchanged, snapshot only adds `strictMode` (old snapshots fall back safely). Scenarios: strict sleep/wake ✅, strict escape after crash ✅, normal crash restore ✅, salvage to a different cat ✅, clock tamper ✅ (+50 s jumps → 6 s), freeze strict ✅ / normal ✅, shutdown with busy DB ✅ (exit 0, saved), Windows DND-like notification ✅ (1 shown), Linux notification expiry ✅ (alarm still ringing at 11 s), `.deb` Download ✅, **Restart & Update after the clean-shutdown fix ✅** (first time tested: red confirm → exit 0 → relaunched → saved), final-screen crash ✅ (Pomodoro credited) | Found: **N3 is ~1 minute, not 2–3 s** (see next row) and **N8 confirmed** (3600 s → 1 s). Harness note: the first two scenario runs after setup produced no log once (re-ran clean). Windows worktree has a harmless uncommitted `package-lock.json` line (`"peer": true`, from npm 11 on Windows). Not verified: L3/L4 |
+| 2026-11-12 | localStorage save timing (N3 correction): counter written every second on the timer page, SIGKILL after 30/45/75/105 s | L2 | On disk after reopen: 30 s → 2, 45 s → 2, 75 s → 57, 105 s → 57. Disk saves happen at page start and about once a minute | Other OSes may differ in timing (same Chromium logic) |
 | 2026-11-09 | Red "Restart Anyway" after restoring the deleted styles (regression from `06d15c2`). Sandbox with simulated AppImage so the dev updater shows Restart & Update; session running | L2 | Before click: blue `rgb(53, 166, 241)` · first click: **red `rgb(229, 72, 77)`**, "Restarting will end your current focus session." · after 6.5 s: back to blue | Windows dev/installer visual check (L4) |
 | 2026-11-09 | Windows installer build from PowerShell (`npm run build:exe`, electron-builder 25.1.8) | L3 on Windows (build only) | `Pawse-Setup-1.0.0.exe`, `.blockmap`, and `latest.yml` (url matches the file name, R1 confirmed); `app.asar` contains only `package.json` and `src/` (A1 confirmed). Needed Windows Developer Mode for the winCodeSign symlink step | Installing and running it (checklist, R5) |
 | 2026-11-08 | Installer file name (R1). Published v1.1.0: asset `Pawse.Setup.1.1.0.exe` vs `latest.yml` url `Pawse-Setup-1.1.0.exe` (mismatch). After fix: Windows NSIS build from Linux produced `Pawse-Setup-1.0.0.exe` | L3 (partial: the build stopped at a Wine step, so no `latest.yml` or finished installer) | File name now has no spaces | Full Windows build and an actual update from GitHub (L4, build on Windows) |
@@ -159,9 +162,9 @@ Levels: L0 parse · L1 Jest · L2 sandbox dev · L3 sandbox packaged · L4 manua
 **Code**
 - **Temporal dead zone in `timer.js`:** `startTimer()` runs during load before `let`/`const` bindings further down exist. Guarded by `var controlsReady`.
 - **Fixes can open new holes:** resetting `timerRunning` on the menu enabled a strict-mode escape (fixed by D3). Re-check adjacent invariants after each fix.
-- **localStorage is not durable immediately** (Chromium batches disk writes, ~2–3 s in testing).
+- **localStorage is not durable immediately:** Chromium saves it to disk about once a minute, so a hard crash can lose up to ~1 minute of the backup (N3).
 - **Record results when the event happens, not when the user acknowledges it** (N1). A modal waiting for a click is a crash window.
-- **When a test result looks alarming, measure the mechanism directly** with a minimal probe before concluding. The N1 harness suggested localStorage loses everything after the first write; a direct probe showed ~2–3 s.
+- **When a test result looks alarming, measure the mechanism directly, and at several points in time.** The N1 harness showed a stale backup; a single 60 s probe then suggested "~2–3 s" and the harness result was wrongly written off as an artifact. Measuring at 30/45/75/105 s showed the real pattern (saves about once a minute). A timing behavior measured at one moment can mislead.
 - **`excluded.*` in a SQLite upsert holds the already-evaluated insert values**, so `COALESCE(excluded.x, old.x)` never falls back.
 - **Time limits must respect inner timeouts** (shutdown limit vs `busy_timeout`, D8).
 
@@ -194,7 +197,8 @@ Newest first. One line per commit.
 
 | Date | Commit | Change |
 | :--- | :--- | :--- |
-| 2026-11-09 | _(this commit)_ | Restore the red "Restart Anyway" styles deleted by `06d15c2` (A4a regression) |
+| 2026-11-12 | _(this commit)_ | Regression audit recorded: all fixes intact and compatible; N3 corrected to ~1 minute; N8 confirmed and recommended before release |
+| 2026-11-09 | `8d6a188` | Restore the red "Restart Anyway" styles deleted by `06d15c2` (A4a regression) |
 | 2026-11-09 | `872a8f8` | Add `docs/RELEASE_CHECKLIST.md` (manual tests for Windows, macOS, Linux); testing deferred and tracked as R5 |
 | 2026-11-09 | `83dbeeb` | Release plan: first official release is v1.0.0; GitHub cleanup and upload steps (D16) |
 | 2026-11-08 | `7e39326` | README: match the app's actual behavior (recovery, dialogue, updates per platform, strict mode, builds per OS) |
