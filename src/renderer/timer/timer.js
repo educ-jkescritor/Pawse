@@ -161,6 +161,10 @@ if (savedSnapshot) {
             if (savedState.sessionUuid) {
                 sessionUuid = savedState.sessionUuid;
             }
+            // The restored work belongs to the day it was done, not to today (A10). Backups from older
+            // versions have no sessionDate; their last-write timestamp is the closest match.
+            const restoredDay = new Date(Number(savedState.sessionDate) || Number(savedState.timestamp) || Date.now());
+            if (!isNaN(restoredDay.getTime())) sessionDate = restoredDay;
             flushedWorkSeconds = savedState.flushedWorkSeconds || 0;
             flushedBreakSeconds = savedState.flushedBreakSeconds || 0;
             
@@ -211,17 +215,36 @@ setInterval(() => {
         // Safe to reference the const declared further down: interval callbacks only run after the
         // whole script has finished executing, so strictMode is initialized by then (no TDZ).
         strictMode: strictMode,
+        sessionDate: sessionDate.getTime(), // The day this session's time belongs to (A10)
         timestamp: Date.now()
     }));
 }, 1000);
 // ---------------------------------------------------
 
+// --- ONE SESSION, ONE DAY ---
+// A saved session's date is the time of its latest save (A9), so a session that crosses midnight would
+// move ALL of its time to the new day. Before every save (and every second while ticking), if the day
+// has changed: save the old part dated to its own day, then continue under a new session ID (A10).
+// Before, this check only ran while the timer was ticking, so a session that was paused, closed, or
+// restored after a crash across midnight was saved entirely on the new day.
+function isSameLocalDay(a, b) {
+    // Year + month + day: comparing only getDate() would treat "the 13th" of different months as equal
+    return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+function rolloverIfNewDay() {
+    if (isSameLocalDay(sessionDate, new Date())) return;
+    flushSessionData(false, true); // Save the old day's part (dated 23:59:59 of that day), new session ID
+    sessionDate = new Date();      // The session now belongs to today
+}
+
 function flushSessionData(isPomodoroComplete = false, forceYesterday = false) {
+    if (!forceYesterday) rolloverIfNewDay(); // Split at midnight first (covers Home, close, phase changes)
     if (actualWork === 0 && actualBreak === 0 && !isPomodoroComplete) return;
 
     let dateCompleted = null;
     if (forceYesterday) {
-        let d = sessionDate; 
+        const d = new Date(sessionDate); // A copy: don't change sessionDate itself
         d.setHours(23, 59, 59, 0);
         // Export exactly as UTC to match SQLite CURRENT_TIMESTAMP behavior
         dateCompleted = d.toISOString().replace('T', ' ').substring(0, 19);
@@ -760,11 +783,7 @@ function startTimer() {
     lastTickTime = performance.now();
 
     timerId = setInterval(() => {
-        let today = new Date().getDate();
-        if (today !== sessionDate.getDate()) {
-            flushSessionData(false, true); // forceYesterday = true
-            sessionDate = new Date();
-        }
+        rolloverIfNewDay();
 
         if (remainingTime <= 0) {
             remainingTime = 0;

@@ -105,7 +105,7 @@ UI changes must fit these exact sizes with no scrollbars or overflow.
 - Table `session`; rows are keyed by `uuid` (unique). `save-session` is an **upsert of running totals** (not increments) → saving the same snapshot again is idempotent. Keep it that way.
 - `total_pomodoro` uses `MAX()` on conflict so a completed set can't be un-credited.
 - Dates are stored as UTC `YYYY-MM-DD HH:MM:SS`; analytics converts to local days in JS.
-- Known caveat: on upsert, `date_completed` becomes the latest save time (the `COALESCE` fallback to the old value never applies).
+- On upsert, `date_completed` becomes the latest save time (the `COALESCE` fallback to the old value never applies). That is correct only because **a session never spans two days**: `rolloverIfNewDay()` in `timer.js` runs before every save (and every second while ticking) and splits a session at midnight into one row per day (A10). Keep that invariant if you change saving.
 - Migrations are ad hoc (`PRAGMA table_info` + `ALTER TABLE`). Schema changes must be backward-compatible with existing user DBs.
 
 ### 6.2 Durable snapshot (crash backup)
@@ -125,7 +125,7 @@ UI changes must fit these exact sizes with no scrollbars or overflow.
 
 ### 6.4 Timing
 - The countdown uses **`performance.now()`** (monotonic, immune to clock changes, doesn't advance during OS suspend). Do not switch it back to `Date.now()`.
-- Calendar logic (midnight rollover, 12 h staleness, analytics days) uses `Date`, which is correct for dates.
+- Calendar logic (midnight rollover, 12 h staleness, analytics days) uses `Date`, which is correct for dates. Compare days with `isSameLocalDay()` (year + month + day), never `getDate()` alone. The session's day (`sessionDate`) is saved in the crash backup and restored with it.
 - A gap of more than 15 s between ticks is a freeze: it's never counted as work. Normal mode pauses; strict mode discards the gap and keeps running.
 
 ### 6.5 Strict Mode invariants
