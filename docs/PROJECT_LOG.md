@@ -13,7 +13,7 @@ Rules for how to work live in [`AGENTS.md`](../AGENTS.md). This file is status a
 
 ## Part 1 — Current Status
 
-_Last updated: 2026-11-13 (N2)_
+_Last updated: 2026-11-13 (N4, Phase 1 complete)_
 
 **Next up (agreed path to release):**
 1. ~~**N1:** crash during the final "Pawsome Job!" modal loses the Pomodoro~~ ✅ done
@@ -24,8 +24,9 @@ _Last updated: 2026-11-13 (N2)_
 6. ~~**N3:** crash backup written through the main process to a file every second~~ ✅ done (`796810a`)
 7. ~~**N7:** crash during a break's skip confirmation resumed one cycle ahead~~ ✅ done (`47748f1`)
 8. ~~**Wording:** README and `AGENTS.md` §6.2 describe the file-based crash backup~~ ✅ done (`63ce2e4`)
-9. ~~**N2:** fish counter showed 0 after a crash restore~~ ✅ done (_(this commit)_)
-10. **Next:** N4 (exit dialog text)
+9. ~~**N2:** fish counter showed 0 after a crash restore~~ ✅ done (`eaef332`)
+10. ~~**N4:** exit dialog said progress wouldn't be saved~~ ✅ done (_(this commit)_)
+11. **Next (Phase 2, dashboard and data):** N5 (dashboard error handling), N6 (out-of-order week loads), A10 (midnight while paused), A9 (`date_completed`)
 
 After release: R2 icon (needs a designer asset), then the 💤 items below.
 
@@ -67,7 +68,7 @@ Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (
 | N2 | After any restore, the fish (cycle) counter showed 0 until the next phase change: `updateSessionCounter()` was only called when a cycle completed or a skip was cancelled, never when the timer screen opened | ✅ | _(this commit)_: call `updateSessionCounter()` once at load, next to the initial time paint (new session → 0 fish; restored → real count) |
 | N3 | The crash backup lived only in localStorage, which Chromium writes to disk about once a minute, so after a crash the timer resumed up to a minute behind (measured: crash at 15 s → rewound 12 s; at 45 s → rewound 43 s) | ✅ | `796810a`: the timer also sends its snapshot every second to the main process, which writes `durable-state.json` in the user-data folder (temp file + rename, so never half-written). The file is the authority once it exists; clearing writes a `{"cleared":true}` marker. localStorage is still written (Settings dashboard live time) and read only when no file exists (first launch after updating from a version without the file). After: crash at 15/45/~58 s resumes **exactly** where it stopped (D18) |
 | N9 | Ending a session (Home / normal close / finished set) and crashing within about a minute **resurrected the ended session**: the localStorage deletion hadn't reached disk, so picking the same cat resumed it (pre-existing; reproduced on the pre-N3 code) | ✅ | Same commit as N3: the file's "cleared" marker is authoritative, so a stale localStorage copy is ignored (D18) |
-| N4 | Exit modal says "Your progress won't be saved", but focus time **is** saved on exit (normal mode copy) | ❌ |
+| N4 | Normal-mode exit dialog said "Your progress won't be saved", but leaving the timer always saves the focus time (`beforeunload` → `flushSessionData`) | ✅ | _(this commit)_: `timer.html` text is now "Returning home ends this session. Your focus time so far is still saved." (matches the strict-mode wording) |
 | N5 | Dashboard `loadAnalytics` has no error handling: a failed query leaves it blank/stale | ❌ |
 | N6 | Fast week navigation: responses can arrive out of order and draw the wrong week | ❌ |
 | N7 | Crash while a break's **skip confirmation** ("End Break Early?" / "Finish Session?") was open resumed **one cycle ahead**: pressing Skip already ran `cycleCount++`, so the backup saved "still in the break" together with "cycle already counted". On the long break this led to "5 cycles". Normal mode only (Skip is blocked in strict) | ✅ | `47748f1`: on a manual skip the cycle is only counted when the user **confirms** (inside the modal's action); natural endings still count it immediately (D19). Reproduced before: cycle 1 → 2 and 3 → 4 after crash; after: stays 1 and 3 |
@@ -150,6 +151,7 @@ Levels: L0 parse · L1 Jest · L2 sandbox dev · L3 sandbox packaged · L4 manua
 | 2026-11-08 | localStorage durability (N3), counter written every second, SIGKILL at 60 s | L2 | Menu page 58/60 survived; timer page 56/59 (snapshot) and 57/60 (probe), also across set completion | Other OSes; power loss | **Superseded 2026-11-12:** those counts were taken right after a disk save; see the save-timing row above.
 | 2026-11-08 | Update flow per build (A6), dev update simulator in the sandbox, platform faked only for the update decision, "open URL" stubbed | L2 (simulated builds) | `.deb`: Check → "PAWSE v1.1.0 is available." [Download] → release page opened, message "Download page opened in your browser." · macOS: same · AppImage: Restart & Update (unchanged) · Windows: Restart & Update (unchanged) | Real GitHub release check on a packaged `.dmg` and `.deb` (L3/L4) |
 | 2026-11-12 | **Regression audit** of all fixes since the audit (`33e7df0..8d6a188`): (1) every fix's key code still present at HEAD; (2) overlapping fixes read together (timer restore/strict/monotonic/finished set, menu salvage, shutdown + restart + updates + notifications); (3) backward compatibility; (4) `test-branch` vs `test-windows`; (5) 13 L2 scenarios re-run together | L2 (instrumented sandbox, no debugger) | **No conflicts or regressions between fixes.** All present; branches identical (`8d6a188`); upsert SQL and localStorage keys unchanged, snapshot only adds `strictMode` (old snapshots fall back safely). Scenarios: strict sleep/wake ✅, strict escape after crash ✅, normal crash restore ✅, salvage to a different cat ✅, clock tamper ✅ (+50 s jumps → 6 s), freeze strict ✅ / normal ✅, shutdown with busy DB ✅ (exit 0, saved), Windows DND-like notification ✅ (1 shown), Linux notification expiry ✅ (alarm still ringing at 11 s), `.deb` Download ✅, **Restart & Update after the clean-shutdown fix ✅** (first time tested: red confirm → exit 0 → relaunched → saved), final-screen crash ✅ (Pomodoro credited) | Found: **N3 is ~1 minute, not 2–3 s** (see next row) and **N8 confirmed** (3600 s → 1 s). Harness note: the first two scenario runs after setup produced no log once (re-ran clean). Windows worktree has a harmless uncommitted `package-lock.json` line (`"peer": true`, from npm 11 on Windows). Not verified: L3/L4 |
+| 2026-11-13 | N4: open the exit dialog (Home) during a session, normal + strict | L2 | Before (normal): "…Your progress won't be saved." After: "Returning home ends this session. Your focus time so far is still saved." (3 lines, no overflow). Strict text unchanged (4 lines, no overflow) | Visual check on Windows (L4) |
 | 2026-11-13 | N2, before → after: session with 2 cycles done, SIGKILL, reopen same cat (normal + strict) | L2 (no debugger) | Before: cycle 2, **fish 0** (both modes). After: cycle 2, **fish 2** (both modes); a new session still shows 0. Jest 62/62 | L3/L4 |
 | 2026-11-12 | N7, before → after. Sandbox jumps to a break with N cycles done, presses Skip, then SIGKILL with the modal open, reopens the same cat | L2 | Before: mid-set cycle 1 → **2**, long break 3 → **4** after reopen. After: **1** and **3** (modal also shows the unchanged count). Regressions: Cancel restores (cycle 1, running); Confirm mid-set → cycle 2, work starts; Confirm "Finish Session?" → menu, Pomodoro 0; natural break end → cycle 2 immediately; skip during work unchanged; final-set crash (N1) still credited. Jest 62/62. Fish counter shows 0 after any restore (known N2, separate) | L3/L4 |
 | 2026-11-12 | N3 + N9, before → after (instrumented sandbox, no debugger, SIGKILL) | L2 | **Resume precision** (normal): crash at 15 s rewound 12 s → **0 s**; at 45 s rewound 43 s → **0 s**; ~58 s → exact. Strict at 45 s: resumes running and strict. **N9** (Home, crash 2 s later, reopen same cat): before → ended session came back (same uuid, stale time); after → **fresh session**. Final-screen crash: fresh set on reopen; 3600 s + Pomodoro kept. Rescue to a different cat: 1 s → **9 s** of ~10 s. Cleanup: normal close, Home, busy-DB quit → file holds the "cleared" marker. Old-version backup (localStorage only, no file): rescued (300 s) and resumed (1200 s left). Corrupt file: fresh session, no crash. Regressions: strict escape blocked, N8 no rollback (902 ×2), clean quit with busy DB (exit 0). Jest 62/62 | L3/L4; power-cut durability (no fsync); Windows file locking (fallback path untested) |
@@ -210,7 +212,8 @@ Newest first. One line per commit.
 
 | Date | Commit | Change |
 | :--- | :--- | :--- |
-| 2026-11-13 | _(this commit)_ | Draw the fish counter when the timer opens, so restored sessions show their cycles (N2) |
+| 2026-11-13 | _(this commit)_ | Exit dialog no longer says progress won't be saved (N4) |
+| 2026-11-13 | `eaef332` | Draw the fish counter when the timer opens, so restored sessions show their cycles (N2) |
 | 2026-11-13 | `63ce2e4` | README + `AGENTS.md` §6.2/§7.4: describe the file-based crash backup (≤ ~1 s lost, file is the authority, "cleared" marker) |
 | 2026-11-12 | `47748f1` | Count a skipped break's cycle only when the user confirms (N7) |
 | 2026-11-12 | `796810a` | Crash backup in a main-process file every second; "cleared" marker stops ended sessions from coming back (N3, N9) |
