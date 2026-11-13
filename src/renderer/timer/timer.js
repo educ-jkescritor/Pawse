@@ -281,7 +281,7 @@ function flushSessionData(isPomodoroComplete = false, forceYesterday = false) {
 }
 
 // Initialize Audio Objects
-const ambientAudio = new Audio('../../assets/sounds/ambient.mp3');
+const ambientAudio = new Audio('../../assets/sounds/bgm-brown-noise.mp3');
 ambientAudio.loop = true;
 const purrAudio = new Audio('../../assets/sounds/purr.mp3');
 purrAudio.loop = true;
@@ -312,7 +312,7 @@ alarmAudio.volume = 0.2; // Lowered default volume to prevent ear strain
 // Meow sounds (often acts as button click feedback)
 const meowAudios = {
     'orange_cat': new Audio('../../assets/sounds/ginger-break-new.mp3'),
-    'tuxedo_cat': new Audio('../../assets/sounds/tux-meow.mp3'),
+    'tuxedo_cat': new Audio('../../assets/sounds/tux-break-new.wav'),
     'black_cat': new Audio('../../assets/sounds/void-break-new.mp3')
 };
 Object.values(meowAudios).forEach(audio => audio.volume = 0.3); // Lowered click/meow volume
