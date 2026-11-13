@@ -948,7 +948,6 @@ function updateCatState() {
 
                 if (isWorkStatic) {
                     catSprite.className = `cat-sprite ${catClass} work-static`;
-                    stopGingerSleepingSound();
 
                     spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2500);
                 } else {
