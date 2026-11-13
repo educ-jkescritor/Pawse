@@ -13,7 +13,7 @@ Rules for how to work live in [`AGENTS.md`](../AGENTS.md). This file is status a
 
 ## Part 1 — Current Status
 
-_Last updated: 2026-11-13 (A10 + A9, Phase 2 complete)_
+_Last updated: 2026-11-13 (Q5)_
 
 **Next up (agreed path to release):**
 1. ~~**N1:** crash during the final "Pawsome Job!" modal loses the Pomodoro~~ ✅ done
@@ -26,8 +26,8 @@ _Last updated: 2026-11-13 (A10 + A9, Phase 2 complete)_
 8. ~~**Wording:** README and `AGENTS.md` §6.2 describe the file-based crash backup~~ ✅ done (`63ce2e4`)
 9. ~~**N2:** fish counter showed 0 after a crash restore~~ ✅ done (`eaef332`)
 10. ~~**N4:** exit dialog said progress wouldn't be saved~~ ✅ done (`e1e80a2`)
-11. **Phase 2 (dashboard and data), decided 2026-11-13:** ~~N6 latest week request wins~~ ✅ (`81cc5c4`) → ~~N5 "Couldn't load" state~~ ✅ (`75774eb`) → ~~A10 (+ A9) a session never crosses midnight~~ ✅ (_(this commit)_)
-12. **Next (Phase 3, polish):** Q5 window title "Document", Q4 auto-start toggle (build or hide: user decides), Q8 missing `LICENSE` (needs the copyright holder name), Q3 IPC null checks
+11. **Phase 2 (dashboard and data), decided 2026-11-13:** ~~N6 latest week request wins~~ ✅ (`81cc5c4`) → ~~N5 "Couldn't load" state~~ ✅ (`75774eb`) → ~~A10 (+ A9) a session never crosses midnight~~ ✅ (`ddf779a`)
+12. **Phase 3 (polish):** ~~Q5 window titles~~ ✅ (_(this commit)_) → Q3 IPC null checks → Q4 (auto-start: hide in v1.0.0; build on branch `feature/auto-start-timer`, created 2026-11-13 from `ddf779a`) → Q8 `LICENSE` (needs the copyright holder name)
 
 After release: R2 icon (needs a designer asset), then the 💤 items below.
 
@@ -74,8 +74,8 @@ Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (
 | N6 | Fast week navigation: several dashboard loads in flight answered in any order and the last-arriving (possibly older) one was drawn, while the app believed it was on the newest week. Measured: answers scrambled in 20/20 bursts of concurrent loads; at realistic click speed 0/20 today (a load takes ~7 ms), more likely with years of history or slow/busy machines | ✅ | `81cc5c4`: each `loadAnalytics` call gets a request number; only the newest may draw |
 | N7 | Crash while a break's **skip confirmation** ("End Break Early?" / "Finish Session?") was open resumed **one cycle ahead**: pressing Skip already ran `cycleCount++`, so the backup saved "still in the break" together with "cycle already counted". On the long break this led to "5 cycles". Normal mode only (Skip is blocked in strict) | ✅ | `47748f1`: on a manual skip the cycle is only counted when the user **confirms** (inside the modal's action); natural endings still count it immediately (D19). Reproduced before: cycle 1 → 2 and 3 → 4 after crash; after: stays 1 and 3 |
 | N8 | A save always **overwrote** the session's totals, even with older, smaller values. A crash backup up to a minute old (N3) salvaged by the menu rolled stored work back (3600 s → 1 s) | ✅ | `478cf5d`: on conflict the upsert keeps the **larger** value for all five totals (`MAX(COALESCE(old, 0), COALESCE(new, 0))`); totals only grow per uuid, so the larger is always the newer. Remaining after N8: the resumed **timer** can still rewind up to ~1 minute and the redone minute is not added again (stats can be up to ~1 minute short, never higher, never rolled back) → fixed by N3 (D17) |
-| A9 | Upsert overwrites `date_completed` with the latest save time, so a session crossing midnight was dated entirely on the later day | ✅ | Resolved by A10 (_(this commit)_): a session can no longer span two days, so "date of its latest save" is always the right day. No SQL change |
-| A10 | The "new day?" check only ran while the timer ticked, so a session paused, closed, or crash-resumed across midnight was saved entirely on the new day (yesterday's work moved to today; daily totals, weekly chart, and streaks wrong). It also compared only `getDate()` (day of month) | ✅ | _(this commit)_: `rolloverIfNewDay()` runs before every save and every second while ticking; it saves the old day's part dated 23:59:59 of that day and continues under a new session ID. Days compared by year + month + day. `sessionDate` is stored in the crash backup and restored (D21) |
+| A9 | Upsert overwrites `date_completed` with the latest save time, so a session crossing midnight was dated entirely on the later day | ✅ | Resolved by A10 (`ddf779a`): a session can no longer span two days, so "date of its latest save" is always the right day. No SQL change |
+| A10 | The "new day?" check only ran while the timer ticked, so a session paused, closed, or crash-resumed across midnight was saved entirely on the new day (yesterday's work moved to today; daily totals, weekly chart, and streaks wrong). It also compared only `getDate()` (day of month) | ✅ | `ddf779a`: `rolloverIfNewDay()` runs before every save and every second while ticking; it saves the old day's part dated 23:59:59 of that day and continues under a new session ID. Days compared by year + month + day. `sessionDate` is stored in the crash backup and restored (D21) |
 | A12 | DB open/migration failures are silent; no schema version (`user_version`) | 💤 |
 | A13 | Dev-only: DB copied between root and AppData without its `-wal` file | 💤 |
 
@@ -99,7 +99,7 @@ Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (
 | Q2 | No logging or crash handling in packaged builds (`console.log` silenced) | 💤 |
 | Q3 | Several IPC handlers don't null-check the sender window | 💤 |
 | Q4 | `autoStartPomodoros` / `autoStartBreaks` toggle is saved but does nothing | ❌ |
-| Q5 | Timer window title is "Document" | ❌ |
+| Q5 | Timer window title was "Document" (template placeholder) in the taskbar, Alt+Tab, and Task Manager; menu and Settings fell back to the package name ("pawse" in dev) | ✅ | _(this commit)_: explicit `<title>`: menu and timer "Pawse", Settings "Pawse Settings" (tells the two windows apart) |
 | Q6 | `ambient.mp3` is 36 MB (~75% of the asar) | 💤 |
 | Q7 | No tray / menu-bar presence | 💤 feature |
 | Q8 | README links a `LICENSE` file that doesn't exist (MIT not actually granted) | ❌ |
@@ -154,6 +154,7 @@ Levels: L0 parse · L1 Jest · L2 sandbox dev · L3 sandbox packaged · L4 manua
 | 2026-11-08 | localStorage durability (N3), counter written every second, SIGKILL at 60 s | L2 | Menu page 58/60 survived; timer page 56/59 (snapshot) and 57/60 (probe), also across set completion | Other OSes; power loss | **Superseded 2026-11-12:** those counts were taken right after a disk save; see the save-timing row above.
 | 2026-11-08 | Update flow per build (A6), dev update simulator in the sandbox, platform faked only for the update decision, "open URL" stubbed | L2 (simulated builds) | `.deb`: Check → "PAWSE v1.1.0 is available." [Download] → release page opened, message "Download page opened in your browser." · macOS: same · AppImage: Restart & Update (unchanged) · Windows: Restart & Update (unchanged) | Real GitHub release check on a packaged `.dmg` and `.deb` (L3/L4) |
 | 2026-11-12 | **Regression audit** of all fixes since the audit (`33e7df0..8d6a188`): (1) every fix's key code still present at HEAD; (2) overlapping fixes read together (timer restore/strict/monotonic/finished set, menu salvage, shutdown + restart + updates + notifications); (3) backward compatibility; (4) `test-branch` vs `test-windows`; (5) 13 L2 scenarios re-run together | L2 (instrumented sandbox, no debugger) | **No conflicts or regressions between fixes.** All present; branches identical (`8d6a188`); upsert SQL and localStorage keys unchanged, snapshot only adds `strictMode` (old snapshots fall back safely). Scenarios: strict sleep/wake ✅, strict escape after crash ✅, normal crash restore ✅, salvage to a different cat ✅, clock tamper ✅ (+50 s jumps → 6 s), freeze strict ✅ / normal ✅, shutdown with busy DB ✅ (exit 0, saved), Windows DND-like notification ✅ (1 shown), Linux notification expiry ✅ (alarm still ringing at 11 s), `.deb` Download ✅, **Restart & Update after the clean-shutdown fix ✅** (first time tested: red confirm → exit 0 → relaunched → saved), final-screen crash ✅ (Pomodoro credited) | Found: **N3 is ~1 minute, not 2–3 s** (see next row) and **N8 confirmed** (3600 s → 1 s). Harness note: the first two scenario runs after setup produced no log once (re-ran clean). Windows worktree has a harmless uncommitted `package-lock.json` line (`"peer": true`, from npm 11 on Windows). Not verified: L3/L4 |
+| 2026-11-13 | Q5: window titles read with `BrowserWindow.getTitle()` for menu, timer, Settings | L2 | Before: "pawse" / **"Document"** / "pawse". After: "Pawse" / "Pawse" / "Pawse Settings" | Packaged build on Windows (L4) |
 | 2026-11-13 | A10 + A9, before → after, with a fake clock on the sandbox timer page: (1) ticking across midnight; (2) paused at "Thu 23:50" with 50 min done, Home after midnight; (3) crash at "Thu 23:40" with 2402 s, resume at "Fri 00:20", Home (normal, and strict which resumes running); (4) same day | L2 (fake clock, DB rows read back) | (1) Thu 9 s + Fri 12 s both before and after. (2) Before: one row **Fri** 3000 s; after: **Thu** 3000 s. (3) Before: one row **Fri** 2402 s (the salvage's Thu date was overwritten by the resumed save); after: **Thu** 2402 s; strict: Thu 2402 s + new Fri row (split on the first tick). (4) One row, Fri, both. Jest 62/62. Note: a first attempt at (3) resumed after >12 h and hit the stale-backup rule instead, so the reopen was moved to "Fri 00:20" | Real midnight on Windows (L4); DST transition days |
 | 2026-11-13 | N5, before → after: (a) the load fails (handler throws), then recovers and refresh is pressed; (b) the database is unreadable (closed); (c) normal load; (d) dashboard while a timer runs (live session); (e) N6 bursts | L2 + screenshots | Before: (a) blank defaults, week label "Date", no message; (b) zeros + "No sessions yet" + "No sessions recorded for this week". After: (a)/(b) date kept, cards "—" + "Couldn't load", chart message, correct week label; refresh after recovery shows real numbers. Dashes aligned across cards (streak number hidden so its 8 px row gap doesn't shift the dash). (c) unchanged; (d) identical to the last commit (live 25 min folded in); (e) still 0/20. Jest 62/62 | Visual check on Windows (L4) |
 | 2026-11-13 | N6: 20 bursts of 10 concurrent week loads ending on week 10 (2,000 seeded sessions), plus a single click and a normal load | L2 | Before: wrong week drawn in **17/20** bursts (app state said week 10). After: **0/20**; single click to week 2 correct; normal load unchanged (date, cards, bars). Jest 62/62 | L3/L4 |
@@ -218,7 +219,8 @@ Newest first. One line per commit.
 
 | Date | Commit | Change |
 | :--- | :--- | :--- |
-| 2026-11-13 | _(this commit)_ | A session never crosses midnight: split before every save, day stored in the crash backup (A10, resolves A9) |
+| 2026-11-13 | _(this commit)_ | Window titles: "Pawse" and "Pawse Settings" instead of "Document" (Q5) |
+| 2026-11-13 | `ddf779a` | A session never crosses midnight: split before every save, day stored in the crash backup (A10, resolves A9) |
 | 2026-11-13 | `75774eb` | Dashboard shows a "Couldn't load" state instead of zeros when stats can't be read (N5) |
 | 2026-11-13 | `81cc5c4` | Dashboard draws only the newest week request (N6) |
 | 2026-11-13 | `e1e80a2` | Exit dialog no longer says progress won't be saved (N4) |
