@@ -1,7 +1,18 @@
+// Clears the session crash backup in both places it is kept (localStorage and the main-process file).
+// Named differently from timer.js's clearDurableSnapshot() because both scripts load on the timer page.
+function clearCrashBackup() {
+    localStorage.removeItem('pawseDurableState');
+    if (window.mainAPI && window.mainAPI.clearDurableState) window.mainAPI.clearDurableState();
+}
+
 let settingsButton = document.getElementById("hub-btn") || document.getElementById("menu-btn");
 if (settingsButton !== null) {
     settingsButton.onclick = function settingsWindow() {
-        window.mainAPI.settings();
+        if (window.mainAPI && window.mainAPI.settings) {
+            window.mainAPI.settings();
+        } else {
+            console.error("[PAWSE / Titlebar] window.mainAPI.settings is unavailable.");
+        }
     };
 }
 
@@ -17,8 +28,12 @@ if (closeButton !== null) {
         }
         
         // Otherwise (Main Menu, Settings), close immediately
-        localStorage.removeItem('pawseDurableState');
-        window.mainAPI.close();
+        clearCrashBackup();
+        if (window.mainAPI && window.mainAPI.close) {
+            window.mainAPI.close();
+        } else {
+            console.error("[PAWSE / Titlebar] window.mainAPI.close is unavailable.");
+        }
     };
 }
 
@@ -31,7 +46,7 @@ if (homeButton !== null) {
             exitModal.classList.remove("hidden");
             return;
         }
-        localStorage.removeItem('pawseDurableState');
+        clearCrashBackup();
         if (window.mainAPI && window.mainAPI.resize) {
             window.mainAPI.resize('default');
         }
@@ -42,14 +57,22 @@ if (homeButton !== null) {
 let minimizeButton = document.getElementById("minimize-btn");
 if (minimizeButton !== null) {
     minimizeButton.onclick = function minimizeWindow() {
-        window.mainAPI.minimize();
+        if (window.mainAPI && window.mainAPI.minimize) {
+            window.mainAPI.minimize();
+        } else {
+            console.error("[PAWSE / Titlebar] window.mainAPI.minimize is unavailable.");
+        }
     };
 }
 
 let maximizeButton = document.getElementById("maximize-btn");
 if (maximizeButton !== null) {
     maximizeButton.onclick = function maximizeWindow() {
-        window.mainAPI.maximize();
+        if (window.mainAPI && window.mainAPI.maximize) {
+            window.mainAPI.maximize();
+        } else {
+            console.error("[PAWSE / Titlebar] window.mainAPI.maximize is unavailable.");
+        }
     };
 }
 
@@ -61,7 +84,9 @@ if (resizeButton !== null) {
         
         if (document.body.classList.contains("timer-only-mode") || document.body.classList.contains("cat-only-mode")) {
             document.body.classList.remove("timer-only-mode", "cat-only-mode");
-            window.mainAPI.resize('default');
+            if (window.mainAPI && window.mainAPI.resize) {
+                window.mainAPI.resize('default');
+            }
             if (sessionModal && typeof pendingModal !== 'undefined' && pendingModal) {
                 sessionModal.classList.remove("closing");
                 sessionModal.classList.remove("hidden");
@@ -72,9 +97,8 @@ if (resizeButton !== null) {
         } else if (resizeModal !== null) {
             resizeModal.classList.remove("closing");
             resizeModal.classList.remove("hidden");
-        } else {
+        } else if (window.mainAPI && window.mainAPI.resize) {
             window.mainAPI.resize('default');
         }
     };
 }
-

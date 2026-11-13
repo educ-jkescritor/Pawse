@@ -1,11 +1,19 @@
 let minimizeButton = document.getElementById("minimize-btn");
-minimizeButton.onclick = function minimizeWindow() {
-    window.mainAPI.minimize();
+if (minimizeButton) {
+    minimizeButton.onclick = function minimizeWindow() {
+        if (window.mainAPI && window.mainAPI.minimize) {
+            window.mainAPI.minimize();
+        }
+    };
 }
 
 let closeButton = document.getElementById("close-btn");
-closeButton.onclick = function closeWindow() {
-    window.mainAPI.close();
+if (closeButton) {
+    closeButton.onclick = function closeWindow() {
+        if (window.mainAPI && window.mainAPI.close) {
+            window.mainAPI.close();
+        }
+    };
 }
 
 const sidebar = document.querySelector(".side-bar");
@@ -69,9 +77,11 @@ let dashboardContent = document.getElementById("dashboard-content");
 let aboutContent = document.getElementById("about-content");
 let settingsContent = document.getElementById("settings-content");
 
-// Preload Ginger About sprites into memory to prevent any transition flicker
+// Preload Tux, Ginger & Void About sprites into memory to prevent any transition flicker
 (function preloadAboutSprites() {
     [
+        '../assets/sprites/tuxedo_cat_tag_static.png',
+        '../assets/sprites/tuxedo_cat_tag.png',
         '../assets/sprites/orange_cat_tag_static.png',
         '../assets/sprites/black_cat_tag_static.png',
         '../assets/sprites/black_cat_tag.png',
@@ -84,6 +94,29 @@ let settingsContent = document.getElementById("settings-content");
 
 let orangeAboutTimeoutId = null;
 let blackAboutTimeoutId = null;
+let tuxedoAboutTimeoutId = null;
+
+// --- Companion pacing (About tab), same idea as the menu ---
+// Each cat: pause on its tag_static for a random time -> play its tag animation for 2 or 3 whole loops -> pause,
+// with its own random timing and a random first start (new on every visit). Anti-sync: a cat about to animate
+// waits a little (random 0.4-0.9 s) when another cat started less than 0.5 s ago, or when both others are moving.
+const aboutAnimating = { tuxedo: false, orange: false, black: false };
+const aboutLastStart = { tuxedo: -Infinity, orange: -Infinity, black: -Infinity };
+function mayAnimateAbout(cat) {
+    const now = performance.now();
+    const others = Object.keys(aboutAnimating).filter(c => c !== cat);
+    if (others.some(c => now - aboutLastStart[c] < 500)) return false; // another cat just started
+    if (others.every(c => aboutAnimating[c])) return false;           // both others are moving
+    return true;
+}
+function markAnimatingAbout(cat, isAnimating) {
+    aboutAnimating[cat] = isAnimating;
+    if (isAnimating) aboutLastStart[cat] = performance.now();
+}
+// A random number of whole animation loops (2 or 3), so an animation is never cut off mid-loop
+function aboutLoopsMs(loopMs) {
+    return (Math.random() < 0.5 ? 2 : 3) * loopMs;
+}
 
 function stopAboutSequences() {
     if (orangeAboutTimeoutId) {
@@ -93,6 +126,15 @@ function stopAboutSequences() {
     if (blackAboutTimeoutId) {
         clearTimeout(blackAboutTimeoutId);
         blackAboutTimeoutId = null;
+    }
+    if (tuxedoAboutTimeoutId) {
+        clearTimeout(tuxedoAboutTimeoutId);
+        tuxedoAboutTimeoutId = null;
+    }
+    Object.keys(aboutAnimating).forEach(c => { aboutAnimating[c] = false; aboutLastStart[c] = -Infinity; });
+    const tuxedoSprite = document.getElementById("tuxedo-about-sprite");
+    if (tuxedoSprite) {
+        tuxedoSprite.className = "tuxedo-about-sprite tag-static";
     }
     const orangeSprite = document.getElementById("orange-about-sprite");
     if (orangeSprite) {
@@ -128,16 +170,22 @@ function startAboutSequences() {
         function playOrangeTagLoop() {
             if (aboutContent && aboutContent.classList.contains("hidden")) return;
 
+            // About to animate, but another cat just started or both others are moving: hold the pose a bit longer
+            if (isOrangeStatic && !mayAnimateAbout('orange')) {
+                orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 400 + Math.floor(Math.random() * 500));
+                return;
+            }
             isOrangeStatic = !isOrangeStatic;
+            markAnimatingAbout('orange', !isOrangeStatic);
             if (isOrangeStatic) {
                 orangeSprite.className = "orange-about-sprite tag-static";
-                orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 2500);
+                orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 2200 + Math.floor(Math.random() * 2400)); // Rest 2.2-4.6s
             } else {
                 orangeSprite.className = "orange-about-sprite tag-anim";
-                orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 2700);
+                orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, aboutLoopsMs(900)); // 2 or 3 loops of 0.9s
             }
         }
-        orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 2000);
+        orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 800 + Math.floor(Math.random() * 1800)); // First start 0.8-2.6s
     }
 
     if (blackSprite) {
@@ -147,16 +195,48 @@ function startAboutSequences() {
         function playBlackTagLoop() {
             if (aboutContent && aboutContent.classList.contains("hidden")) return;
 
+            // About to animate, but another cat just started or both others are moving: hold the pose a bit longer
+            if (isBlackStatic && !mayAnimateAbout('black')) {
+                blackAboutTimeoutId = setTimeout(playBlackTagLoop, 400 + Math.floor(Math.random() * 500));
+                return;
+            }
             isBlackStatic = !isBlackStatic;
+            markAnimatingAbout('black', !isBlackStatic);
             if (isBlackStatic) {
                 blackSprite.className = "black-about-sprite tag-static";
-                blackAboutTimeoutId = setTimeout(playBlackTagLoop, 2800);
+                blackAboutTimeoutId = setTimeout(playBlackTagLoop, 2600 + Math.floor(Math.random() * 2400)); // Rest 2.6-5.0s
             } else {
                 blackSprite.className = "black-about-sprite tag-anim";
-                blackAboutTimeoutId = setTimeout(playBlackTagLoop, 2700);
+                blackAboutTimeoutId = setTimeout(playBlackTagLoop, aboutLoopsMs(900)); // 2 or 3 loops of 0.9s
             }
         }
-        blackAboutTimeoutId = setTimeout(playBlackTagLoop, 3200);
+        blackAboutTimeoutId = setTimeout(playBlackTagLoop, 1600 + Math.floor(Math.random() * 2000)); // First start 1.6-3.6s
+    }
+
+    const tuxedoSprite = document.getElementById("tuxedo-about-sprite");
+    if (tuxedoSprite) {
+        let isTuxedoStatic = true;
+        tuxedoSprite.className = "tuxedo-about-sprite tag-static";
+
+        function playTuxedoTagLoop() {
+            if (aboutContent && aboutContent.classList.contains("hidden")) return;
+
+            // About to animate, but another cat just started or both others are moving: hold the pose a bit longer
+            if (isTuxedoStatic && !mayAnimateAbout('tuxedo')) {
+                tuxedoAboutTimeoutId = setTimeout(playTuxedoTagLoop, 400 + Math.floor(Math.random() * 500));
+                return;
+            }
+            isTuxedoStatic = !isTuxedoStatic;
+            markAnimatingAbout('tuxedo', !isTuxedoStatic);
+            if (isTuxedoStatic) {
+                tuxedoSprite.className = "tuxedo-about-sprite tag-static";
+                tuxedoAboutTimeoutId = setTimeout(playTuxedoTagLoop, 2400 + Math.floor(Math.random() * 2400)); // Rest 2.4-4.8s
+            } else {
+                tuxedoSprite.className = "tuxedo-about-sprite tag-anim";
+                tuxedoAboutTimeoutId = setTimeout(playTuxedoTagLoop, aboutLoopsMs(1200)); // 2 or 3 loops of the 1.2s 4-frame tag animation
+            }
+        }
+        tuxedoAboutTimeoutId = setTimeout(playTuxedoTagLoop, 1200 + Math.floor(Math.random() * 2000)); // First start 1.2-3.2s
     }
 }
 const startOrangeAboutSequence = startAboutSequences;
@@ -341,15 +421,37 @@ function renderCalendar() {
     });
 }
 
+// Each dashboard load gets a number; only the newest request may draw. Week clicks can have several
+// loads in flight at once, and their answers can arrive in any order: an older answer arriving last
+// would draw the wrong week while the app believes it is on the newest one (N6).
+let analyticsRequestId = 0;
+
 async function loadAnalytics(weeksAgo = 0) {
     currentWeeksAgo = weeksAgo;
-    const data = await window.mainAPI.loadanalytics(weeksAgo);
+    const requestId = ++analyticsRequestId;
+    let data;
+    try {
+        data = await window.mainAPI.loadanalytics(weeksAgo);
+    } catch (err) {
+        if (requestId !== analyticsRequestId) return;
+        // The stats could not be read (e.g. the database is locked or damaged). Say so instead of
+        // showing zeros that look like "no history" (N5). Refresh (↻) or reopening Settings retries.
+        console.error("[PAWSE / Analytics] Failed to load dashboard:", err?.message || err);
+        showDashboardLoadError(weeksAgo);
+        return;
+    }
+    if (requestId !== analyticsRequestId) return; // A newer request started while waiting: drop this stale answer
+    renderDashboard(data, weeksAgo);
+}
 
+// Draws every dashboard part (cards, week label, chart) from one analytics result. Split out of
+// loadAnalytics so the "couldn't load" state can draw the same layout first (N5).
+function renderDashboard(data, weeksAgo, { includeLiveSession = true } = {}) {
     // Live Session Integration: Seamlessly fold in in-progress focus time when a timer is currently active
     try {
         const isTimerRunning = localStorage.getItem('timerRunning') === 'true';
         const durableStateStr = localStorage.getItem('pawseDurableState');
-        if (durableStateStr && isTimerRunning) {
+        if (durableStateStr && isTimerRunning && includeLiveSession) {
             const liveState = JSON.parse(durableStateStr);
             const liveActualWork = Number(liveState.actualWork) || 0;
             const liveFlushedWork = Number(liveState.flushedWorkSeconds) || 0;
@@ -429,7 +531,10 @@ async function loadAnalytics(weeksAgo = 0) {
     const streak = data.current_streak || 0;
     const bestStreak = data.best_streak || 0; // Fallback to 0 for logic checks
 
-    if (currentStreakEl) currentStreakEl.textContent = streak;
+    if (currentStreakEl) {
+        currentStreakEl.style.display = ''; // shown again after a "couldn't load" state hid it
+        currentStreakEl.textContent = streak;
+    }
     if (streakUnitEl) streakUnitEl.textContent = streak <= 1 ? 'day' : 'days';
 
     if (streakCard && bestStreakEl) {
@@ -676,6 +781,35 @@ const topCompanionCard = document.getElementById("top-companion-card");
     }
 }
 
+// "Couldn't load" state (N5): draw the normal empty layout (week label, day labels), then replace
+// every value with a neutral "—" and say why. Never show zeros, which look like "no history yet".
+// The date line is left as is; refresh (↻) or reopening Settings tries again.
+function showDashboardLoadError(weeksAgo) {
+    const emptyWeek = {
+        today_work_seconds: 0, avg_daily_seconds: 0, current_streak: 0, best_streak: 0,
+        favorite_cat: null, favorite_cat_percentage: 0, historical_pomodoro: 0,
+        weekly_data: [0, 0, 0, 0, 0, 0, 0], weekly_avg_seconds: 0
+    };
+    renderDashboard(emptyWeek, weeksAgo, { includeLiveSession: false });
+
+    const setText = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = text; el.removeAttribute('title'); }
+    };
+    // All three values use the card's large pixel font, so the dashes line up across the cards
+    setText("today_work_seconds", "—");
+    setText("streak_unit", "—");
+    const streakNumberEl = document.getElementById("current_streak");
+    if (streakNumberEl) streakNumberEl.style.display = 'none'; // its 8px row gap would shift the dash
+    setText("top_companion_name", "—");
+    setText("today_vs_avg", "Couldn't load");
+    setText("best_streak", "Couldn't load");
+    setText("top_companion_rate", "Couldn't load");
+
+    const chartMessage = document.querySelector(".graph-bars .no-data-message");
+    if (chartMessage) chartMessage.textContent = "Couldn't load your dashboard. Press refresh or reopen Settings.";
+}
+
 loadAnalytics();
 
 // Dashboard Manual Refresh Handler
@@ -686,14 +820,13 @@ if (refreshBtn) {
     const handleRefresh = async () => {
         if (isRefreshingAnalytics) return;
         isRefreshingAnalytics = true;
-
         refreshBtn.classList.add("spinning");
         updateDashboardDateTime();
 
         try {
             await loadAnalytics(currentWeeksAgo);
         } catch (err) {
-            console.error("Failed to refresh dashboard analytics:", err);
+            console.error("[PAWSE / Analytics] Failed to refresh dashboard analytics:", err?.message || err);
         } finally {
             // Keep spinning class for the full 500ms CSS animation cycle for smooth UX
             setTimeout(() => {
@@ -991,8 +1124,27 @@ function getIdleVersionMessage(version) {
     return `Current version: ${vStr}`;
 }
 
+// --- RESTART CONFIRMATION DURING AN ACTIVE SESSION ---
+// "Restart & Update" quits the app, which ends a running focus session (it can't be resumed).
+// If a session is running, the first click only warns; a second click within the window restarts.
+const RESTART_CONFIRM_WINDOW_MS = 6000;
+let restartConfirmPending = false;
+let restartConfirmTimer = null;
+
+function cancelRestartConfirm() {
+    restartConfirmPending = false;
+    if (restartConfirmTimer) {
+        clearTimeout(restartConfirmTimer);
+        restartConfirmTimer = null;
+    }
+    if (updateBtn) updateBtn.classList.remove("btn-danger");
+}
+
 function applyUpdateStatus(status) {
     if (!status) return;
+
+    // Any fresh status from the main process replaces a pending restart confirmation
+    cancelRestartConfirm();
 
     if (status.isStore || status.state === "windows-store") {
         isStoreEnvironment = true;
@@ -1073,8 +1225,39 @@ if (updateBtn) {
         }
 
         const currentText = updateBtn.textContent.trim();
-        if (currentText === "Restart & Update" || currentText === "Restart Now") {
-            // Immediate action: trigger app restart/reload directly on click
+        if (currentText === "Download") {
+            // Manual-update builds (macOS, Linux .deb): open the release page in the browser
+            if (window.mainAPI && window.mainAPI.downloadUpdate) window.mainAPI.downloadUpdate();
+            return;
+        }
+        if (currentText === "Restart & Update" || currentText === "Restart Now" || currentText === "Restart Anyway") {
+            // A timer page is open (running, paused, or waiting at a phase modal)
+            const sessionActive = localStorage.getItem('timerRunning') === 'true';
+
+            if (sessionActive && !restartConfirmPending) {
+                // First click during a session: warn instead of restarting
+                const previousText = currentText;
+                const previousMessage = updateMessage ? updateMessage.textContent : "";
+                restartConfirmPending = true;
+                updateBtn.textContent = "Restart Anyway";
+                updateBtn.classList.add("btn-danger"); // Red: destructive confirmation
+                if (updateMessage) {
+                    // One line, like other Settings descriptions; the button text says what to do next
+                    updateMessage.textContent = "Restarting will end your current focus session.";
+                }
+                restartConfirmTimer = setTimeout(() => {
+                    // No second click: return to the normal "ready to restart" state
+                    restartConfirmPending = false;
+                    restartConfirmTimer = null;
+                    updateBtn.classList.remove("btn-danger");
+                    updateBtn.textContent = previousText;
+                    if (updateMessage) updateMessage.textContent = previousMessage;
+                }, RESTART_CONFIRM_WINDOW_MS);
+                return;
+            }
+
+            // No session running, or the user confirmed with a second click
+            cancelRestartConfirm();
             window.mainAPI.restartApp();
         } else {
             // "Check for Updates" or "Retry"

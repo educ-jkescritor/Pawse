@@ -78,6 +78,11 @@
     /* --- SYSTEM ALERTS (Green) --- */
     --sys-green-solid: #4CAF50;
 
+    /* --- SYSTEM ALERTS (Red: destructive actions) --- */
+    --sys-red-solid: #E5484D;
+    --sys-red-hover: #CE3A3F;
+    --sys-red-active: #B22F34;
+
     /* --- CLASSIC TIMER (Green) --- */
     --theme-classic-solid: #CFE58A;
     --theme-classic-light: #ECFEA9;
@@ -732,7 +737,8 @@ body::after {
     /* Smooth transition for the zoom effect */
 }
 
-/* Ginger Cat Selection Bottom-Aligned Peeking Sprite */
+/* Selection Bottom-Aligned Peeking Sprites (all three companions) */
+#tuxedo_cat .cat_image,
 #orange_cat .cat_image,
 #black_cat .cat_image {
     align-self: stretch;
@@ -744,6 +750,7 @@ body::after {
     overflow: visible;
 }
 
+.tuxedo-main-sprite,
 .orange-main-sprite,
 .black-main-sprite {
     display: block;
@@ -898,6 +905,70 @@ body::after {
 }
 
 @keyframes blackMainAnim {
+    from { background-position: 0px 0px; }
+    to { background-position: -256px 0px; }
+}
+
+/* Tux (Tuxedo Cat) Main Sprites & Animations: same structure as Ginger and Void (4 poses + 4-frame sheet) */
+.tuxedo-main-sprite::before,
+.tuxedo-main-sprite::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.tuxedo-main-sprite::before {
+    background-image:
+        url('../assets/sprites/tuxedo_cat_main_static1.png'),
+        url('../assets/sprites/tuxedo_cat_main_static2.png'),
+        url('../assets/sprites/tuxedo_cat_main_static3.png'),
+        url('../assets/sprites/tuxedo_cat_main_static4.png');
+}
+
+.tuxedo-main-sprite::after {
+    background-image: url('../assets/sprites/tuxedo_cat_main.png');
+}
+
+.tuxedo-main-sprite.main-static,
+.tuxedo-main-sprite.main-static-1 {
+    background-image: url('../assets/sprites/tuxedo_cat_main_static1.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+}
+
+.tuxedo-main-sprite.main-static-2 {
+    background-image: url('../assets/sprites/tuxedo_cat_main_static2.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+}
+
+.tuxedo-main-sprite.main-static-3 {
+    background-image: url('../assets/sprites/tuxedo_cat_main_static3.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+}
+
+.tuxedo-main-sprite.main-static-4 {
+    background-image: url('../assets/sprites/tuxedo_cat_main_static4.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+}
+
+.tuxedo-main-sprite.main-anim {
+    background-image: url('../assets/sprites/tuxedo_cat_main.png');
+    background-size: 256px 64px; /* 4 frames * 64px */
+    background-position: 0px 0px;
+    animation: tuxedoMainAnim 1.0s steps(4) infinite;
+}
+
+@keyframes tuxedoMainAnim {
     from { background-position: 0px 0px; }
     to { background-position: -256px 0px; }
 }
