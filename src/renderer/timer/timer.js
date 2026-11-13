@@ -381,6 +381,7 @@ function stopTuxSippingSound() {
 
 function playTuxSippingSound() {
     stopTuxSippingSound();
+    if (isTimerOnlyMode()) return;
 
     let volume = parseInt(localStorage.getItem('companionVolume'), 10);
     if (Number.isNaN(volume)) volume = 50;
@@ -427,6 +428,7 @@ function stopGingerSleepingSound() {
 
 function playGingerSleepingSound() {
     stopGingerSleepingSound();
+    if (isTimerOnlyMode()) return;
 
     let volume = parseInt(localStorage.getItem('companionVolume'), 10);
     if (Number.isNaN(volume)) volume = 50;
@@ -473,6 +475,7 @@ function stopVoidReadingSound() {
 
 function playVoidReadingSound() {
     stopVoidReadingSound();
+    if (isTimerOnlyMode()) return;
 
     let volume = parseInt(localStorage.getItem('companionVolume'), 10);
     if (Number.isNaN(volume)) volume = 50;
@@ -493,6 +496,24 @@ function playVoidReadingSound() {
     voidReadingAudio.play().catch(error => {
         console.warn('Void reading sound could not play:', error);
     });
+}
+
+// Check if the timer is running in "timer-only mode" 
+function isTimerOnlyMode() {
+    return document.body.classList.contains('timer-only-mode');
+}
+
+function stopAllCatSounds() {
+    purrAudio.pause();
+
+    Object.values(meowAudios).forEach(audio => {
+        audio.pause();
+        audio.currentTime = 0;
+    });
+
+    stopTuxSippingSound();
+    stopGingerSleepingSound();
+    stopVoidReadingSound();
 }
 
 function updateAudioSettings() {
@@ -576,6 +597,7 @@ function updateAudioSettings() {
     // 5. Purr checklist: (volume > 0) AND (unmuted) AND (session running) AND (work mode)
     // Continuous purring is available for Tux and Void only.
     if (
+        !isTimerOnlyMode() &&
         catConfig.dbId !== 'orange_cat' &&
         purVol > 0 &&
         soundEnabled &&
@@ -810,7 +832,12 @@ catSprite.addEventListener('click', () => {
     if (isNaN(compVol)) compVol = 50;
 
     const meowAudio = meowAudios[catClass];
-    if (meowAudio && soundEnabled && compVol > 0) {
+    if (
+        !isTimerOnlyMode() &&
+        meowAudio &&
+        soundEnabled &&
+        compVol > 0
+    ) {
         meowAudio.currentTime = 0; // Rewind to start for spam clicks
         meowAudio.play().catch(e => {});
     }
@@ -1979,3 +2006,33 @@ window.addEventListener('keydown', (e) => {
         }
     }
 });
+
+// Watch mode changes from resize buttons, restore controls,
+// keyboard shortcuts, and titlebar.js.
+let wasTimerOnlyMode = isTimerOnlyMode();
+
+function syncCatAudioWithWindowMode() {
+    if (isTimerOnlyMode()) {
+        stopAllCatSounds();
+    }
+
+    updateAudioSettings();
+}
+
+const catAudioModeObserver = new MutationObserver(() => {
+    const timerOnlyMode = isTimerOnlyMode();
+
+    // Ignore unrelated body-class changes.
+    if (timerOnlyMode === wasTimerOnlyMode) return;
+
+    wasTimerOnlyMode = timerOnlyMode;
+    syncCatAudioWithWindowMode();
+});
+
+catAudioModeObserver.observe(document.body, {
+    attributes: true,
+    attributeFilter: ['class']
+});
+
+// Apply the rule if the page starts in timer-only mode.
+syncCatAudioWithWindowMode();
