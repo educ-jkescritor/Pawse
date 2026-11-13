@@ -99,7 +99,7 @@ A core engineering highlight of PAWSE is its crash-resilient timer. Traditional 
 ```mermaid
 flowchart TD
     A["Active Timer Tick (1s Interval)"] --> B["Capture State Snapshot<br/>(remainingTime, cycleCount, focus totals, strict mode)"]
-    B --> C["Write to localStorage<br/>('pawseDurableState')"]
+    B --> C["Write to a backup file on disk<br/>(durable-state.json, via the main process)"]
 
     D["Crash / Force Quit / Power Loss"] --> E["App Restart: Companion Menu (index.js)"]
     E --> F{"Unsaved snapshot<br/>found?"}
@@ -114,13 +114,13 @@ flowchart TD
 ```
 
 ### The Recovery Rules
-1. Every second, `src/renderer/timer/timer.js` saves the companion, cycle, remaining time, focus totals, and Strict Mode state to `localStorage`.
+1. Every second, `src/renderer/timer/timer.js` saves the companion, cycle, remaining time, focus totals, and Strict Mode state. The main process writes it straight to a small backup file (`durable-state.json`) in the app's data folder, so it is always current on disk.
 2. On restart, the companion menu (`index.js`) first saves any unsaved focus time from that snapshot to the local database, so your stats and streaks keep it even if you pick a different companion.
 3. Picking the **same** companion within 12 hours resumes the session at the time it stopped. Time while the app was closed is **not** counted as focus, so the countdown continues exactly where you left it.
 4. A completed set (all 4 cycles) is saved the moment it finishes, so it's never lost and never resumed.
 5. The timer uses a monotonic clock, so changing the system clock can't speed it up or slow it down. When the computer sleeps, the timer pauses (Strict Mode resumes it automatically on wake).
 
-> **Note:** after a hard crash, the last few seconds before the crash may not be recovered.
+> **Note:** after a hard crash, at most about the last second before the crash may not be recovered. When a session ends normally, the backup is marked as cleared, so an ended session is never brought back.
 
 ---
 
@@ -135,7 +135,9 @@ flowchart TD
     subgraph Backend ["Main Process (Node.js)"]
         A["main.js<br/>Window Lifecycles & IPC Dispatcher"]
         C[("pawse.db<br/>SQLite3 Engine (database.js)")]
+        B[("durable-state.json<br/>Crash backup (written every second)")]
         A <-->|"Parameterized Queries<br/>(Zero SQLi Risk)"| C
+        A <-->|"Atomic write / read"| B
     end
 
     subgraph Bridge ["Secure Preload Gateway"]
@@ -146,10 +148,11 @@ flowchart TD
         UI["UI Views<br/>index.html | settings.html | timer.html"]
         TM["timer.js<br/>Timer State Machine"]
         SM["settings.js<br/>Dashboard & Config Manager"]
-        DS[("localStorage<br/>pawseDurableState")]
+        DS[("localStorage<br/>Settings + live dashboard copy")]
         UI --- TM
         UI --- SM
-        TM <-->|"Sub-Second State Snapshot"| DS
+        TM -->|"Live session copy"| DS
+        SM <-->|"Settings"| DS
     end
 
     A -->|"Enforces CSP & OS Sandbox"| UI

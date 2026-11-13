@@ -13,7 +13,7 @@ Rules for how to work live in [`AGENTS.md`](../AGENTS.md). This file is status a
 
 ## Part 1 — Current Status
 
-_Last updated: 2026-11-12 (N7)_
+_Last updated: 2026-11-13 (crash-backup wording)_
 
 **Next up (agreed path to release):**
 1. ~~**N1:** crash during the final "Pawsome Job!" modal loses the Pomodoro~~ ✅ done
@@ -22,8 +22,9 @@ _Last updated: 2026-11-12 (N7)_
 4. **Manual testing (L4):** checklist written in [`docs/RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md) for Windows, macOS, and Linux. **Not run yet.** Windows can be tested now; macOS and real-Linux testing are **deferred** (no test machines). Run at least Windows before publishing v1.0.0 following D16 (delete the old v1.1.0 release and tags first)
 5. ~~**N8:** saves could roll stored focus time back~~ ✅ done (`478cf5d`)
 6. ~~**N3:** crash backup written through the main process to a file every second~~ ✅ done (`796810a`)
-7. ~~**N7:** crash during a break's skip confirmation resumed one cycle ahead~~ ✅ done (_(this commit)_)
-8. **Next:** correct the crash-recovery wording in `README.md` (resume is now exact; the last ~1 s may be lost) and `AGENTS.md` §6.2 (backup lives in a file; localStorage copy kept for the dashboard and old-version fallback)
+7. ~~**N7:** crash during a break's skip confirmation resumed one cycle ahead~~ ✅ done (`47748f1`)
+8. ~~**Wording:** README and `AGENTS.md` §6.2 describe the file-based crash backup~~ ✅ done (_(this commit)_)
+9. **Next:** N2 (fish counter after restore), then N4 (exit dialog text)
 
 After release: R2 icon (needs a designer asset), then the 💤 items below.
 
@@ -37,7 +38,7 @@ Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (
 | A1b | An older public release contained bundled credential/session files | ⏳ | Credentials revoked and RLS verified. **Still to do:** delete the old v1.1.0 release and the v1.1.0 / v1.0.0 tags before publishing v1.0.0 (D16) |
 | A2 | Strict Mode: after sleep/crash the timer was paused with Play disabled (user locked out) | ✅ | `9ea9609`, `117bcbd` |
 | A3 | Crash + picking a different cat (or returning after 12 h) lost unsaved work | ✅ | `6c636dd`: menu salvages the snapshot to the DB |
-| A4a | "Restart & Update" ended a running session without warning | ✅ | `4c76f49`: two-click confirm, red "Restart Anyway". The red styles were accidentally deleted by `06d15c2` (sidebar update) and restored in _(this commit)_ |
+| A4a | "Restart & Update" ended a running session without warning | ✅ | `4c76f49`: two-click confirm, red "Restart Anyway". The red styles were accidentally deleted by `06d15c2` (sidebar update) and restored in `8d6a188` |
 | A4b | Quitting while a save was in flight crashed the app on exit (abort, code 134) | ✅ | `4412524`: wait for saves, close DB, 4 s limit |
 | A5 | Windows: notification re-shown in a tight loop when Windows closes it immediately (DND / Focus Assist / notifications off) | ✅ | `3fb78d4`: respect DND (stop if closed < 2 s), cap 6 re-shows, handle `failed`. Simulated: 285 → 1 notification (D13) |
 | A5b | macOS/Linux: any notification close (including auto-expiry or DND) stopped the alarm sound after a few seconds | ✅ | Same commit as A5: only a confirmed user dismissal (Windows `userCanceled`) silences the alarm (D13) |
@@ -68,7 +69,7 @@ Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (
 | N4 | Exit modal says "Your progress won't be saved", but focus time **is** saved on exit (normal mode copy) | ❌ |
 | N5 | Dashboard `loadAnalytics` has no error handling: a failed query leaves it blank/stale | ❌ |
 | N6 | Fast week navigation: responses can arrive out of order and draw the wrong week | ❌ |
-| N7 | Crash while a break's **skip confirmation** ("End Break Early?" / "Finish Session?") was open resumed **one cycle ahead**: pressing Skip already ran `cycleCount++`, so the backup saved "still in the break" together with "cycle already counted". On the long break this led to "5 cycles". Normal mode only (Skip is blocked in strict) | ✅ | _(this commit)_: on a manual skip the cycle is only counted when the user **confirms** (inside the modal's action); natural endings still count it immediately (D19). Reproduced before: cycle 1 → 2 and 3 → 4 after crash; after: stays 1 and 3 |
+| N7 | Crash while a break's **skip confirmation** ("End Break Early?" / "Finish Session?") was open resumed **one cycle ahead**: pressing Skip already ran `cycleCount++`, so the backup saved "still in the break" together with "cycle already counted". On the long break this led to "5 cycles". Normal mode only (Skip is blocked in strict) | ✅ | `47748f1`: on a manual skip the cycle is only counted when the user **confirms** (inside the modal's action); natural endings still count it immediately (D19). Reproduced before: cycle 1 → 2 and 3 → 4 after crash; after: stays 1 and 3 |
 | N8 | A save always **overwrote** the session's totals, even with older, smaller values. A crash backup up to a minute old (N3) salvaged by the menu rolled stored work back (3600 s → 1 s) | ✅ | `478cf5d`: on conflict the upsert keeps the **larger** value for all five totals (`MAX(COALESCE(old, 0), COALESCE(new, 0))`); totals only grow per uuid, so the larger is always the newer. Remaining after N8: the resumed **timer** can still rewind up to ~1 minute and the redone minute is not added again (stats can be up to ~1 minute short, never higher, never rolled back) → fixed by N3 (D17) |
 | A9 | Upsert overwrites `date_completed` with the latest save time | ❌ |
 | A10 | Midnight rollover is only checked while the timer is ticking | ❌ |
@@ -207,7 +208,8 @@ Newest first. One line per commit.
 
 | Date | Commit | Change |
 | :--- | :--- | :--- |
-| 2026-11-12 | _(this commit)_ | Count a skipped break's cycle only when the user confirms (N7) |
+| 2026-11-13 | _(this commit)_ | README + `AGENTS.md` §6.2/§7.4: describe the file-based crash backup (≤ ~1 s lost, file is the authority, "cleared" marker) |
+| 2026-11-12 | `47748f1` | Count a skipped break's cycle only when the user confirms (N7) |
 | 2026-11-12 | `796810a` | Crash backup in a main-process file every second; "cleared" marker stops ended sessions from coming back (N3, N9) |
 | 2026-11-12 | `b719b35` | Record N8 results; N3 scheduled next |
 | 2026-11-12 | `478cf5d` | Keep the larger totals when saving so stats never roll back after a crash (N8) |

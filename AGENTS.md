@@ -108,13 +108,16 @@ UI changes must fit these exact sizes with no scrollbars or overflow.
 - Known caveat: on upsert, `date_completed` becomes the latest save time (the `COALESCE` fallback to the old value never applies).
 - Migrations are ad hoc (`PRAGMA table_info` + `ALTER TABLE`). Schema changes must be backward-compatible with existing user DBs.
 
-### 6.2 Durable snapshot (`localStorage['pawseDurableState']`)
-- Written every second by `timer.js`. Fields: `catType, sessionUuid, remainingTime, workingTime, cycleCount, isRunning, actualWork, actualBreak, flushedWorkSeconds, flushedBreakSeconds, workCount, breakCount, strictMode, timestamp`.
+### 6.2 Durable snapshot (crash backup)
+- Written every second by `timer.js` through `writeDurableSnapshot()`. Fields: `catType, sessionUuid, remainingTime, workingTime, cycleCount, isRunning, actualWork, actualBreak, flushedWorkSeconds, flushedBreakSeconds, workCount, breakCount, strictMode, timestamp`.
+- **Primary copy: a file** written by the main process: `app.getPath('userData')/durable-state.json` (IPC `durable-write` / `durable-read` / `durable-clear`, exposed as `mainAPI.writeDurableState` / `readDurableState` / `clearDurableState`). Writes go to a temp file, then rename, so the file is never half-written. It reaches disk right away: a hard crash loses at most ~1 s.
+- **The file is the authority once it exists.** Ending a session writes `{"cleared":true,"timestamp":…}` instead of deleting the file; a stale localStorage copy must never resurrect an ended session (N9). Readers (`readDurableSnapshot()` in `timer.js`, the salvage in `index.js`) use localStorage **only when no file exists** (first launch after updating from a version without the file). A corrupt file counts as "no backup".
+- **Secondary copy: `localStorage['pawseDurableState']`**, still written every second because the Settings dashboard reads it for live session time. Chromium writes localStorage to disk only about once a minute, so never rely on it for crash recovery.
+- Always go through the helpers (`readDurableSnapshot` / `writeDurableSnapshot` / `clearDurableSnapshot` in `timer.js`, `clearCrashBackup` in `titlebar.js`); don't call `localStorage` for this key directly.
 - Restored only for the **same cat** within **12 h**. Crash time is frozen, not deducted.
 - **Strict sessions** restore running; normal sessions restore paused.
 - The menu (`index.js`) salvages any snapshot with work/break time to the DB **before** a timer page can overwrite or discard it.
-- Removed on normal exit (`beforeunload`) and on Home/Return to Menu.
-- Chromium writes localStorage to disk **in batches**: a hard kill can lose the last ~15 s. Don't promise "exact" recovery.
+- Cleared on normal exit (`beforeunload`), Home/Return to Menu, and the moment a set completes naturally.
 - Any new timer state must be added to **both** runtime variables and the snapshot.
 
 ### 6.3 Other localStorage keys
@@ -182,7 +185,7 @@ UI changes must fit these exact sizes with no scrollbars or overflow.
    `process.mainModule.require('electron').BrowserWindow.getAllWindows()[0].webContents.send('system-suspend')`
 5. **Simulate events:**
    - Freeze: CDP `Debugger.pause` for 20 s, then `Debugger.resume`
-   - Crash: `pkill -9` on the launched Electron (wait 10–15 s first; localStorage writes to disk in batches)
+   - Crash: `pkill -9` on the launched Electron (wait ~2 s first so the backup file has a recent write; localStorage itself lags ~1 minute)
    - Clock change: override `Date.now` in the page
    - Normal close: click the real UI (✕ → confirm), don't kill
 6. **Check results** by reading the sandbox DB with `sqlite3` (read-only) and/or `localStorage`.
