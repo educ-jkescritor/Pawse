@@ -357,14 +357,29 @@ let analyticsRequestId = 0;
 async function loadAnalytics(weeksAgo = 0) {
     currentWeeksAgo = weeksAgo;
     const requestId = ++analyticsRequestId;
-    const data = await window.mainAPI.loadanalytics(weeksAgo);
+    let data;
+    try {
+        data = await window.mainAPI.loadanalytics(weeksAgo);
+    } catch (err) {
+        if (requestId !== analyticsRequestId) return;
+        // The stats could not be read (e.g. the database is locked or damaged). Say so instead of
+        // showing zeros that look like "no history" (N5). Refresh (↻) or reopening Settings retries.
+        console.error("[PAWSE / Analytics] Failed to load dashboard:", err?.message || err);
+        showDashboardLoadError(weeksAgo);
+        return;
+    }
     if (requestId !== analyticsRequestId) return; // A newer request started while waiting: drop this stale answer
+    renderDashboard(data, weeksAgo);
+}
 
+// Draws every dashboard part (cards, week label, chart) from one analytics result. Split out of
+// loadAnalytics so the "couldn't load" state can draw the same layout first (N5).
+function renderDashboard(data, weeksAgo, { includeLiveSession = true } = {}) {
     // Live Session Integration: Seamlessly fold in in-progress focus time when a timer is currently active
     try {
         const isTimerRunning = localStorage.getItem('timerRunning') === 'true';
         const durableStateStr = localStorage.getItem('pawseDurableState');
-        if (durableStateStr && isTimerRunning) {
+        if (durableStateStr && isTimerRunning && includeLiveSession) {
             const liveState = JSON.parse(durableStateStr);
             const liveActualWork = Number(liveState.actualWork) || 0;
             const liveFlushedWork = Number(liveState.flushedWorkSeconds) || 0;
@@ -444,7 +459,10 @@ async function loadAnalytics(weeksAgo = 0) {
     const streak = data.current_streak || 0;
     const bestStreak = data.best_streak || 0; // Fallback to 0 for logic checks
 
-    if (currentStreakEl) currentStreakEl.textContent = streak;
+    if (currentStreakEl) {
+        currentStreakEl.style.display = ''; // shown again after a "couldn't load" state hid it
+        currentStreakEl.textContent = streak;
+    }
     if (streakUnitEl) streakUnitEl.textContent = streak <= 1 ? 'day' : 'days';
 
     if (streakCard && bestStreakEl) {
@@ -689,6 +707,35 @@ const topCompanionCard = document.getElementById("top-companion-card");
             graphBarsContainer.appendChild(avgLine);
         }
     }
+}
+
+// "Couldn't load" state (N5): draw the normal empty layout (week label, day labels), then replace
+// every value with a neutral "—" and say why. Never show zeros, which look like "no history yet".
+// The date line is left as is; refresh (↻) or reopening Settings tries again.
+function showDashboardLoadError(weeksAgo) {
+    const emptyWeek = {
+        today_work_seconds: 0, avg_daily_seconds: 0, current_streak: 0, best_streak: 0,
+        favorite_cat: null, favorite_cat_percentage: 0, historical_pomodoro: 0,
+        weekly_data: [0, 0, 0, 0, 0, 0, 0], weekly_avg_seconds: 0
+    };
+    renderDashboard(emptyWeek, weeksAgo, { includeLiveSession: false });
+
+    const setText = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = text; el.removeAttribute('title'); }
+    };
+    // All three values use the card's large pixel font, so the dashes line up across the cards
+    setText("today_work_seconds", "—");
+    setText("streak_unit", "—");
+    const streakNumberEl = document.getElementById("current_streak");
+    if (streakNumberEl) streakNumberEl.style.display = 'none'; // its 8px row gap would shift the dash
+    setText("top_companion_name", "—");
+    setText("today_vs_avg", "Couldn't load");
+    setText("best_streak", "Couldn't load");
+    setText("top_companion_rate", "Couldn't load");
+
+    const chartMessage = document.querySelector(".graph-bars .no-data-message");
+    if (chartMessage) chartMessage.textContent = "Couldn't load your dashboard. Press refresh or reopen Settings.";
 }
 
 loadAnalytics();

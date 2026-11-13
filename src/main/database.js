@@ -158,6 +158,9 @@ function generateAnalytics(weeksAgo = 0) {
             `;
                 
         db.get(todayWorkQuery, [todayStartUTC, todayEndUTC], (err, row1) => {
+            // The database could not be read: report it instead of returning zeros, which the dashboard would
+            // show as "no history yet" (N5). Later queries keep their old per-query fallbacks.
+            if (err) return reject(err);
             if (!err && row1 && row1.today_work_seconds) analyticData.today_work_seconds = row1.today_work_seconds;
 
             db.get(historicalPomodoroQuery, [], (err, row2) => {
