@@ -170,7 +170,10 @@ body.cat-only-mode .app-wrapper {
     background-image: url('../../assets/sprites/orange_cat_break.png');
     background-size: 576px 64px; /* 9 frames * 64px */
     background-position: 0px 0px;
-    animation: orangeBreakAnim 0.9s steps(9) infinite;
+    /* Petting plays ONCE and holds its last frame. Looping ("infinite") let the animation wrap back to frame 1 for
+       an instant before the idle pose returned (a visible flash in ~1 of 3 pets). jump-none: 9 frames, 0.1s each,
+       from frame 1 (0px) to the last frame (-512px). */
+    animation: orangeBreakAnim 0.9s steps(9, jump-none) 1 forwards;
     cursor: default;
 }
 
@@ -282,7 +285,8 @@ body.cat-only-mode .app-wrapper {
     background-image: url('../../assets/sprites/black_cat_break.png');
     background-size: 448px 64px; /* 7 frames * 64px */
     background-position: 0px 0px;
-    animation: blackBreakAnim 0.7s steps(7) infinite;
+    /* Petting plays once and holds its last frame (see Ginger): 7 frames, 0.1s each, 0px to -384px */
+    animation: blackBreakAnim 0.7s steps(7, jump-none) 1 forwards;
     cursor: default;
 }
 
@@ -376,7 +380,10 @@ body.cat-only-mode .app-wrapper {
     background-image: url('../../assets/sprites/tuxedo_cat_break.png');
     background-size: 640px 64px; /* 10 frames * 64px */
     background-position: 0px 0px;
-    animation: tuxedoBreakAnim 1.0s steps(10) infinite;
+    /* Petting plays once and holds its last frame (see Ginger): 10 frames, 0.1s each, 0px to -576px.
+       For an N-frame strip change three numbers: background-size N*64px, steps(N, jump-none) with duration N*0.1s,
+       and the keyframe end -(N-1)*64px. The JS waits for this animation to end, so it needs no change. */
+    animation: tuxedoBreakAnim 1.0s steps(10, jump-none) 1 forwards;
     cursor: default;
 }
 
@@ -387,7 +394,7 @@ body.cat-only-mode .app-wrapper {
 
 @keyframes tuxedoBreakAnim {
     from { background-position: 0px 0px; }
-    to { background-position: -640px 0px; }
+    to { background-position: -576px 0px; } /* last frame (10th) */
 }
 
 /* --- CLICK ANIMATIONS --- */
@@ -416,12 +423,12 @@ body.cat-only-mode .app-wrapper {
 
 @keyframes orangeBreakAnim {
     from { background-position: 0px 0px; }
-    to { background-position: -576px 0px; }
+    to { background-position: -512px 0px; } /* last frame (9th) */
 }
 
 @keyframes blackBreakAnim {
     from { background-position: 0px 0px; }
-    to { background-position: -448px 0px; }
+    to { background-position: -384px 0px; } /* last frame (7th) */
 }
 
 .cat-sprite.black_cat.clicking {

@@ -601,9 +601,24 @@ catSprite.addEventListener('click', () => {
         catSprite.style.backgroundImage = `url('../../assets/sprites/${catClass}_click.png')`;
     }
 
-    // Wait exactly the length of this specific cat's animation (Tux: 10 frames x 0.1s = 1.0s)
+    // Length of this cat's petting animation (Tux: 10 frames x 0.1s = 1.0s)
     const duration = (catClass === 'orange_cat') ? 900 : (catClass === 'black_cat' ? 700 : (catClass === 'tuxedo_cat' ? 1000 : (clickDurations[catClass] || 1000)));
-    setTimeout(() => {
+
+    // Return to the idle pose when the petting animation itself reports it has ended. It plays once and holds its
+    // last frame (timer.css), so there is no wrap-around flash, and a strip with a different frame count needs only
+    // CSS changes. The timer is a safety net (e.g. the window was hidden and the event never fired).
+    let pettingFinished = false;
+    const onPettingEnd = (event) => {
+        if (event.target === catSprite && /BreakAnim$/.test(event.animationName)) finishPetting();
+    };
+    if (hasStateSprites(catClass)) catSprite.addEventListener('animationend', onPettingEnd);
+    setTimeout(finishPetting, hasStateSprites(catClass) ? duration + 400 : duration);
+
+    function finishPetting() {
+        if (pettingFinished) return;
+        pettingFinished = true;
+        catSprite.removeEventListener('animationend', onPettingEnd);
+
         // If session forcefully shifted back to work time, let updateCatState handle it
         if (workingTime) return;
 
@@ -616,7 +631,7 @@ catSprite.addEventListener('click', () => {
             catSprite.className = `cat-sprite ${catClass} breaking`;
             catSprite.style.backgroundImage = `url('../../assets/sprites/${catClass}_static.png')`;
         }
-    }, duration);
+    }
 });
 
 function triggerWelcomeBubble() {
