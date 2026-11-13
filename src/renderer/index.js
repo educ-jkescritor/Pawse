@@ -84,9 +84,14 @@ if (localStorage.getItem('alwaysOnTop') === 'true') {
 
 let selectedCat = null;
 
-// Preload Ginger & Void selection sprites into memory to prevent any transition flicker
+// Preload Tux, Ginger & Void selection sprites into memory to prevent any transition flicker
 (function preloadMainSprites() {
     [
+        '../assets/sprites/tuxedo_cat_main.png',
+        '../assets/sprites/tuxedo_cat_main_static1.png',
+        '../assets/sprites/tuxedo_cat_main_static2.png',
+        '../assets/sprites/tuxedo_cat_main_static3.png',
+        '../assets/sprites/tuxedo_cat_main_static4.png',
         '../assets/sprites/orange_cat_main_static1.png',
         '../assets/sprites/orange_cat_main_static2.png',
         '../assets/sprites/orange_cat_main_static3.png',
@@ -106,13 +111,16 @@ let selectedCat = null;
 // Start continuous alternating sequence between orange_cat_main_static and orange_cat_main
 let orangeMainTimeoutId = null;
 let blackMainTimeoutId = null;
+let tuxedoMainTimeoutId = null;
 (function startCompanionMainSequences() {
     const orangeSprite = document.getElementById("orange-main-sprite");
     const blackSprite = document.getElementById("black-main-sprite");
-    // Main pose function
+    const tuxedoSprite = document.getElementById("tuxedo-main-sprite");
+    // Main pose function. otherCatFrame may be one frame or a list (the other companions' current poses)
     function pickNextPose(previousFrame, otherCatFrame) {
+        const others = [].concat(otherCatFrame);
         const available = [1, 2, 3, 4].filter(f => f !== previousFrame);
-        const preferred = available.filter(f => f !== otherCatFrame);
+        const preferred = available.filter(f => !others.includes(f));
         const pool = preferred.length > 0 ? preferred : available;
         return pool[Math.floor(Math.random() * pool.length)];
     }
@@ -129,6 +137,7 @@ let blackMainTimeoutId = null;
     // Dynamic randomized starting poses on every app launch
     let currentOrangeFrame = Math.floor(Math.random() * 4) + 1;
     let currentBlackFrame = pickNextPose(0, currentOrangeFrame);
+    let currentTuxedoFrame = pickNextPose(0, [currentOrangeFrame, currentBlackFrame]);
     // Duplicate pickNextPose converted to unused
 
     // Smart random frame picker: avoids picking the same previous frame,
@@ -148,7 +157,7 @@ let blackMainTimeoutId = null;
             isOrangeStatic = !isOrangeStatic;
             if (isOrangeStatic) {
                 // dynamic non-repeating pose selection
-                currentOrangeFrame = pickNextPose(currentOrangeFrame, currentBlackFrame);
+                currentOrangeFrame = pickNextPose(currentOrangeFrame, [currentBlackFrame, currentTuxedoFrame]);
                 orangeSprite.className = `orange-main-sprite main-static-${currentOrangeFrame}`;
                 const restDuration = 2000 + Math.floor(Math.random() * 2200);
                 orangeMainTimeoutId = setTimeout(playOrangeLoop, restDuration);
@@ -170,7 +179,7 @@ let blackMainTimeoutId = null;
             isBlackStatic = !isBlackStatic;
             if (isBlackStatic) {
                 // dynamic non-repeating pose selection
-                currentBlackFrame = pickNextPose(currentBlackFrame, currentOrangeFrame);
+                currentBlackFrame = pickNextPose(currentBlackFrame, [currentOrangeFrame, currentTuxedoFrame]);
                 blackSprite.className = `black-main-sprite main-static-${currentBlackFrame}`;
                 const restDuration = 2200 + Math.floor(Math.random() * 2400);
                 blackMainTimeoutId = setTimeout(playBlackLoop, restDuration);
@@ -183,6 +192,29 @@ let blackMainTimeoutId = null;
         // Slightly offset initial trigger so both companions do not animate in exact unison
         const initialBlackDelay = 2200 + Math.floor(Math.random() * 1800); // 2.2s - 4.0s
         blackMainTimeoutId = setTimeout(playBlackLoop, initialBlackDelay);
+    }
+
+    if (tuxedoSprite) {
+        let isTuxedoStatic = true;
+        tuxedoSprite.className = `tuxedo-main-sprite main-static-${currentTuxedoFrame}`;
+
+        function playTuxedoLoop() {
+            isTuxedoStatic = !isTuxedoStatic;
+            if (isTuxedoStatic) {
+                // dynamic non-repeating pose selection
+                currentTuxedoFrame = pickNextPose(currentTuxedoFrame, [currentOrangeFrame, currentBlackFrame]);
+                tuxedoSprite.className = `tuxedo-main-sprite main-static-${currentTuxedoFrame}`;
+                const restDuration = 2100 + Math.floor(Math.random() * 2300);
+                tuxedoMainTimeoutId = setTimeout(playTuxedoLoop, restDuration);
+            } else {
+                tuxedoSprite.className = "tuxedo-main-sprite main-anim";
+                const animCycles = Math.random() < 0.5 ? 1 : 2;
+                tuxedoMainTimeoutId = setTimeout(playTuxedoLoop, animCycles * 1000);
+            }
+        }
+        // Offset start so the three companions do not animate in unison
+        const initialTuxedoDelay = 3000 + Math.floor(Math.random() * 1600); // 3.0s - 4.6s
+        tuxedoMainTimeoutId = setTimeout(playTuxedoLoop, initialTuxedoDelay);
     }
     /* Legacy loop removed
     if (!sprite) return;

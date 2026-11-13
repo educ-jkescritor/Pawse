@@ -96,14 +96,6 @@ body.cat-only-mode .app-wrapper {
     animation-iteration-count: infinite;
 }
 
-/* Tuxedo Cat has 1 extra frame (8 frames total) */
-.cat-sprite.tuxedo_cat.working {
-    background-size: 4096px 512px; /* 4096 total width */
-    animation-name: workAnimationTuxedo;
-    animation-duration: 0.8s;
-    animation-timing-function: steps(8, end);
-}
-
 /* Orange Cat (Ginger) sleeping work animation: 3 frames in sprite sheet, 64x64 frame size (192x64 total sheet) */
 .cat-sprite.orange_cat {
     position: relative;
@@ -294,6 +286,110 @@ body.cat-only-mode .app-wrapper {
     cursor: default;
 }
 
+/* Tux (Tuxedo Cat) coffee-sipping work animation, sitting idle break animation, & grooming petting animation:
+   64x64 frame size, same structure as Void (work 5 frames, idle 4 frames, petting 10 frames) */
+.cat-sprite.tuxedo_cat.work-static,
+.cat-sprite.tuxedo_cat.sipping-anim,
+.cat-sprite.tuxedo_cat.idle-static,
+.cat-sprite.tuxedo_cat.idle-anim,
+.cat-sprite.tuxedo_cat.break-anim,
+.cat-sprite.tuxedo_cat.breaking {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    transform: scale(3.0) translateY(0px);
+    backface-visibility: hidden;
+    will-change: background-image, background-position;
+}
+
+.cat-sprite.tuxedo_cat::before,
+.cat-sprite.tuxedo_cat::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.cat-sprite.tuxedo_cat::before {
+    background-image:
+        url('../../assets/sprites/tuxedo_cat_work_static.png'),
+        url('../../assets/sprites/tuxedo_cat_work.png'),
+        url('../../assets/sprites/tuxedo_cat_idle_static.png');
+}
+
+.cat-sprite.tuxedo_cat::after {
+    background-image:
+        url('../../assets/sprites/tuxedo_cat_idle.png'),
+        url('../../assets/sprites/tuxedo_cat_break.png');
+}
+
+.cat-sprite.tuxedo_cat.work-static {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/tuxedo_cat_work_static.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+    cursor: default;
+}
+
+.cat-sprite.tuxedo_cat.sipping-anim {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/tuxedo_cat_work.png');
+    background-size: 320px 64px; /* 5 frames * 64px */
+    background-position: 0px 0px;
+    animation: workAnimationTuxedo 1.0s steps(5) infinite;
+}
+
+.cat-sprite.tuxedo_cat.idle-static,
+.cat-sprite.tuxedo_cat.breaking {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/tuxedo_cat_idle_static.png');
+    background-size: 64px 64px;
+    background-position: 0px 0px;
+    animation: none;
+    cursor: pointer;
+}
+
+.cat-sprite.tuxedo_cat.idle-anim {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/tuxedo_cat_idle.png');
+    background-size: 256px 64px; /* 4 frames * 64px */
+    background-position: 0px 0px;
+    animation: tuxedoIdleAnim 0.6s steps(4) infinite;
+    cursor: pointer;
+}
+
+.cat-sprite.tuxedo_cat.break-anim {
+    display: block;
+    width: 64px;
+    height: 64px;
+    background-image: url('../../assets/sprites/tuxedo_cat_break.png');
+    background-size: 640px 64px; /* 10 frames * 64px */
+    background-position: 0px 0px;
+    animation: tuxedoBreakAnim 1.0s steps(10) infinite;
+    cursor: default;
+}
+
+@keyframes tuxedoIdleAnim {
+    from { background-position: 0px 0px; }
+    to { background-position: -256px 0px; }
+}
+
+@keyframes tuxedoBreakAnim {
+    from { background-position: 0px 0px; }
+    to { background-position: -640px 0px; }
+}
+
 /* --- CLICK ANIMATIONS --- */
 .cat-sprite.orange_cat.clicking {
     width: 512px;
@@ -338,16 +434,6 @@ body.cat-only-mode .app-wrapper {
     to { background-position: -6144px 0px; }
 }
 
-.cat-sprite.tuxedo_cat.clicking {
-    display: block;
-    background-size: 5120px 512px; /* 10 frames */
-    animation: tuxedoClickAnim 1.0s steps(10) infinite;
-}
-@keyframes tuxedoClickAnim {
-    from { background-position: 0px 0px; }
-    to { background-position: -5120px 0px; }
-}
-
 @keyframes workAnimation {
     from { background-position: 0px 0px; }
     to { background-position: -3584px 0px; }
@@ -355,7 +441,7 @@ body.cat-only-mode .app-wrapper {
 
 @keyframes workAnimationTuxedo {
     from { background-position: 0px 0px; }
-    to { background-position: -4096px 0px; }
+    to { background-position: -320px 0px; }
 }
 
 @keyframes workAnimationOrange {
@@ -782,6 +868,15 @@ body.cat-only-mode .cat-sprite.black_cat.idle-anim,
 body.cat-only-mode .cat-sprite.black_cat.break-anim,
 body.cat-only-mode .cat-sprite.black_cat.breaking {
     transform: scale(3.0) translateY(0); /* Preserve 3.0x scale for 64x64 black cat in 240x240 mini window */
+}
+
+body.cat-only-mode .cat-sprite.tuxedo_cat.work-static,
+body.cat-only-mode .cat-sprite.tuxedo_cat.sipping-anim,
+body.cat-only-mode .cat-sprite.tuxedo_cat.idle-static,
+body.cat-only-mode .cat-sprite.tuxedo_cat.idle-anim,
+body.cat-only-mode .cat-sprite.tuxedo_cat.break-anim,
+body.cat-only-mode .cat-sprite.tuxedo_cat.breaking {
+    transform: scale(3.0) translateY(0); /* Preserve 3.0x scale for 64x64 tuxedo cat in 240x240 mini window */
 }
 
 body.cat-only-mode:hover .cat-sprite,

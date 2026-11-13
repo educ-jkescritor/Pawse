@@ -412,6 +412,13 @@ const clickDurations = {
     'tuxedo_cat': 1000  // 10 frames
 };
 
+// Cats drawn with the 64 px state sprites (work / idle / break strips + still poses). Since the new Tux set,
+// that is all three companions; the older "else" paths below (one 512 px work/static/click sheet) are kept
+// only as a fallback for a companion without these sprites.
+function hasStateSprites(catClass) {
+    return catClass === 'orange_cat' || catClass === 'black_cat' || catClass === 'tuxedo_cat';
+}
+
 // Preload companion sprite assets into browser GPU memory to eliminate any white flashing on swap
 (function preloadCompanionSprites() {
     const urls = [
@@ -433,6 +440,13 @@ const clickDurations = {
             '../../assets/sprites/black_cat_idle_static.png',
             '../../assets/sprites/black_cat_idle.png',
             '../../assets/sprites/black_cat_break.png'
+        );
+    } else if (catConfig.dbId === 'tuxedo_cat') {
+        urls.push(
+            '../../assets/sprites/tuxedo_cat_work_static.png',
+            '../../assets/sprites/tuxedo_cat_idle_static.png',
+            '../../assets/sprites/tuxedo_cat_idle.png',
+            '../../assets/sprites/tuxedo_cat_break.png'
         );
     }
     urls.forEach(url => {
@@ -516,7 +530,7 @@ function startBreakIdleLoop() {
     }
 
     const catClass = catConfig.dbId;
-    if ((catClass !== 'orange_cat' && catClass !== 'black_cat') || workingTime || isPetting) return;
+    if (!hasStateSprites(catClass) || workingTime || isPetting) return;
 
     catSprite.style.backgroundImage = '';
     catSprite.className = `cat-sprite ${catClass} idle-static`;
@@ -532,7 +546,8 @@ function startBreakIdleLoop() {
             spriteTimeoutId = setTimeout(playIdleSequence, 2500); // Rest on idle_static for 2.5s
         } else {
             catSprite.className = `cat-sprite ${catClass} idle-anim`;
-            spriteTimeoutId = setTimeout(playIdleSequence, 2250); // 3 complete 0.75s loops of 5-frame idle animation
+            // 3 complete loops of the idle animation: Ginger & Void 0.75s (5 frames), Tux 0.6s (4 frames)
+            spriteTimeoutId = setTimeout(playIdleSequence, catClass === 'tuxedo_cat' ? 1800 : 2250);
         }
     }
 
@@ -578,7 +593,7 @@ catSprite.addEventListener('click', () => {
     }
 
     // Shift to the click / break sprite (Pure sensory petting, NO speech bubble)
-    if (catClass === 'orange_cat' || catClass === 'black_cat') {
+    if (hasStateSprites(catClass)) {
         catSprite.style.backgroundImage = '';
         catSprite.className = `cat-sprite ${catClass} break-anim`;
     } else {
@@ -586,8 +601,8 @@ catSprite.addEventListener('click', () => {
         catSprite.style.backgroundImage = `url('../../assets/sprites/${catClass}_click.png')`;
     }
 
-    // Wait exactly the length of this specific cat's animation
-    const duration = (catClass === 'orange_cat') ? 900 : (catClass === 'black_cat' ? 700 : (clickDurations[catClass] || 1000));
+    // Wait exactly the length of this specific cat's animation (Tux: 10 frames x 0.1s = 1.0s)
+    const duration = (catClass === 'orange_cat') ? 900 : (catClass === 'black_cat' ? 700 : (catClass === 'tuxedo_cat' ? 1000 : (clickDurations[catClass] || 1000)));
     setTimeout(() => {
         // If session forcefully shifted back to work time, let updateCatState handle it
         if (workingTime) return;
@@ -595,7 +610,7 @@ catSprite.addEventListener('click', () => {
         isPetting = false;
 
         // Revert back to break idle loop (or static for other cats) and unlock
-        if (catClass === 'orange_cat' || catClass === 'black_cat') {
+        if (hasStateSprites(catClass)) {
             startBreakIdleLoop();
         } else {
             catSprite.className = `cat-sprite ${catClass} breaking`;
@@ -718,6 +733,28 @@ function updateCatState() {
             }
 
             spriteTimeoutId = setTimeout(playBlackWorkSequence, 2500);
+        } else if (catClass === 'tuxedo_cat') {
+            // Tux coffee sequence: starts with work_static (steady at the desk), then sips coffee
+            // (5-frame animation), then back to work_static
+            let isWorkStatic = true;
+
+            catSprite.style.backgroundImage = ''; // Clear inline override so CSS class takes precedence
+            catSprite.className = `cat-sprite ${catClass} work-static`;
+
+            function playTuxedoWorkSequence() {
+                if (!workingTime) return;
+
+                isWorkStatic = !isWorkStatic;
+                if (isWorkStatic) {
+                    catSprite.className = `cat-sprite ${catClass} work-static`;
+                    spriteTimeoutId = setTimeout(playTuxedoWorkSequence, 2500); // Rest still for 2.5s
+                } else {
+                    catSprite.className = `cat-sprite ${catClass} sipping-anim`;
+                    spriteTimeoutId = setTimeout(playTuxedoWorkSequence, 3000); // 3 complete 1.0s loops of 5-frame animation
+                }
+            }
+
+            spriteTimeoutId = setTimeout(playTuxedoWorkSequence, 2500);
         } else {
             // Actively working for other cats: Sequence of work -> static -> work
             let isWorkingAnim = true;
@@ -745,8 +782,8 @@ function updateCatState() {
             spriteTimeoutId = setTimeout(playSequence, 2800);
         }
     } else {
-        // Break time: Orange & Black Cat run idle_static <-> idle loop when unclicked; Tuxedo stays static
-        if (catClass === 'orange_cat' || catClass === 'black_cat') {
+        // Break time: every companion runs the idle_static <-> idle loop when unclicked
+        if (hasStateSprites(catClass)) {
             startBreakIdleLoop();
         } else {
             catSprite.className = `cat-sprite ${catClass} breaking`;

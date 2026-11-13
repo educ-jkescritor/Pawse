@@ -77,9 +77,11 @@ let dashboardContent = document.getElementById("dashboard-content");
 let aboutContent = document.getElementById("about-content");
 let settingsContent = document.getElementById("settings-content");
 
-// Preload Ginger About sprites into memory to prevent any transition flicker
+// Preload Tux, Ginger & Void About sprites into memory to prevent any transition flicker
 (function preloadAboutSprites() {
     [
+        '../assets/sprites/tuxedo_cat_tag_static.png',
+        '../assets/sprites/tuxedo_cat_tag.png',
         '../assets/sprites/orange_cat_tag_static.png',
         '../assets/sprites/black_cat_tag_static.png',
         '../assets/sprites/black_cat_tag.png',
@@ -92,6 +94,7 @@ let settingsContent = document.getElementById("settings-content");
 
 let orangeAboutTimeoutId = null;
 let blackAboutTimeoutId = null;
+let tuxedoAboutTimeoutId = null;
 
 function stopAboutSequences() {
     if (orangeAboutTimeoutId) {
@@ -101,6 +104,14 @@ function stopAboutSequences() {
     if (blackAboutTimeoutId) {
         clearTimeout(blackAboutTimeoutId);
         blackAboutTimeoutId = null;
+    }
+    if (tuxedoAboutTimeoutId) {
+        clearTimeout(tuxedoAboutTimeoutId);
+        tuxedoAboutTimeoutId = null;
+    }
+    const tuxedoSprite = document.getElementById("tuxedo-about-sprite");
+    if (tuxedoSprite) {
+        tuxedoSprite.className = "tuxedo-about-sprite tag-static";
     }
     const orangeSprite = document.getElementById("orange-about-sprite");
     if (orangeSprite) {
@@ -165,6 +176,26 @@ function startAboutSequences() {
             }
         }
         blackAboutTimeoutId = setTimeout(playBlackTagLoop, 3200);
+    }
+
+    const tuxedoSprite = document.getElementById("tuxedo-about-sprite");
+    if (tuxedoSprite) {
+        let isTuxedoStatic = true;
+        tuxedoSprite.className = "tuxedo-about-sprite tag-static";
+
+        function playTuxedoTagLoop() {
+            if (aboutContent && aboutContent.classList.contains("hidden")) return;
+
+            isTuxedoStatic = !isTuxedoStatic;
+            if (isTuxedoStatic) {
+                tuxedoSprite.className = "tuxedo-about-sprite tag-static";
+                tuxedoAboutTimeoutId = setTimeout(playTuxedoTagLoop, 3000); // Rest on tag_static for 3.0s
+            } else {
+                tuxedoSprite.className = "tuxedo-about-sprite tag-anim";
+                tuxedoAboutTimeoutId = setTimeout(playTuxedoTagLoop, 2400); // 2 complete 1.2s loops of the 4-frame tag animation
+            }
+        }
+        tuxedoAboutTimeoutId = setTimeout(playTuxedoTagLoop, 2600); // Between Ginger (2.0s) and Void (3.2s), so they don't move in unison
     }
 }
 const startOrangeAboutSequence = startAboutSequences;
