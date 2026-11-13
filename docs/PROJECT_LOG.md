@@ -13,7 +13,7 @@ Rules for how to work live in [`AGENTS.md`](../AGENTS.md). This file is status a
 
 ## Part 1 — Current Status
 
-_Last updated: 2026-11-13 (Q3)_
+_Last updated: 2026-11-13 (release checklist covers the recent fixes)_
 
 **Next up (agreed path to release):**
 1. ~~**N1:** crash during the final "Pawsome Job!" modal loses the Pomodoro~~ ✅ done
@@ -27,7 +27,8 @@ _Last updated: 2026-11-13 (Q3)_
 9. ~~**N2:** fish counter showed 0 after a crash restore~~ ✅ done (`eaef332`)
 10. ~~**N4:** exit dialog said progress wouldn't be saved~~ ✅ done (`e1e80a2`)
 11. **Phase 2 (dashboard and data), decided 2026-11-13:** ~~N6 latest week request wins~~ ✅ (`81cc5c4`) → ~~N5 "Couldn't load" state~~ ✅ (`75774eb`) → ~~A10 (+ A9) a session never crosses midnight~~ ✅ (`ddf779a`)
-12. **Phase 3 (polish):** ~~Q5 window titles~~ ✅ (`0284590`) → ~~Q3 IPC sender checks~~ ✅ (_(this commit)_) → Q4 (auto-start: hide in v1.0.0; build on branch `feature/auto-start-timer`, created 2026-11-13 from `ddf779a`) → Q8 `LICENSE` (needs the copyright holder name)
+12. **Phase 3 (polish):** ~~Q5 window titles~~ ✅ (`0284590`) → ~~Q3 IPC sender checks~~ ✅ (`1d9d49a`) → Q4 (auto-start: hide in v1.0.0; build on branch `feature/auto-start-timer`, created 2026-11-13 from `ddf779a`) → Q8 `LICENSE` (needs the copyright holder name)
+13. **Release prep:** ~~release checklist updated for the recent fixes~~ ✅ (_(this commit)_) → Q8 license + asset notices (on hold: names, sound sources) → user exports sprites → Windows checklist (R5) → delete old GitHub release/tags → version bump + preview notes → publish. Open decision: the old Auto-Start Timer toggle (does nothing) ships in v1.0.0 unless hidden
 
 After release: R2 icon (needs a designer asset), then the 💤 items below.
 
@@ -97,7 +98,7 @@ Legend: ✅ done · ⏳ in progress / partly done · ❌ open · 💤 deferred (
 | :--- | :--- | :--- |
 | Q1 | Jest tests re-implement logic instead of importing real modules; no E2E tests; no CI | 💤 Plan: Playwright `_electron` + CI on 3 OSes |
 | Q2 | No logging or crash handling in packaged builds (`console.log` silenced) | 💤 |
-| Q3 | Window IPC handlers crashed the main process when the message came from a window that was already gone (a click while a window closes, or a notification clicked after its window closed): `BrowserWindow.fromWebContents()` itself throws "Object has been destroyed", so even the handlers that null-checked its result failed (6/6 in testing) | ✅ | _(this commit)_: `windowFromEvent(event)` returns the window or `null` without throwing (checks the sender first); all 9 lookups use it; maximize, close, and restore (including its 500 ms timer) now handle `null` |
+| Q3 | Window IPC handlers crashed the main process when the message came from a window that was already gone (a click while a window closes, or a notification clicked after its window closed): `BrowserWindow.fromWebContents()` itself throws "Object has been destroyed", so even the handlers that null-checked its result failed (6/6 in testing) | ✅ | `1d9d49a`: `windowFromEvent(event)` returns the window or `null` without throwing (checks the sender first); all 9 lookups use it; maximize, close, and restore (including its 500 ms timer) now handle `null` |
 | Q4 | `autoStartPomodoros` / `autoStartBreaks` toggle is saved but does nothing | ❌ |
 | Q5 | Timer window title was "Document" (template placeholder) in the taskbar, Alt+Tab, and Task Manager; menu and Settings fell back to the package name ("pawse" in dev) | ✅ | `0284590`: explicit `<title>`: menu and timer "Pawse", Settings "Pawse Settings" (tells the two windows apart) |
 | Q6 | `ambient.mp3` is 36 MB (~75% of the asar) | 💤 |
@@ -220,7 +221,8 @@ Newest first. One line per commit.
 
 | Date | Commit | Change |
 | :--- | :--- | :--- |
-| 2026-11-13 | _(this commit)_ | Window handlers no longer crash when the sending window is already gone (Q3) |
+| 2026-11-13 | _(this commit)_ | Release checklist: steps for the fixes since 2026-11-09 (crash backup within ~1 s, ended session stays ended, totals never drop, fish and skip after a crash, exit text, window titles, double-click close, week navigation, optional midnight); note that the old Auto-Start Timer toggle does nothing in v1.0.0 |
+| 2026-11-13 | `1d9d49a` | Window handlers no longer crash when the sending window is already gone (Q3) |
 | 2026-11-13 | `0284590` | Window titles: "Pawse" and "Pawse Settings" instead of "Document" (Q5) |
 | 2026-11-13 | `ddf779a` | A session never crosses midnight: split before every save, day stored in the crash backup (A10, resolves A9) |
 | 2026-11-13 | `75774eb` | Dashboard shows a "Couldn't load" state instead of zeros when stats can't be read (N5) |
