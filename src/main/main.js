@@ -318,15 +318,28 @@ if (!gotTheLock) {
   });
 }
 
+// Returns the window that sent an IPC message, or null if the sender or its window is already gone.
+// BrowserWindow.fromWebContents() itself throws "Object has been destroyed" for a destroyed sender, so
+// checking its result for null is not enough. This happens when a click arrives while a window closes,
+// or when a notification is clicked after its window has closed; unguarded, the main process throws
+// (an error dialog / the app stops) (Q3).
+function windowFromEvent(event) {
+  const sender = event && event.sender;
+  if (!sender || sender.isDestroyed()) return null;
+  const senderWindow = BrowserWindow.fromWebContents(sender);
+  return senderWindow && !senderWindow.isDestroyed() ? senderWindow : null;
+}
+
 ipcMain.on('minimize-window', (event) => {
-  const senderWindow = BrowserWindow.fromWebContents(event.sender);
+  const senderWindow = windowFromEvent(event);
   if(senderWindow) {
     senderWindow.minimize();
   }
 });
 
 ipcMain.on('maximize-window', (event) => {
-  const senderWindow = BrowserWindow.fromWebContents(event.sender);
+  const senderWindow = windowFromEvent(event);
+  if (!senderWindow) return;
   if (senderWindow.isMaximized()) {
     senderWindow.unmaximize();
   } else {
@@ -335,7 +348,7 @@ ipcMain.on('maximize-window', (event) => {
 });
 
 ipcMain.on('resize-window', (event, mode) => {
-  const senderWindow = BrowserWindow.fromWebContents(event.sender);
+  const senderWindow = windowFromEvent(event);
   if (!senderWindow || senderWindow.isDestroyed()) return;
   
   let targetWidth = 310;
@@ -385,8 +398,8 @@ ipcMain.on('resize-window', (event, mode) => {
 });
 
 ipcMain.on('close-window', (event) => {
-  const senderWindow = BrowserWindow.fromWebContents(event.sender);
-  senderWindow.close();
+  const senderWindow = windowFromEvent(event);
+  if (senderWindow) senderWindow.close();
 });
 
 ipcMain.on('settings-window', (event) => {
@@ -537,7 +550,7 @@ ipcMain.on('save-session', (event, data) => {
 
 ipcMain.on('set-always-on-top', (event, isAlwaysOnTop) => {
   globalAlwaysOnTop = isAlwaysOnTop;
-  const activeWindow = BrowserWindow.fromWebContents(event.sender);
+  const activeWindow = windowFromEvent(event);
   
   if (win && !win.isDestroyed()) {
     win.setAlwaysOnTop(isAlwaysOnTop, 'screen-saver');
@@ -564,7 +577,8 @@ ipcMain.handle('load-analytics', async (event, weeksAgo) => {
 });
 
 ipcMain.on('restore-window', (event) => {
-  const targetWin = BrowserWindow.fromWebContents(event.sender);
+  const targetWin = windowFromEvent(event);
+  if (!targetWin) return;
   if (targetWin.isMinimized()) {
     targetWin.restore();
   }
@@ -573,12 +587,12 @@ ipcMain.on('restore-window', (event) => {
   targetWin.focus();
 
   setTimeout(() => {
-    targetWin.setAlwaysOnTop(globalAlwaysOnTop, 'screen-saver');
+    if (!targetWin.isDestroyed()) targetWin.setAlwaysOnTop(globalAlwaysOnTop, 'screen-saver');
   }, 500);
 });
 
 ipcMain.on('flash-frame', (event, flag) => {
-  const senderWindow = BrowserWindow.fromWebContents(event.sender);
+  const senderWindow = windowFromEvent(event);
   if (senderWindow && !senderWindow.isDestroyed()) {
     if (flag) {
       if (!senderWindow.isFocused() || senderWindow.isMinimized()) {
@@ -688,7 +702,7 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
         try {
           notification.close();
         } catch (e) {}
-        const senderWindow = BrowserWindow.fromWebContents(event.sender);
+        const senderWindow = windowFromEvent(event);
         const targetWin = senderWindow || win;
         if (targetWin && !targetWin.isDestroyed()) {
           targetWin.flashFrame(false);
@@ -778,7 +792,7 @@ ipcMain.on('show-notification', (event, { title, body, actionText }) => {
         // (expiry, Do Not Disturb), so a close there must NOT stop the alarm; it still stops when the
         // user clicks the notification or acts in the app, or after the 30s auto-silence.
         if (process.platform === 'win32' && closeReason === 'userCanceled') {
-          const senderWindow = BrowserWindow.fromWebContents(event.sender);
+          const senderWindow = windowFromEvent(event);
           const targetWin = senderWindow || win;
           if (targetWin && !targetWin.isDestroyed()) {
             targetWin.flashFrame(false);
