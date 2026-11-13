@@ -358,37 +358,38 @@ document.addEventListener('click', (event) => {
     audio.play().catch(() => {});
 }, { capture: true });
 
-// Void's full three-second reading sound.
-const voidReadingAudio = new Audio(
-    '../../assets/sounds/void-idle.mp3'
+// Tux sipping audio (during focus work time)
+const tuxSippingAudio = new Audio(
+    '../../assets/sounds/tux-focus.mp3'
 );
 
-voidReadingAudio.preload = 'auto';
-voidReadingAudio.loop = false;
+tuxSippingAudio.preload = 'auto';
+tuxSippingAudio.loop = false;
 
-voidReadingAudio.addEventListener('error', () => {
+tuxSippingAudio.addEventListener('error', () => {
     console.error(
-        'Unable to load Void reading audio:',
-        voidReadingAudio.src,
-        voidReadingAudio.error
+        'Unable to load Tux sipping audio:',
+        tuxSippingAudio.src,
+        tuxSippingAudio.error
     );
 });
 
-function stopVoidReadingSound() {
-    voidReadingAudio.pause();
-    voidReadingAudio.currentTime = 0;
+function stopTuxSippingSound() {
+    tuxSippingAudio.pause();
+    tuxSippingAudio.currentTime = 0;
 }
 
-function playVoidReadingSound() {
-    stopVoidReadingSound();
+function playTuxSippingSound() {
+    stopTuxSippingSound();
 
     let volume = parseInt(localStorage.getItem('companionVolume'), 10);
     if (Number.isNaN(volume)) volume = 50;
 
-    voidReadingAudio.volume = Math.max(0, Math.min(100, volume)) / 100;
+    tuxSippingAudio.volume =
+        Math.max(0, Math.min(100, volume)) / 100;
 
     if (
-        catConfig.dbId !== 'black_cat' ||
+        catConfig.dbId !== 'tuxedo_cat' ||
         !workingTime ||
         !isRunning ||
         !soundEnabled ||
@@ -398,12 +399,12 @@ function playVoidReadingSound() {
         return;
     }
 
-    voidReadingAudio.play().catch(error => {
-        console.warn('Void reading sound could not play:', error);
+    tuxSippingAudio.play().catch(error => {
+        console.warn('Tux sipping sound could not play:', error);
     });
 }
 
-// Ginger's three snoring sounds
+// Ginger snoring sounds (during focus work time)
 const gingerSleepingAudio = new Audio(
     '../../assets/sounds/ginger-work.mp3'
 );
@@ -449,6 +450,51 @@ function playGingerSleepingSound() {
     });
 }
 
+// Void reading sound (during focus work time)
+const voidReadingAudio = new Audio(
+    '../../assets/sounds/void-idle.mp3'
+);
+
+voidReadingAudio.preload = 'auto';
+voidReadingAudio.loop = false;
+
+voidReadingAudio.addEventListener('error', () => {
+    console.error(
+        'Unable to load Void reading audio:',
+        voidReadingAudio.src,
+        voidReadingAudio.error
+    );
+});
+
+function stopVoidReadingSound() {
+    voidReadingAudio.pause();
+    voidReadingAudio.currentTime = 0;
+}
+
+function playVoidReadingSound() {
+    stopVoidReadingSound();
+
+    let volume = parseInt(localStorage.getItem('companionVolume'), 10);
+    if (Number.isNaN(volume)) volume = 50;
+
+    voidReadingAudio.volume = Math.max(0, Math.min(100, volume)) / 100;
+
+    if (
+        catConfig.dbId !== 'black_cat' ||
+        !workingTime ||
+        !isRunning ||
+        !soundEnabled ||
+        isAlarmPlaying ||
+        volume <= 0
+    ) {
+        return;
+    }
+
+    voidReadingAudio.play().catch(error => {
+        console.warn('Void reading sound could not play:', error);
+    });
+}
+
 function updateAudioSettings() {
     const soundIcon = document.getElementById("sound-icon");
     if (soundIcon) {
@@ -482,6 +528,19 @@ function updateAudioSettings() {
     alarmAudio.volume = alrVol / 100;
     tickAudio.volume = tickVol / 100;
     Object.values(meowAudios).forEach(audio => audio.volume = compVol / 100);
+
+    tuxSippingAudio.volume =
+        Math.max(0, Math.min(100, compVol)) / 100;
+
+    if (
+        !soundEnabled ||
+        !isRunning ||
+        !workingTime ||
+        isAlarmPlaying ||
+        compVol <= 0
+    ) {
+        stopTuxSippingSound();
+    }
 
     gingerSleepingAudio.volume = Math.max(0, Math.min(100, compVol)) / 100;
 
@@ -840,6 +899,7 @@ function triggerWelcomeBubble() {
 }
 
 function updateCatState() {
+    stopTuxSippingSound();
     stopGingerSleepingSound();
     stopVoidReadingSound();
     isPetting = false; // Release lock in case of forced state shifts
@@ -939,43 +999,62 @@ function updateCatState() {
             catSprite.className = `cat-sprite ${catClass} work-static`;
 
             function playTuxedoWorkSequence() {
-                if (!workingTime) return;
+                if (!workingTime) {
+                    stopTuxSippingSound();
+                    return;
+                }
 
                 isWorkStatic = !isWorkStatic;
+
                 if (isWorkStatic) {
                     catSprite.className = `cat-sprite ${catClass} work-static`;
-                    spriteTimeoutId = setTimeout(playTuxedoWorkSequence, 2500); // Rest still for 2.5s
+
+                    spriteTimeoutId = setTimeout(playTuxedoWorkSequence, 2500);
                 } else {
                     catSprite.className = `cat-sprite ${catClass} sipping-anim`;
-                    spriteTimeoutId = setTimeout(playTuxedoWorkSequence, 3000); // 3 complete 1.0s loops of 5-frame animation
+                    playTuxSippingSound();
+
+                    spriteTimeoutId = setTimeout(playTuxedoWorkSequence, 3000);
                 }
             }
 
             spriteTimeoutId = setTimeout(playTuxedoWorkSequence, 2500);
         } else {
-            // Actively working for other cats: Sequence of work -> static -> work
+            // Tux: focus animation for 2.8 seconds, then still for 2 seconds.
             let isWorkingAnim = true;
-            
-            // Initial state: Working
+
+            // Tux starts animated immediately, so start the sound here too.
             catSprite.className = `cat-sprite ${catClass} working`;
-            catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
-            
+            catSprite.style.backgroundImage =
+                `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
+
+            playTuxSippingSound();
+
             function playSequence() {
-                if (!workingTime) return;
-                
+                if (!workingTime) {
+                    stopTuxSippingSound();
+                    return;
+                }
+
                 isWorkingAnim = !isWorkingAnim;
+
                 if (isWorkingAnim) {
                     catSprite.className = `cat-sprite ${catClass} working`;
-                    catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
-                    spriteTimeoutId = setTimeout(playSequence, 2800); // Type for 2.8 seconds
+                    catSprite.style.backgroundImage =
+                        `url('../../assets/sprites/${catConfig.dbId}_work.png')`;
+
+                    playTuxSippingSound();
+                    spriteTimeoutId = setTimeout(playSequence, 2800);
                 } else {
                     catSprite.className = `cat-sprite ${catClass} breaking`;
-                    catSprite.style.backgroundImage = `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
-                    spriteTimeoutId = setTimeout(playSequence, 2000); // Stop and look for 2 seconds
+                    catSprite.style.backgroundImage =
+                        `url('../../assets/sprites/${catConfig.dbId}_static.png')`;
+
+                    stopTuxSippingSound();
+                    spriteTimeoutId = setTimeout(playSequence, 2000);
                 }
             }
-            
-            // Kick off the sequence
+
             spriteTimeoutId = setTimeout(playSequence, 2800);
         }
     } else {
@@ -1514,6 +1593,7 @@ function stopAlarmSound() {
 }
 
 function showModal(title, message, btnText, nextAction, playAlarm = true) {
+    stopTuxSippingSound();
     stopGingerSleepingSound();
     stopVoidReadingSound();
     // Dismiss any active resize modal so it cannot stack behind/over the session modal
