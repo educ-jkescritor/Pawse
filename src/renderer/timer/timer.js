@@ -358,6 +358,51 @@ document.addEventListener('click', (event) => {
     audio.play().catch(() => {});
 }, { capture: true });
 
+// Void's full three-second reading sound.
+const voidReadingAudio = new Audio(
+    '../../assets/sounds/void-idle.mp3'
+);
+
+voidReadingAudio.preload = 'auto';
+voidReadingAudio.loop = false;
+
+voidReadingAudio.addEventListener('error', () => {
+    console.error(
+        'Unable to load Void reading audio:',
+        voidReadingAudio.src,
+        voidReadingAudio.error
+    );
+});
+
+function stopVoidReadingSound() {
+    voidReadingAudio.pause();
+    voidReadingAudio.currentTime = 0;
+}
+
+function playVoidReadingSound() {
+    stopVoidReadingSound();
+
+    let volume = parseInt(localStorage.getItem('companionVolume'), 10);
+    if (Number.isNaN(volume)) volume = 50;
+
+    voidReadingAudio.volume = Math.max(0, Math.min(100, volume)) / 100;
+
+    if (
+        catConfig.dbId !== 'black_cat' ||
+        !workingTime ||
+        !isRunning ||
+        !soundEnabled ||
+        isAlarmPlaying ||
+        volume <= 0
+    ) {
+        return;
+    }
+
+    voidReadingAudio.play().catch(error => {
+        console.warn('Void reading sound could not play:', error);
+    });
+}
+
 function updateAudioSettings() {
     const soundIcon = document.getElementById("sound-icon");
     if (soundIcon) {
@@ -391,6 +436,18 @@ function updateAudioSettings() {
     alarmAudio.volume = alrVol / 100;
     tickAudio.volume = tickVol / 100;
     Object.values(meowAudios).forEach(audio => audio.volume = compVol / 100);
+
+    voidReadingAudio.volume = Math.max(0, Math.min(100, compVol)) / 100;
+
+    if (
+        !soundEnabled ||
+        !isRunning ||
+        !workingTime ||
+        isAlarmPlaying ||
+        compVol <= 0
+    ) {
+        stopVoidReadingSound();
+    }
 
     // 4. Ambient checklist: (volume > 0) AND (unmuted) AND (session running)
     if (ambVol > 0 && soundEnabled && isRunning && !isAlarmPlaying) {
@@ -717,6 +774,7 @@ function triggerWelcomeBubble() {
 }
 
 function updateCatState() {
+    stopVoidReadingSound();
     isPetting = false; // Release lock in case of forced state shifts
     isShowingFact = false; // Reset fact display lock
     
@@ -776,15 +834,23 @@ function updateCatState() {
             catSprite.className = `cat-sprite ${catClass} work-static`;
 
             function playBlackWorkSequence() {
-                if (!workingTime) return;
+                if (!workingTime) {
+                    stopVoidReadingSound();
+                    return;
+                }
 
                 isWorkStatic = !isWorkStatic;
+
                 if (isWorkStatic) {
                     catSprite.className = `cat-sprite ${catClass} work-static`;
-                    spriteTimeoutId = setTimeout(playBlackWorkSequence, 2500); // Rest still reading for 2.5s
+                    stopVoidReadingSound();
+
+                    spriteTimeoutId = setTimeout(playBlackWorkSequence, 2500);
                 } else {
                     catSprite.className = `cat-sprite ${catClass} reading-anim`;
-                    spriteTimeoutId = setTimeout(playBlackWorkSequence, 3000); // 3 complete 1.0s loops of 5-frame animation
+                    playVoidReadingSound();
+
+                    spriteTimeoutId = setTimeout(playBlackWorkSequence, 3000);
                 }
             }
 
@@ -1373,6 +1439,7 @@ function stopAlarmSound() {
 }
 
 function showModal(title, message, btnText, nextAction, playAlarm = true) {
+    stopVoidReadingSound();
     // Dismiss any active resize modal so it cannot stack behind/over the session modal
     const resizeModalEl = document.getElementById("resize-modal-overlay");
     if (resizeModalEl && !resizeModalEl.classList.contains("hidden")) {
