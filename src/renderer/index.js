@@ -108,6 +108,25 @@ let selectedCat = null;
     });
 })();
 
+// --- Companion pacing (shared by the three menu cats) ---
+// Each cat runs its own loop: pause on a random still pose -> play its animation for whole loops -> pause again,
+// with its own random timing. Anti-sync: a cat about to animate waits a little (random 0.4-0.9 s) when another cat
+// started less than 0.5 s ago, or when both others are already moving. So two cats rarely start together, all three
+// never move at once, and each companion looks like it lives in its own world.
+const menuAnimating = { tuxedo: false, orange: false, black: false };
+const menuLastStart = { tuxedo: -Infinity, orange: -Infinity, black: -Infinity };
+function mayAnimate(cat) {
+    const now = performance.now();
+    const others = Object.keys(menuAnimating).filter(c => c !== cat);
+    if (others.some(c => now - menuLastStart[c] < 500)) return false; // another cat just started
+    if (others.every(c => menuAnimating[c])) return false;           // both others are moving
+    return true;
+}
+function markAnimating(cat, isAnimating) {
+    menuAnimating[cat] = isAnimating;
+    if (isAnimating) menuLastStart[cat] = performance.now();
+}
+
 // Start continuous alternating sequence between orange_cat_main_static and orange_cat_main
 let orangeMainTimeoutId = null;
 let blackMainTimeoutId = null;
@@ -154,7 +173,13 @@ let tuxedoMainTimeoutId = null;
         orangeSprite.className = `orange-main-sprite main-static-${currentOrangeFrame}`;
 
         function playOrangeLoop() {
+            // About to animate, but another cat just started or both others are moving: hold this pose a bit longer
+            if (isOrangeStatic && !mayAnimate('orange')) {
+                orangeMainTimeoutId = setTimeout(playOrangeLoop, 400 + Math.floor(Math.random() * 500));
+                return;
+            }
             isOrangeStatic = !isOrangeStatic;
+            markAnimating('orange', !isOrangeStatic);
             if (isOrangeStatic) {
                 // dynamic non-repeating pose selection
                 currentOrangeFrame = pickNextPose(currentOrangeFrame, [currentBlackFrame, currentTuxedoFrame]);
@@ -176,7 +201,13 @@ let tuxedoMainTimeoutId = null;
         blackSprite.className = `black-main-sprite main-static-${currentBlackFrame}`;
 
         function playBlackLoop() {
+            // About to animate, but another cat just started or both others are moving: hold this pose a bit longer
+            if (isBlackStatic && !mayAnimate('black')) {
+                blackMainTimeoutId = setTimeout(playBlackLoop, 400 + Math.floor(Math.random() * 500));
+                return;
+            }
             isBlackStatic = !isBlackStatic;
+            markAnimating('black', !isBlackStatic);
             if (isBlackStatic) {
                 // dynamic non-repeating pose selection
                 currentBlackFrame = pickNextPose(currentBlackFrame, [currentOrangeFrame, currentTuxedoFrame]);
@@ -199,7 +230,13 @@ let tuxedoMainTimeoutId = null;
         tuxedoSprite.className = `tuxedo-main-sprite main-static-${currentTuxedoFrame}`;
 
         function playTuxedoLoop() {
+            // About to animate, but another cat just started or both others are moving: hold this pose a bit longer
+            if (isTuxedoStatic && !mayAnimate('tuxedo')) {
+                tuxedoMainTimeoutId = setTimeout(playTuxedoLoop, 400 + Math.floor(Math.random() * 500));
+                return;
+            }
             isTuxedoStatic = !isTuxedoStatic;
+            markAnimating('tuxedo', !isTuxedoStatic);
             if (isTuxedoStatic) {
                 // dynamic non-repeating pose selection
                 currentTuxedoFrame = pickNextPose(currentTuxedoFrame, [currentOrangeFrame, currentBlackFrame]);

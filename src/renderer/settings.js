@@ -96,6 +96,28 @@ let orangeAboutTimeoutId = null;
 let blackAboutTimeoutId = null;
 let tuxedoAboutTimeoutId = null;
 
+// --- Companion pacing (About tab), same idea as the menu ---
+// Each cat: pause on its tag_static for a random time -> play its tag animation for 2 or 3 whole loops -> pause,
+// with its own random timing and a random first start (new on every visit). Anti-sync: a cat about to animate
+// waits a little (random 0.4-0.9 s) when another cat started less than 0.5 s ago, or when both others are moving.
+const aboutAnimating = { tuxedo: false, orange: false, black: false };
+const aboutLastStart = { tuxedo: -Infinity, orange: -Infinity, black: -Infinity };
+function mayAnimateAbout(cat) {
+    const now = performance.now();
+    const others = Object.keys(aboutAnimating).filter(c => c !== cat);
+    if (others.some(c => now - aboutLastStart[c] < 500)) return false; // another cat just started
+    if (others.every(c => aboutAnimating[c])) return false;           // both others are moving
+    return true;
+}
+function markAnimatingAbout(cat, isAnimating) {
+    aboutAnimating[cat] = isAnimating;
+    if (isAnimating) aboutLastStart[cat] = performance.now();
+}
+// A random number of whole animation loops (2 or 3), so an animation is never cut off mid-loop
+function aboutLoopsMs(loopMs) {
+    return (Math.random() < 0.5 ? 2 : 3) * loopMs;
+}
+
 function stopAboutSequences() {
     if (orangeAboutTimeoutId) {
         clearTimeout(orangeAboutTimeoutId);
@@ -109,6 +131,7 @@ function stopAboutSequences() {
         clearTimeout(tuxedoAboutTimeoutId);
         tuxedoAboutTimeoutId = null;
     }
+    Object.keys(aboutAnimating).forEach(c => { aboutAnimating[c] = false; aboutLastStart[c] = -Infinity; });
     const tuxedoSprite = document.getElementById("tuxedo-about-sprite");
     if (tuxedoSprite) {
         tuxedoSprite.className = "tuxedo-about-sprite tag-static";
@@ -147,16 +170,22 @@ function startAboutSequences() {
         function playOrangeTagLoop() {
             if (aboutContent && aboutContent.classList.contains("hidden")) return;
 
+            // About to animate, but another cat just started or both others are moving: hold the pose a bit longer
+            if (isOrangeStatic && !mayAnimateAbout('orange')) {
+                orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 400 + Math.floor(Math.random() * 500));
+                return;
+            }
             isOrangeStatic = !isOrangeStatic;
+            markAnimatingAbout('orange', !isOrangeStatic);
             if (isOrangeStatic) {
                 orangeSprite.className = "orange-about-sprite tag-static";
-                orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 2500);
+                orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 2200 + Math.floor(Math.random() * 2400)); // Rest 2.2-4.6s
             } else {
                 orangeSprite.className = "orange-about-sprite tag-anim";
-                orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 2700);
+                orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, aboutLoopsMs(900)); // 2 or 3 loops of 0.9s
             }
         }
-        orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 2000);
+        orangeAboutTimeoutId = setTimeout(playOrangeTagLoop, 800 + Math.floor(Math.random() * 1800)); // First start 0.8-2.6s
     }
 
     if (blackSprite) {
@@ -166,16 +195,22 @@ function startAboutSequences() {
         function playBlackTagLoop() {
             if (aboutContent && aboutContent.classList.contains("hidden")) return;
 
+            // About to animate, but another cat just started or both others are moving: hold the pose a bit longer
+            if (isBlackStatic && !mayAnimateAbout('black')) {
+                blackAboutTimeoutId = setTimeout(playBlackTagLoop, 400 + Math.floor(Math.random() * 500));
+                return;
+            }
             isBlackStatic = !isBlackStatic;
+            markAnimatingAbout('black', !isBlackStatic);
             if (isBlackStatic) {
                 blackSprite.className = "black-about-sprite tag-static";
-                blackAboutTimeoutId = setTimeout(playBlackTagLoop, 2800);
+                blackAboutTimeoutId = setTimeout(playBlackTagLoop, 2600 + Math.floor(Math.random() * 2400)); // Rest 2.6-5.0s
             } else {
                 blackSprite.className = "black-about-sprite tag-anim";
-                blackAboutTimeoutId = setTimeout(playBlackTagLoop, 2700);
+                blackAboutTimeoutId = setTimeout(playBlackTagLoop, aboutLoopsMs(900)); // 2 or 3 loops of 0.9s
             }
         }
-        blackAboutTimeoutId = setTimeout(playBlackTagLoop, 3200);
+        blackAboutTimeoutId = setTimeout(playBlackTagLoop, 1600 + Math.floor(Math.random() * 2000)); // First start 1.6-3.6s
     }
 
     const tuxedoSprite = document.getElementById("tuxedo-about-sprite");
@@ -186,16 +221,22 @@ function startAboutSequences() {
         function playTuxedoTagLoop() {
             if (aboutContent && aboutContent.classList.contains("hidden")) return;
 
+            // About to animate, but another cat just started or both others are moving: hold the pose a bit longer
+            if (isTuxedoStatic && !mayAnimateAbout('tuxedo')) {
+                tuxedoAboutTimeoutId = setTimeout(playTuxedoTagLoop, 400 + Math.floor(Math.random() * 500));
+                return;
+            }
             isTuxedoStatic = !isTuxedoStatic;
+            markAnimatingAbout('tuxedo', !isTuxedoStatic);
             if (isTuxedoStatic) {
                 tuxedoSprite.className = "tuxedo-about-sprite tag-static";
-                tuxedoAboutTimeoutId = setTimeout(playTuxedoTagLoop, 3000); // Rest on tag_static for 3.0s
+                tuxedoAboutTimeoutId = setTimeout(playTuxedoTagLoop, 2400 + Math.floor(Math.random() * 2400)); // Rest 2.4-4.8s
             } else {
                 tuxedoSprite.className = "tuxedo-about-sprite tag-anim";
-                tuxedoAboutTimeoutId = setTimeout(playTuxedoTagLoop, 2400); // 2 complete 1.2s loops of the 4-frame tag animation
+                tuxedoAboutTimeoutId = setTimeout(playTuxedoTagLoop, aboutLoopsMs(1200)); // 2 or 3 loops of the 1.2s 4-frame tag animation
             }
         }
-        tuxedoAboutTimeoutId = setTimeout(playTuxedoTagLoop, 2600); // Between Ginger (2.0s) and Void (3.2s), so they don't move in unison
+        tuxedoAboutTimeoutId = setTimeout(playTuxedoTagLoop, 1200 + Math.floor(Math.random() * 2000)); // First start 1.2-3.2s
     }
 }
 const startOrangeAboutSequence = startAboutSequences;
