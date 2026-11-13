@@ -406,7 +406,7 @@ function playTuxSippingSound() {
 
 // Ginger snoring sounds (during focus work time)
 const gingerSleepingAudio = new Audio(
-    '../../assets/sounds/ginger-work.mp3'
+    '../../assets/sounds/ginger-focus.mp3'
 );
 
 gingerSleepingAudio.preload = 'auto';
@@ -452,7 +452,7 @@ function playGingerSleepingSound() {
 
 // Void reading sound (during focus work time)
 const voidReadingAudio = new Audio(
-    '../../assets/sounds/void-idle.mp3'
+    '../../assets/sounds/void-focus.mp3'
 );
 
 voidReadingAudio.preload = 'auto';
