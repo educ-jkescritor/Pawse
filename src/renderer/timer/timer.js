@@ -375,6 +375,10 @@ function formatTime(remainingTime) {
 }
 
 document.getElementById("timer-display").textContent = formatTime(remainingTime);     
+// Draw the fish (completed cycles) for the starting state too. A new session shows 0; a session
+// restored after a crash shows its real count. Before, the fish were only drawn when a cycle completed,
+// so a restored session showed 0 fish until its next phase change (N2).
+updateSessionCounter();
 
 let spriteTimeoutId = null;
 const catSprite = document.getElementById("cat-sprite");
