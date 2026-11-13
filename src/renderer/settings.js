@@ -349,9 +349,16 @@ function renderCalendar() {
     });
 }
 
+// Each dashboard load gets a number; only the newest request may draw. Week clicks can have several
+// loads in flight at once, and their answers can arrive in any order: an older answer arriving last
+// would draw the wrong week while the app believes it is on the newest one (N6).
+let analyticsRequestId = 0;
+
 async function loadAnalytics(weeksAgo = 0) {
     currentWeeksAgo = weeksAgo;
+    const requestId = ++analyticsRequestId;
     const data = await window.mainAPI.loadanalytics(weeksAgo);
+    if (requestId !== analyticsRequestId) return; // A newer request started while waiting: drop this stale answer
 
     // Live Session Integration: Seamlessly fold in in-progress focus time when a timer is currently active
     try {
