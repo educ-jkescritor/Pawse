@@ -285,8 +285,8 @@ const ambientAudio = new Audio('../../assets/sounds/bgm-brown-noise.mp3');
 ambientAudio.loop = true;
 const purrAudio = new Audio('../../assets/sounds/purr.mp3');
 purrAudio.loop = true;
-const tickAudio = new Audio('../../assets/sounds/tick.mp3');
-tickAudio.volume = 0.2; // Lowered default volume to prevent ear strain
+const tickAudio = new Audio('../../assets/sounds/tick-new.mp3');
+tickAudio.volume = 0.1; // Lowered default volume to prevent ear strain
 let tickEnabled = false;
 const alarmAudio = new Audio('../../assets/sounds/alarm.mp3');
 
@@ -1130,10 +1130,11 @@ function startTimer() {
             }
 
             if (tickEnabled && soundEnabled) {
-                // Active tick audio sync: bypass dead air padding
-                tickAudio.currentTime = 0.10;
-                tickAudio.play().catch(e => {});
-            }
+                tickAudio.currentTime = 0;
+                tickAudio.play().catch(error => {
+                    console.warn('Tick sound could not play:', error);
+                });
+}
         }
 
         // Recompute remaining seconds directly against the monotonic target timestamp
