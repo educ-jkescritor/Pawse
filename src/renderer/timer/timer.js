@@ -403,6 +403,52 @@ function playVoidReadingSound() {
     });
 }
 
+// Ginger's three snoring sounds
+const gingerSleepingAudio = new Audio(
+    '../../assets/sounds/ginger-work.mp3'
+);
+
+gingerSleepingAudio.preload = 'auto';
+gingerSleepingAudio.loop = false;
+
+gingerSleepingAudio.addEventListener('error', () => {
+    console.error(
+        'Unable to load Ginger sleeping audio:',
+        gingerSleepingAudio.src,
+        gingerSleepingAudio.error
+    );
+});
+
+function stopGingerSleepingSound() {
+    gingerSleepingAudio.pause();
+    gingerSleepingAudio.currentTime = 0;
+}
+
+function playGingerSleepingSound() {
+    stopGingerSleepingSound();
+
+    let volume = parseInt(localStorage.getItem('companionVolume'), 10);
+    if (Number.isNaN(volume)) volume = 50;
+
+    gingerSleepingAudio.volume =
+        Math.max(0, Math.min(100, volume)) / 100;
+
+    if (
+        catConfig.dbId !== 'orange_cat' ||
+        !workingTime ||
+        !isRunning ||
+        !soundEnabled ||
+        isAlarmPlaying ||
+        volume <= 0
+    ) {
+        return;
+    }
+
+    gingerSleepingAudio.play().catch(error => {
+        console.warn('Ginger sleeping sound could not play:', error);
+    });
+}
+
 function updateAudioSettings() {
     const soundIcon = document.getElementById("sound-icon");
     if (soundIcon) {
@@ -437,6 +483,18 @@ function updateAudioSettings() {
     tickAudio.volume = tickVol / 100;
     Object.values(meowAudios).forEach(audio => audio.volume = compVol / 100);
 
+    gingerSleepingAudio.volume = Math.max(0, Math.min(100, compVol)) / 100;
+
+    if (
+        !soundEnabled ||
+        !isRunning ||
+        !workingTime ||
+        isAlarmPlaying ||
+        compVol <= 0
+    ) {
+        stopGingerSleepingSound();
+    }
+
     voidReadingAudio.volume = Math.max(0, Math.min(100, compVol)) / 100;
 
     if (
@@ -457,7 +515,15 @@ function updateAudioSettings() {
     }
     
     // 5. Purr checklist: (volume > 0) AND (unmuted) AND (session running) AND (work mode)
-    if (purVol > 0 && soundEnabled && isRunning && !isAlarmPlaying && workingTime) {
+    // Continuous purring is available for Tux and Void only.
+    if (
+        catConfig.dbId !== 'orange_cat' &&
+        purVol > 0 &&
+        soundEnabled &&
+        isRunning &&
+        !isAlarmPlaying &&
+        workingTime
+    ) {
         purrAudio.play().catch(e => {});
     } else {
         purrAudio.pause();
@@ -774,6 +840,7 @@ function triggerWelcomeBubble() {
 }
 
 function updateCatState() {
+    stopGingerSleepingSound();
     stopVoidReadingSound();
     isPetting = false; // Release lock in case of forced state shifts
     isShowingFact = false; // Reset fact display lock
@@ -812,15 +879,23 @@ function updateCatState() {
             catSprite.className = `cat-sprite ${catClass} work-static`;
 
             function playOrangeSleepSequence() {
-                if (!workingTime) return;
+                if (!workingTime) {
+                    stopGingerSleepingSound();
+                    return;
+                }
 
                 isWorkStatic = !isWorkStatic;
+
                 if (isWorkStatic) {
                     catSprite.className = `cat-sprite ${catClass} work-static`;
-                    spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2500); // Rest still for 2.5s
+                    stopGingerSleepingSound();
+
+                    spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2500);
                 } else {
                     catSprite.className = `cat-sprite ${catClass} sleeping-anim`;
-                    spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2700); // 3 complete 0.9s loops of 3-frame breathing
+                    playGingerSleepingSound();
+
+                    spriteTimeoutId = setTimeout(playOrangeSleepSequence, 2700);
                 }
             }
 
@@ -1439,6 +1514,7 @@ function stopAlarmSound() {
 }
 
 function showModal(title, message, btnText, nextAction, playAlarm = true) {
+    stopGingerSleepingSound();
     stopVoidReadingSound();
     // Dismiss any active resize modal so it cannot stack behind/over the session modal
     const resizeModalEl = document.getElementById("resize-modal-overlay");
