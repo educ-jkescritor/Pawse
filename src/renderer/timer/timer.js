@@ -498,12 +498,71 @@ function playVoidReadingSound() {
     });
 }
 
+// Separate from the sounds played when clicking a cat (idle animation sounds)
+const breakIdleSoundPaths = {
+    orange_cat: '../../assets/sounds/ginger-idle.mp3',
+    tuxedo_cat: '../../assets/sounds/tux-idle.mp3',
+    black_cat: '../../assets/sounds/void-idle.mp3'
+};
+
+const breakIdleAudios = {};
+
+Object.entries(breakIdleSoundPaths).forEach(([catId, path]) => {
+    if (!path) return;
+
+    const audio = new Audio(path);
+    audio.preload = 'auto';
+    audio.loop = false;
+
+    audio.addEventListener('error', () => {
+        console.error('Unable to load idle sound:', path, audio.error);
+    });
+
+    breakIdleAudios[catId] = audio;
+});
+
+function stopBreakIdleSounds() {
+    Object.values(breakIdleAudios).forEach(audio => {
+        audio.pause();
+        audio.currentTime = 0;
+    });
+}
+
+function playBreakIdleSound() {
+    stopBreakIdleSounds();
+
+    const audio = breakIdleAudios[catConfig.dbId];
+
+    let volume = parseInt(localStorage.getItem('companionVolume'), 10);
+    if (Number.isNaN(volume)) volume = 50;
+
+    if (
+        !audio ||
+        workingTime ||
+        isPetting ||
+        !isRunning ||
+        !soundEnabled ||
+        isAlarmPlaying ||
+        isTimerOnlyMode() ||
+        volume <= 0
+    ) {
+        return;
+    }
+
+    audio.volume = Math.max(0, Math.min(100, volume)) / 100;
+
+    audio.play().catch(error => {
+        console.warn('Break idle sound could not play:', error);
+    });
+}
+
 // Check if the timer is running in "timer-only mode" 
 function isTimerOnlyMode() {
     return document.body.classList.contains('timer-only-mode');
 }
 
 function stopAllCatSounds() {
+    stopBreakIdleSounds();
     purrAudio.pause();
 
     Object.values(meowAudios).forEach(audio => {
@@ -549,6 +608,22 @@ function updateAudioSettings() {
     alarmAudio.volume = alrVol / 100;
     tickAudio.volume = tickVol / 100;
     Object.values(meowAudios).forEach(audio => audio.volume = compVol / 100);
+
+    Object.values(breakIdleAudios).forEach(audio => {
+        audio.volume = Math.max(0, Math.min(100, compVol)) / 100;
+    });
+
+    if (
+        workingTime ||
+        isPetting ||
+        !isRunning ||
+        !soundEnabled ||
+        isAlarmPlaying ||
+        isTimerOnlyMode() ||
+        compVol <= 0
+    ) {
+        stopBreakIdleSounds();
+    }
 
     tuxSippingAudio.volume =
         Math.max(0, Math.min(100, compVol)) / 100;
@@ -769,6 +844,8 @@ function triggerAmbientThought() {
 }
 
 function startBreakIdleLoop() {
+    stopBreakIdleSounds();
+
     if (spriteTimeoutId) {
         clearTimeout(spriteTimeoutId);
         spriteTimeoutId = null;
@@ -783,26 +860,39 @@ function startBreakIdleLoop() {
     let isIdleStatic = true;
 
     function playIdleSequence() {
-        if (workingTime || isPetting) return;
+        if (workingTime || isPetting) {
+            stopBreakIdleSounds();
+            return;
+        }
 
         isIdleStatic = !isIdleStatic;
+
         if (isIdleStatic) {
             catSprite.className = `cat-sprite ${catClass} idle-static`;
-            spriteTimeoutId = setTimeout(playIdleSequence, 2500); // Rest on idle_static for 2.5s
+            stopBreakIdleSounds();
+
+            spriteTimeoutId = setTimeout(playIdleSequence, 2500);
         } else {
             catSprite.className = `cat-sprite ${catClass} idle-anim`;
-            // 3 complete loops of the idle animation: Ginger & Void 0.75s (5 frames), Tux 0.6s (4 frames)
-            spriteTimeoutId = setTimeout(playIdleSequence, catClass === 'tuxedo_cat' ? 1800 : 2250);
+            playBreakIdleSound();
+
+            spriteTimeoutId = setTimeout(
+                playIdleSequence,
+                catClass === 'tuxedo_cat' ? 1800 : 2250
+            );
         }
     }
 
     spriteTimeoutId = setTimeout(playIdleSequence, 2500);
 }
+
 const startOrangeBreakIdleLoop = startBreakIdleLoop;
 
 catSprite.addEventListener('click', () => {
     // Only allow interaction during break times and if not already petting
     if (workingTime || isPetting) return;
+
+    stopBreakIdleSounds();
 
     // Stop any active break idle animation sequence so click animation takes over cleanly
     if (spriteTimeoutId) {
@@ -926,9 +1016,11 @@ function triggerWelcomeBubble() {
 }
 
 function updateCatState() {
+    stopBreakIdleSounds();
     stopTuxSippingSound();
     stopGingerSleepingSound();
     stopVoidReadingSound();
+
     isPetting = false; // Release lock in case of forced state shifts
     isShowingFact = false; // Reset fact display lock
     
@@ -1620,9 +1712,11 @@ function stopAlarmSound() {
 }
 
 function showModal(title, message, btnText, nextAction, playAlarm = true) {
+    stopBreakIdleSounds();
     stopTuxSippingSound();
     stopGingerSleepingSound();
     stopVoidReadingSound();
+
     // Dismiss any active resize modal so it cannot stack behind/over the session modal
     const resizeModalEl = document.getElementById("resize-modal-overlay");
     if (resizeModalEl && !resizeModalEl.classList.contains("hidden")) {
