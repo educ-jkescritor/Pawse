@@ -288,7 +288,7 @@ purrAudio.loop = true;
 const tickAudio = new Audio('../../assets/sounds/tick-new.mp3');
 tickAudio.volume = 0.1; // Lowered default volume to prevent ear strain
 let tickEnabled = false;
-const alarmAudio = new Audio('../../assets/sounds/alarm.mp3');
+const alarmAudio = new Audio('../../assets/sounds/alarm-new.wav');
 
 // Linux & Cross-Platform Audio Stream Recovery:
 // When audio drivers (ALSA / PulseAudio) experience underruns, power-saving pauses, or loop transitions,
